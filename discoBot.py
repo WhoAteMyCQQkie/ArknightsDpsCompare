@@ -55,8 +55,8 @@ client = discord.Client(intents=intents)
 onPi = True
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
 try:
-	with open("werbinich.txt") as file:
-		inhalt = file.readline()
+	with open("testrun.txt") as file:
+		_ = file.readline()
 		onPi = False
 except:
 	pass
