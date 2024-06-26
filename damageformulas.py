@@ -10868,6 +10868,87 @@ class SpecterAlter(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
+class Stainless(Operator):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+		maxlvl=90
+		lvl1atk = 532  #######including trust
+		maxatk = 633
+		self.atk_interval = 1.5   #### in seconds
+		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
+		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
+		self.pot = pot if pot in range(1,7) else 1
+		if self.pot > 3: self.base_atk += 25
+		
+		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
+		self.mastery = mastery if mastery in [0,1,2,3] else 3
+		if level != maxlvl: self.name = f"Stainless Lv{level} P{self.pot} S{self.skill}" #####set op name
+		else: self.name = f"Stainless P{self.pot} S{self.skill}"
+		if self.mastery == 0: self.name += "L7"
+		elif self.mastery < 3: self.name += f"M{self.mastery}"
+		self.targets = max(1,targets)
+		self.trait = TrTaTaSkMo[0]
+		self.talent1 = TrTaTaSkMo[1]
+		self.talent2 = TrTaTaSkMo[2]
+		self.skilldmg = TrTaTaSkMo[3]
+		self.moduledmg = TrTaTaSkMo[4]
+		
+		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
+		if level >= maxlvl-30:
+			if self.module == 1:
+				self.name += " ModX"
+				if self.module_lvl == 3: self.base_atk += 45
+				elif self.module_lvl == 2: self.base_atk += 35
+				else: self.base_atk += 25
+				self.name += f"{self.module_lvl}"
+			else: self.name += " no Mod"
+		else: self.module = 0
+		
+		if self.skill == 3 and not self.skilldmg: self.name += " TurretOnly"
+		
+		if self.skill != 1 and self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		
+		self.buffs = buffs
+		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+	
+	def skill_dps(self, defense, res):
+		dps = 0
+		atkbuff = self.buffs[0]
+		aspd = self.buffs[2]
+		atk_scale = 1
+		
+		#talent/module buffs
+		if self.module == 1: aspd += 5
+			
+		####the actual skills
+		if self.skill == 1:
+			skill_scale = 1.7 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			hitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			
+		if self.skill == 2:
+			atkbuff += 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
+			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+		if self.skill == 3:
+			atkbuff += 0.4 + 0.05 * self.mastery
+			aspd += 40 + 5 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
+			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			if not self.skilldmg: dps = 0
+			turret_scale = 2.6 if self.mastery == 0 else 2.55 + 0.15 * self.mastery
+			turret_aoe = 1.2 + 0.1 * self.mastery
+			turrethitdmg = max(final_atk * turret_scale - defense, final_atk * turret_scale * 0.05)
+			turretaoedmg = max(final_atk * turret_aoe - defense, final_atk * turret_aoe * 0.05)
+			totalturret = turrethitdmg + turretaoedmg * (self.targets - 1)
+			dps += totalturret * self.buffs[4] / 5
+			
+		return dps
+
+
 class Surtr(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -12667,13 +12748,13 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lunacub": Lunacub, "lutonada": Lutonada, "magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "matoimaru": Matoimaru, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "mon3tr": Mon3tr, "kaltsit": Mon3tr, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": MumuDorothy, "muelsyse": MumuDorothy, "mumudorothy": MumuDorothy,  "mumu1": MumuDorothy, "mumu2": MumuEbenholz,"mumuebenholz": MumuEbenholz, "mumu3": MumuCeobe,"mumuceobe": MumuCeobe, "mumu4": MumuMudrock,"mumumudrock": MumuMudrock, "mumu5": MumuRosa,"mumurosa": MumuRosa, "mumu6": MumuSkadi,"mumuskadi": MumuSkadi, "mumu7": MumuSchwarz,"mumuschwarz": MumuSchwarz, 
 		"ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "odda": Odda, "pallas": Pallas, "penance": Penance, "phantom": Phantom, "pinecone": Pinecone, "platinum": Platinum, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, 
-		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "surtr": Surtr, "jus": Surtr, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "thorns": Thorns, "thorn": Thorns,"toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
+		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "surtr": Surtr, "jus": Surtr, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "thorns": Thorns, "thorn": Thorns,"toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpianus": Ulpianus, "utage": Utage, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "walter": Walter, "wisadel": Walter, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","BluePoison","Broca","Cantabile","Caper","Carnelian","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Fuze","Gavialter","Gladiia","Goldenglow","Grani","Greythroat",
 		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Irene","JessicaAlt","Kazemaru","Kjera","Kroos","Kroos3star","Lapluma","Lappland","LavaAlt","Lessing","Logos","Leto","Lin","Ling","Lunacub","Lutonada","Magallan","Manticore","Matoimaru","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Morgan","Mountain","Mousse","Mudrock","Muelsyse(type !mumu for more info)","NearlAlter","Nian","Odda","Pallas","Penance","Phantom","Pinecone","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Schwarz","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Surtr","SwireAlt","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vigil","Vigna","Virtuosa","Viviana","Vulcan","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
+		"Rosa","Rosmontis","Schwarz","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Surtr","SwireAlt","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vigil","Vigna","Virtuosa","Viviana","Vulcan","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
 
 #copy from op_dict to show the plot. should only be used for testing
 test_ops = {}
