@@ -6267,7 +6267,7 @@ class JessicaAlter(Operator):
 		if self.skill == 3:
 			skillbuff = 3.1 if self.mastery == 3 else 2.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+buffs[0] + skillbuff) + buffs[1]
-			nukedmg = final_atk * 2.5
+			nukedmg = final_atk * 2.5 * (1+buffs[3])
 			self.name += f" GrenadeDmg:{int(nukedmg)}"
 			
 	
@@ -11788,7 +11788,7 @@ class Ulpianus(Operator):
 		if self.skill == 3:
 			final_atk = self.base_atk * (1+buffs[0] + 2.3 + 0.1 * self.mastery) + buffs[1]
 			scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
-			nukedmg = final_atk * scale
+			nukedmg = final_atk * scale * (1+buffs[3])
 			self.name += f" InitialDmg:{int(nukedmg)}"
 		
 	
