@@ -447,7 +447,7 @@ class Andreana(Operator):
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		if self.moduledmg: self.name += " atMaxRange"
+		if self.moduledmg and self.module == 1: self.name += " atMaxRange"
 
 		
 		self.buffs = buffs
@@ -600,7 +600,7 @@ class April(Operator):
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		if self.moduledmg: self.name += " groundEnemies"
+		if self.moduledmg and self.module == 2: self.name += " groundEnemies"
 
 		self.buffs = buffs
 			
@@ -1089,7 +1089,7 @@ class Ashlock(Operator):
 		
 		if not self.talent1: self.name += " LowTalent"
 
-		if self.moduledmg: self.name += " blockedTarget"
+		if self.moduledmg and self.module == 1: self.name += " blockedTarget"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -4317,7 +4317,7 @@ class Firewhistle(Operator):
 		else: self.module = 0
 		
 		if not self.talent1: self.name += " meelee"
-		if self.moduledmg: self.name += " vsBlocked"
+		if self.moduledmg and self.module == 1: self.name += " vsBlocked"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -4676,7 +4676,7 @@ class Franka(Operator):
 		
   ##### keep the ones that apply
 
-		if self.moduledmg: self.name += " vsBlocked"
+		if self.moduledmg and self.module == 1: self.name += " vsBlocked"
 
 		
 		self.buffs = buffs
@@ -9165,7 +9165,7 @@ class Platinum(Operator):
 		else: self.module = 0
 		
 
-		if self.moduledmg: self.name += " aerial target"
+		if self.moduledmg and self.module == 1: self.name += " aerial target"
 		
 		self.buffs = buffs
 			
@@ -9271,7 +9271,7 @@ class Pozemka(Operator):
 			else:
 				defshred = 0.2 if self.pot > 4 else 0.18
 		newdef = defense * (1-defshred)
-		if self.moduledmg:
+		if self.moduledmg and self.module == 2:
 			atk_scale = 1.05
 			
 			

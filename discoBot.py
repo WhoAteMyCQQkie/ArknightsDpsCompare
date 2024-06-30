@@ -785,6 +785,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			spalten = 2
 		if contains_data > 52 and beegness == 4:
 			spalten = 1
+		if contains_data > 30 and beegness == 8 and textsize == 10:
+			spalten = 2
 		
 		if split != 5:
 			pl.xlabel("Defense\nRes")
