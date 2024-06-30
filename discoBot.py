@@ -22,7 +22,8 @@
 # cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
 # optional:add kwargs to make the bot understand more text (like vs heavy for rosa)
 # make lines distinguishable when adding more than 10 ops (example: switch to dotted lines)
-#todo: first collect the operators and then draw the stuff. (seems quite tedious)
+# todo: first collect the operators(aka parse through the entire input) and then draw the stuff. (seems quite tedious)
+# fix: info text from logos S1, jessica S3, Ulpianus S3, ... doesn't interact with base atk buffs
 
 #TODO: Minijobs that really should be done asap
 # hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it

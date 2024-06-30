@@ -6263,6 +6263,12 @@ class JessicaAlter(Operator):
 		else: self.module = 0
 
 		self.buffs = buffs
+		
+		if self.skill == 3:
+			skillbuff = 3.1 if self.mastery == 3 else 2.7 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+buffs[0] + skillbuff) + buffs[1]
+			nukedmg = final_atk * 2.5
+			self.name += f" GrenadeDmg:{int(nukedmg)}"
 			
 	
 	def skill_dps(self, defense, res):
@@ -11778,7 +11784,13 @@ class Ulpianus(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
+		
+		if self.skill == 3:
+			final_atk = self.base_atk * (1+buffs[0] + 2.3 + 0.1 * self.mastery) + buffs[1]
+			scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
+			nukedmg = final_atk * scale
+			self.name += f" InitialDmg:{int(nukedmg)}"
+		
 	
 	def skill_dps(self, defense, res):
 		dps = 0
