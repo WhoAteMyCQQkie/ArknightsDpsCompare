@@ -414,6 +414,16 @@ class AmiyaGuard(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			dps = final_atk/(self.atk_interval/(1+aspd/100))
 		return dps
+	
+	def get_name(self):
+		if self.skill == 2:
+			skill_scale = 1.6 + 0.2 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + 0.14) + self.buffs[1]
+			nukedmg = final_atk * 9 * skill_scale * (1+self.buffs[3])
+			truedmg = final_atk * 2 * skill_scale * (1+self.buffs[3])
+			self.name += f"  Nuke:{int(nukedmg)}Arts+{int(truedmg)}True"
+		return self.name
+
 		
 class Andreana(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -6364,6 +6374,19 @@ class Kafka(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
+	def get_name(self):
+		if self.skill == 2:
+			talent = 0.18 if self.pot > 4 else 0.15
+			
+			if self.module == 2:
+				if self.module_lvl == 2: talent += 0.07
+				if self.module_lvl == 3: talent += 0.1
+			skill_scale = 4 if self.mastery == 3 else 3 + 0.3 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + talent) + self.buffs[1]
+			nukedmg = final_atk * skill_scale * (1+self.buffs[3])
+			self.name += f" InitialHit:{int(nukedmg)}"
+		return self.name
+
 class Kazemaru(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
@@ -6424,7 +6447,7 @@ class Kazemaru(Operator):
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
-			avgphys = (sp_cost * hitdmg + 2* skillhitdmg) / (sp_cost + 1)
+			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
@@ -6439,6 +6462,18 @@ class Kazemaru(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.skilldmg: dps += hitdmg2/(self.atk_interval/(1+aspd/100))
 		return dps
+	
+	def get_name(self):
+		summon_scale = 2.75 if self.pot > 4 else 2.7
+		if self.module != 0 and self.module_lvl > 1: summon_scale += 0.05 * self.module_lvl
+		
+		atk = 0	
+		if self.skill == 2: atk += 0.9 + 0.1 * self.mastery
+		
+		final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
+		nukedmg = final_atk * summon_scale * (1+self.buffs[3])
+		self.name += f" SummoningAoe:{int(nukedmg)}"
+		return self.name
 	
 class Kjera(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -11184,6 +11219,18 @@ class SwireAlt(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * 2
 		return dps
 
+	def get_name(self):
+		if self.skill == 3:
+
+			atk = self.stacks * 0.04
+			if self.module == 1 and self.module_lvl > 1: atk += self.stacks * 0.01
+			
+			skill_scale = 1.2 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
+			nukedmg = final_atk * 10 * skill_scale * (1+self.buffs[3])
+			self.name += f" 10Coins:{int(nukedmg)}"
+		return self.name
+
 class TexasAlter(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -11279,7 +11326,27 @@ class TexasAlter(Operator):
 			dps += hitdmgarts * min(self.targets, maxtargets)
 			
 		return dps
+	
+	def get_name(self):
+		atk = 0.2 #talent
+		if self.module == 2:
+			if self.moduledmg: atk += 0.1
+			if self.module_lvl == 2: atk += 0.05
+			if self.module_lvl == 3: atk += 0.08
 		
+		if self.skill == 2:
+			atk += 0.4 + 0.05 * self.mastery
+			skill_scale = 1.8 + 0.2 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
+			nukedmg = final_atk * skill_scale * (1+self.buffs[3])
+			self.name += f" InitialAoe:{int(nukedmg)}"
+		if self.skill == 3:
+			skill_scale = 1.3 if self.mastery == 0 else 1.2 + 0.15 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
+			nukedmg = final_atk * 2 * skill_scale * (1+self.buffs[3])
+			self.name += f" InitialAoe:{int(nukedmg)}"
+		return self.name
+	
 class Tequila(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
