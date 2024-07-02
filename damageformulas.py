@@ -11783,8 +11783,7 @@ class Ulpianus(Operator):
 		
 		maxkills = 10 if self.pot > 4 else 9
 		if self.talent2: self.name += f" {maxkills}kills"
-		if self.talent2:
-			self.base_atk += 30 * maxkills
+
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -11798,27 +11797,33 @@ class Ulpianus(Operator):
 		flatbuff = 0
 		#talent/module buffs
 		
+		bonusbase_atk = 0
+		if self.talent2:
+			bonusbase_atk = 300 if self.pot > 4 else 270
 			
 		####the actual skills
 		if self.skill == 1:
 			skill_scale = 2.1 + 0.2 * self.mastery
 			sp_cost = 4 if self.mastery == 3 else 5
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	+ flatbuff
+			final_atk = (self.base_atk + bonusbase_atk) * (1+atkbuff) + self.buffs[1]	+ flatbuff
 		if self.skill == 2:
 			atkbuff += 1.3 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	+ flatbuff
+			final_atk = (self.base_atk + bonusbase_atk) * (1+atkbuff) + self.buffs[1]	+ flatbuff
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		if self.skill == 3:
 			atkbuff += 2.3 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	+ flatbuff
+			final_atk = (self.base_atk + bonusbase_atk) * (1+atkbuff) + self.buffs[1]	+ flatbuff
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
 	def get_name(self):
 		if self.skill == 3:
-			final_atk = self.base_atk * (1+self.buffs[0] + 2.3 + 0.1 * self.mastery) + self.buffs[1]
+			bonusbase_atk = 0
+			if self.talent2:
+				bonusbase_atk = 300 if self.pot > 4 else 270
+			final_atk = (self.base_atk + bonusbase_atk) * (1+self.buffs[0] + 2.3 + 0.1 * self.mastery) + self.buffs[1]
 			scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
 			nukedmg = final_atk * scale * (1+self.buffs[3])
 			self.name += f" InitialDmg:{int(nukedmg)}"
