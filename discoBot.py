@@ -41,6 +41,7 @@ import damageformulas as df
 import healingformulas as hf
 import unicodedata
 import time
+import io
 
 ##############################################
 #Bot Settings for the channels it will respond to
@@ -854,13 +855,15 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		fig = pl.gcf()
 		fig.set_size_inches(2 * beegness, beegness)
 		pl.tight_layout()
-		pl.savefig('temp.png')
-		#pl.clf()
+		buf = io.BytesIO()
+		pl.savefig(buf,format='png')
+		buf.seek(0)
+		file = discord.File(buf, filename='plot.png')
 		pl.close()
 		if parsing_error:
-			await message.channel.send(error_message[:-1], file=discord.File('temp.png'))
+			await message.channel.send(error_message[:-1], file=file)
 		else:
-			await message.channel.send(file=discord.File('temp.png'))
+			await message.channel.send(file=file)
 		
 		
 		
