@@ -9494,7 +9494,7 @@ class Provence(Operator):
 		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
 		self.skilldmg = TrTaTaSkMo[3]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -11074,7 +11074,7 @@ class Stainless(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -11223,7 +11223,7 @@ class SwireAlt(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -11986,7 +11986,7 @@ class Utage(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -12044,7 +12044,7 @@ class Vigil(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -12380,7 +12380,7 @@ class Vulcan(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -12711,7 +12711,7 @@ class Wildmane(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -12776,7 +12776,7 @@ class YatoAlter(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		#self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
