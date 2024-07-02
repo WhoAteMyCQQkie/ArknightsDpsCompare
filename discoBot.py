@@ -42,6 +42,7 @@ import healingformulas as hf
 import unicodedata
 import time
 import io
+import itertools
 
 ##############################################
 #Bot Settings for the channels it will respond to
@@ -107,7 +108,7 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		operator.base_atk += basebuffs[1]
 	if not normal_dps and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
 	op_name = operator.get_name() + op_name
-	if op_name in alreadyDrawnOps: return
+	if op_name in alreadyDrawnOps: return False
 	alreadyDrawnOps.append(op_name)
 	if len(op_name) > 70: #formatting issue for too long names
 		op_name = op_name[:int(len(op_name)/2)] + "\n" + op_name[int(len(op_name)/2):]
@@ -227,7 +228,7 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		for i in range(len(enemies)):
 			demanded = operator.skill_dps(enemies[i][0],enemies[i][1])*(1+buffs[3])
 			pl.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-		
+	return True
 		
 
 
@@ -344,47 +345,78 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 
 		while i < entries:
 			if parsed_message[i] in op_dict and i+1==entries:
-				plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data)
-				contains_data += 1
+				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 			elif parsed_message[i] in op_dict and not (parsed_message[i+1] in modifiers):
-				contains_data += 1
 				if contains_data > 40: break
-				plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data)
+				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
 				i+=1
-				skill=-1
-				mastery = 3
-				modlvl = 3
-				pot=-1
-				mod=-1
+				skills = {-1}
+				masteries = {-1}
+				modlvls = {-1}
+				pots = {-1}
+				mods = {-1}
 				while i < entries and parsed_message[i] in modifiers:
-					if parsed_message[i] in ["s1","s2","s3"]: skill = int(parsed_message[i][1])
-					elif parsed_message[i] in ["p1","p2","p3","p4","p5","p6"]: pot = int(parsed_message[i][1])
-					elif parsed_message[i] in ["1","2","3"]: modlvl = int(parsed_message[i])
-					elif parsed_message[i] in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3",]: modlvl = int(parsed_message[i][-1])
-					elif parsed_message[i] in ["m0","m1","m2","m3"]: mastery = int(parsed_message[i][1])
-					elif parsed_message[i] in ["sl7","s7","slv7","l7","lv7"]: mastery = 0
-					elif parsed_message[i] in ["mod0","mod1","mod2","mod3"]: mod = int(parsed_message[i][3])
-					elif parsed_message[i] in ["modx","x"]: mod = 1
+					if parsed_message[i] in ["s1","s2","s3"]: 
+						skills.add(int(parsed_message[i][1]))
+						skills.discard(-1)
+					elif parsed_message[i] in ["p1","p2","p3","p4","p5","p6"]: 
+						pots.add(int(parsed_message[i][1]))
+						pots.discard(-1)
+					elif parsed_message[i] in ["1","2","3"]: 
+						modlvls.add(int(parsed_message[i]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3",]: 
+						modlvls.add(int(parsed_message[i][-1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["m0","m1","m2","m3"]: 
+						masteries.add(int(parsed_message[i][1]))
+						masteries.discard(-1)
+					elif parsed_message[i] in ["sl7","s7","slv7","l7","lv7"]:
+						masteries.add(0)
+						masteries.discard(-1)
+					elif parsed_message[i] in ["mod0","mod1","mod2","mod3"]:
+						mods.add(int(parsed_message[i][3]))
+						mods.discard(-1)
+					elif parsed_message[i] in ["modx","x"]:
+						mods.add(1)
+						mods.discard(-1)
 					elif parsed_message[i] in ["x1","x2","x3"]: 
-						mod = 1
-						modlvl = int(parsed_message[i][1])
+						mods.add(1)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
 					elif parsed_message[i] in ["y1","y2","y3"]: 
-						mod = 2
-						modlvl = int(parsed_message[i][1])
-					elif parsed_message[i] in ["mody","y"]: mod = 2
-					elif parsed_message[i] in ["modd","d"]: mod = 3
+						mods.add(2)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["mody","y"]:
+						mods.add(2)
+						mods.discard(-1)
+					elif parsed_message[i] in ["modd","d"]:
+						mods.add(3)
+						mods.discard(-1)
 					elif parsed_message[i] in ["d1","d2","d3"]: 
-						mod = 3
-						modlvl = int(parsed_message[i][1])
-					elif parsed_message[i] in ["0","no","mod","module","nomod","modlvl","modlv"]: mod = 0
+						mods.add(3)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["0","no","mod","module","nomod","modlvl","modlv"]:
+						mods.add(0)
+						mods.discard(-1)
 					elif parsed_message[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
-						skill = int(parsed_message[i][1])
-						mastery = int(parsed_message[i][3])
+						skills.add(int(parsed_message[i][1]))
+						skills.discard(-1)
+						masteries.add(int(parsed_message[i][3]))
+						masteries.discard(-1)
 					i+=1
-				plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data)
-				contains_data += 1
+				if not -1 in modlvls and 0 in mods and len(mods) == 1:
+					mods.add(-1)
+				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
+					if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
 				i+=1
