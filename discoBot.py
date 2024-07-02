@@ -23,7 +23,7 @@
 # optional:add kwargs to make the bot understand more text (like vs heavy for rosa)
 # make lines distinguishable when adding more than 10 ops (example: switch to dotted lines)
 # todo: first collect the operators(aka parse through the entire input) and then draw the stuff. (seems quite tedious)
-# fix: info text from logos S1, jessica S3, Ulpianus S3, ... doesn't interact with base atk buffs
+# ulpianus talent incorrectly scales with percentage base atk buffs
 
 #TODO: Minijobs that really should be done asap
 # hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
@@ -87,7 +87,7 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	if plotnumbers > 30: style = ':'
 	
 	#Setting the name of the operator
-	op_name = operator.get_name()
+	op_name = ""
 	if buffs[0] > 0: op_name += f" atk+{int(100*buffs[0])}%"
 	if buffs[0] < 0: op_name += f" atk{int(100*buffs[0])}%"
 	if buffs[1] > 0: op_name += f" atk+{buffs[1]}"
@@ -107,6 +107,7 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		op_name += f" +{int(basebuffs[1])}bAtk"
 		operator.base_atk += basebuffs[1]
 	if not normal_dps and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
+	op_name = operator.get_name() + op_name
 	if op_name in alreadyDrawnOps: return
 	alreadyDrawnOps.append(op_name)
 	if len(op_name) > 70: #formatting issue for too long names

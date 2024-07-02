@@ -6263,14 +6263,7 @@ class JessicaAlter(Operator):
 		else: self.module = 0
 
 		self.buffs = buffs
-		
-		if self.skill == 3:
-			skillbuff = 3.1 if self.mastery == 3 else 2.7 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+buffs[0] + skillbuff) + buffs[1]
-			nukedmg = final_atk * 2.5 * (1+buffs[3])
-			self.name += f" GrenadeDmg:{int(nukedmg)}"
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -6296,6 +6289,15 @@ class JessicaAlter(Operator):
 			hitdmg = max(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
+
+	def get_name(self):
+		if self.skill == 3:
+			skillbuff = 3.1 if self.mastery == 3 else 2.7 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + skillbuff) + self.buffs[1]
+			nukedmg = final_atk * 2.5 * (1+self.buffs[3])
+			self.name += f" GrenadeDmg:{int(nukedmg)}"
+		return self.name
+		
 
 class Kafka(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -7241,10 +7243,6 @@ class Logos(Operator):
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		if self.skill == 1:
-			final_atk = self.base_atk * (1+buffs[0] + 0.7 + 0.1 * self.mastery) + buffs[1]
-			limit = final_atk * (1.2 + 0.1 * self.mastery)
-			self.name += f" Death@{int(limit)}HP"
 		if self.skill == 2 and self.skilldmg: self.name += " after5sec"
 		if self.module == 3 and self.talent1: self.name += " withAvgNecrosis"
 		elif self.module == 3: self.name += " noNecrosis"
@@ -7319,6 +7317,13 @@ class Logos(Operator):
 				if self.module_lvl > 1:
 					dps += final_atk * falloutdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,4) * bonuschance * 15 / (fallouttime + 15)
 		return dps
+
+	def get_name(self):
+		if self.skill == 1:
+			final_atk = self.base_atk * (1+self.buffs[0] + 0.7 + 0.1 * self.mastery) + self.buffs[1]
+			limit = final_atk * (1.2 + 0.1 * self.mastery)
+			self.name += f" Death@{int(limit)}HP"
+		return self.name
 
 class Lunacub(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -11784,13 +11789,6 @@ class Ulpianus(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-		
-		if self.skill == 3:
-			final_atk = self.base_atk * (1+buffs[0] + 2.3 + 0.1 * self.mastery) + buffs[1]
-			scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
-			nukedmg = final_atk * scale * (1+buffs[3])
-			self.name += f" InitialDmg:{int(nukedmg)}"
-		
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -11817,6 +11815,14 @@ class Ulpianus(Operator):
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
+
+	def get_name(self):
+		if self.skill == 3:
+			final_atk = self.base_atk * (1+self.buffs[0] + 2.3 + 0.1 * self.mastery) + self.buffs[1]
+			scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
+			nukedmg = final_atk * scale * (1+self.buffs[3])
+			self.name += f" InitialDmg:{int(nukedmg)}"
+		return self.name
 
 class Utage(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
