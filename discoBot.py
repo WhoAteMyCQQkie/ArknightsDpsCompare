@@ -2,35 +2,34 @@
 # In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file).
 # The start of the on_message method (lines 143ff) probably needs to be changed aswell. The upper 3 lines are used for DMs and DragonGJYs server, the 4th line is for private testing (with the same token).
 
-#TODO
-# clean up plotting, so that the parts are not scattered around
-# efficiency boost: restructure everything so that the atkbuff calculations are done only when instancing the operator, instead of with every call of the skilldps method
-# fix the werbinich.txt/ make this script usable by anyone
+#TODO: Easy but tedious tasks that just take a lot of time
+# implement the missing operators
 # implement more healers (and probably fix the kwargs situation before many more are added)
 # implement various total_dmg methods for operators
-# add average_dmg methods (which include skill down time and ramp up times etc)
-# implement bonus dmg for single instance dmg like jessica S3 grenade, kafka S2 initial hit, Guardmiya S2 etc
-# add !disclaimer prompt talking about the limits of the bots
-# optional: add detail prompt to give explanation text for complicated graphs (like assumptions for santallas s2 hitratio)
-# add Github
-# change high/low into high/low/default for unrealistic conditionals (aka chongyue)
-# STACKS (mlynar, lapluma, gavialter) to increment certain conditionals
-# !div  (!div a b results in : a is XX% more than b etc), so that people can calc relative gains. maybe even a universal calc with some safety measures
-# defshred/resshred compatible with operators doing that on their own
-# improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
-# optional: make it so that !dps operator s1 s2 shows both skills for said operator
-# cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
-# optional:add kwargs to make the bot understand more text (like vs heavy for rosa)
-# make lines distinguishable when adding more than 10 ops (example: switch to dotted lines)
-# todo: first collect the operators(aka parse through the entire input) and then draw the stuff. (seems quite tedious)
+# defshred/resshred compatible with operators doing that on their own (-> pass on as kwarg and read the kward for those operators)
 
-#TODO: Minijobs that really should be done asap
+#TODO: specific Minijobs that really should be done asap
 # hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
 # Mudrock: include the SP gains from the module for S2 damage calculations
 # platinum: fix the dmg bonus, it counts from 0 to 2.5 seconds right now, which should be from 1 to 2.5 seconds i think
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
 # Wisadel: Add S1 and S2, and maybe double check S3's aoe
 # kaltsit: the true damage of S3 cant handle changes in max res 
+
+#TODO: bigger changes that may be complicated or even unrealistic
+# add average_dmg methods (which include skill down time and ramp up times etc)
+# clean up plotting, so that the parts are not scattered around in the code
+# efficiency boost: restructure everything so that the atkbuff calculations are done only when instancing the operator, instead of with every call of the skilldps method (may interfere with bbuff)
+# add !disclaimer prompt talking about the limits of the bots
+# optional: add detail prompt to give explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
+# change high/low into high/low/default for unrealistic conditionals (aka chongyue)
+# stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
+# !div  (!div a b results in : a is XX% more than b etc), so that people can calc relative gains. maybe even a universal calc with some safety measures
+# improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
+# cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
+# make it so that !dps operator s1 s2 shows both skills for said operator
+# add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
+# first collect the operators(aka parse through the entire input) and THEN draw the stuff.
 
 import discord
 import os
