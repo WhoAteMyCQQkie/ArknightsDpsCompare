@@ -41,6 +41,7 @@ import io
 import itertools
 import nltk
 import subprocess
+import signal
 
 ##############################################
 #Bot Settings for the channels it will respond to
@@ -303,7 +304,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			await message.channel.send(file=discord.File('damageformulas.py'))
 			await message.channel.send(file=discord.File('healingformulas.py'))
 	
-	if message.content.lower().startswith('!calc') and False:
+	if message.content.lower().startswith('!calc'):
 		#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
 		grammar = nltk.CFG.fromstring("""
 			S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
@@ -327,42 +328,38 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif letter == " ": continue
 			else: output.append(letter)
 		
-		#make sure that the code doesnt take ages to calculate
-		def limit_resources():
-			try:
-				import resource
+		
+		#this is supposed to stop any processes after 2 seconds
+		def handler(signum, frame):
+			raise TimeoutError("Operation timed out")
 
-				memory_limit = 50 * 1024 * 1024  # 50 MB
-				resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
-				
-				cpu_time_limit = 2  # 2 seconds
-				resource.setrlimit(resource.RLIMIT_CPU, (cpu_time_limit, cpu_time_limit))
-			except ImportError:
-				pass
-		preexec_fn = limit_resources
-		try:
-			import resource	
-		except:
-			preexec_fn = None
-			
+		signal.signal(signal.SIGALRM, handler)
+		signal.alarm(2)
 		try:
 			is_valid = any(parser.parse(output))
-			print(is_valid)
 			if is_valid:
 				command = ""
 				for letter in output:
 					command += letter
 				command = "print("+command+")"
-				result = subprocess.run(['python', '-c', command], preexec_fn=preexec_fn, capture_output=True, text=True)
+				result = subprocess.run(['python', '-c', command], capture_output=True, text=True,timeout=1)
 				if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
-				await message.channel.send(str(result.stdout))
+				if(len(str(result.stdout)) < 200):
+					await message.channel.send(str(result.stdout))
+				else:
+					await message.channel.send("Result too large.")
 			else:
 				await message.channel.send("Invalid syntax.")
 		except ValueError:
 			await message.channel.send("Only numbers and +-x/*^() are allowed as inputs.")
 		except ZeroDivisionError:
 			await message.channel.send("Congrats, you just divided by zero.")
-
+		except TimeoutError:
+			await message.channel.send("Exceeded reasonable computation time.")
+		except subprocess.TimeoutExpired:
+			await message.channel.send("The thread did not survive trying to process this request.")
+		finally:
+			signal.alarm(0)
 
 		
 	if message.content.lower().startswith('!dps'):
