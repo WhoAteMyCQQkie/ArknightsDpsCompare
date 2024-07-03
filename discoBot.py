@@ -39,6 +39,8 @@ import damageformulas as df
 import healingformulas as hf
 import io
 import itertools
+import nltk
+import subprocess
 
 ##############################################
 #Bot Settings for the channels it will respond to
@@ -300,6 +302,68 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			await message.channel.send(disclaimer, file=discord.File('discoBot.py'))
 			await message.channel.send(file=discord.File('damageformulas.py'))
 			await message.channel.send(file=discord.File('healingformulas.py'))
+	
+	if message.content.lower().startswith('!calc') and False:
+		#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
+		grammar = nltk.CFG.fromstring("""
+			S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
+			B -> '.' D | 
+			N -> V L B | V '0' B
+			V -> '+' | '-' | 
+			D -> D D | '0' | Z
+			L -> L D | Z
+			Z -> '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+		""")
+		parser = nltk.ChartParser(grammar)
+		sentence = message.content.lower()[5:]
+		output = []
+		
+		for letter in sentence:
+			if letter == ",": output.append(".")
+			elif letter == "^": 
+				output.append("*")
+				output.append("*")
+			elif letter == "x": output.append("*")
+			elif letter == " ": continue
+			else: output.append(letter)
+		
+		#make sure that the code doesnt take ages to calculate
+		def limit_resources():
+			try:
+				import resource
+
+				memory_limit = 50 * 1024 * 1024  # 50 MB
+				resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+				
+				cpu_time_limit = 2  # 2 seconds
+				resource.setrlimit(resource.RLIMIT_CPU, (cpu_time_limit, cpu_time_limit))
+			except ImportError:
+				pass
+		preexec_fn = limit_resources
+		try:
+			import resource	
+		except:
+			preexec_fn = None
+			
+		try:
+			is_valid = any(parser.parse(output))
+			print(is_valid)
+			if is_valid:
+				command = ""
+				for letter in output:
+					command += letter
+				command = "print("+command+")"
+				result = subprocess.run(['python', '-c', command], preexec_fn=preexec_fn, capture_output=True, text=True)
+				if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
+				await message.channel.send(str(result.stdout))
+			else:
+				await message.channel.send("Invalid syntax.")
+		except ValueError:
+			await message.channel.send("Only numbers and +-x/*^() are allowed as inputs.")
+		except ZeroDivisionError:
+			await message.channel.send("Congrats, you just divided by zero.")
+
+
 		
 	if message.content.lower().startswith('!dps'):
 		#read the message
