@@ -27,7 +27,6 @@
 # !div  (!div a b results in : a is XX% more than b etc), so that people can calc relative gains. maybe even a universal calc with some safety measures
 # improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
 # cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
-# make it so that !dps operator s1 s2 shows both skills for said operator
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
 
@@ -35,12 +34,9 @@ import discord
 import os
 import numpy as np
 import pylab as pl
-import matplotlib.image as mpimg
 from PIL import Image
 import damageformulas as df
 import healingformulas as hf
-import unicodedata
-import time
 import io
 import itertools
 
@@ -82,9 +78,9 @@ bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do 
 def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
 	style = '-'
-	if plotnumbers > 10: style = '--'
-	if plotnumbers > 20: style = '-.'
-	if plotnumbers > 30: style = ':'
+	if plotnumbers > 9: style = '--'
+	if plotnumbers > 19: style = '-.'
+	if plotnumbers > 29: style = ':'
 	
 	#Setting the name of the operator
 	op_name = ""
