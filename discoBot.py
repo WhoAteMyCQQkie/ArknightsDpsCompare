@@ -14,7 +14,8 @@
 # platinum: fix the dmg bonus, it counts from 0 to 2.5 seconds right now, which should be from 1 to 2.5 seconds i think
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
 # Wisadel: Add S1 and S2, and maybe double check S3's aoe
-# kaltsit: the true damage of S3 cant handle changes in max res 
+# kaltsit: the true damage of S3 cant handle changes in max res
+# add new modules for ifrit, gladiia.
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
@@ -24,11 +25,11 @@
 # optional: add detail prompt to give explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue)
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
-# !div  (!div a b results in : a is XX% more than b etc), so that people can calc relative gains. maybe even a universal calc with some safety measures
 # improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
 # cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
+# make it visible in the plot, which part of the name comes from where. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 
 import discord
 import os

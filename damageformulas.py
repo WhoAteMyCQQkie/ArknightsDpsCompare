@@ -48,17 +48,15 @@ class Blueprint(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -125,11 +123,10 @@ class Aak(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 57
 				elif self.module_lvl == 2: self.base_atk += 47
 				else: self.base_atk += 37
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -191,11 +188,10 @@ class Absinthe(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		if self.skill == 2 and self.module == 1 and self.module_lvl > 1: self.talent1= True
@@ -267,7 +263,7 @@ class Aciddrop(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += f"ModX{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -325,11 +321,10 @@ class Amiya(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -449,11 +444,10 @@ class Andreana(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 91
 				elif self.module_lvl == 2: self.base_atk += 81
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -522,17 +516,15 @@ class Angelina(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 20
 				elif self.module_lvl == 2: self.base_atk += 15
 				else: self.base_atk += 10
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -602,11 +594,10 @@ class April(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 32
 				elif self.module_lvl == 2: self.base_atk += 28
 				else: self.base_atk += 23
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -672,23 +663,21 @@ class Archetto(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 48
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 32
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 24
 				elif self.module_lvl == 2: self.base_atk += 22
 				else: self.base_atk += 17
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
 		if self.module == 1 and self.module_lvl > 1 and self.talent1 and self.skill != 3: self.name += " +2ndSniper"
 		
-		if self.moduledmg and self.module == 1: self.name += " aerial target"
+		if self.moduledmg and self.module == 1: self.name += " aerialTarget"
 		if self.moduledmg and self.module == 2: self.name += " GroundEnemy"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -785,11 +774,10 @@ class Arene(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 39
 				else: self.base_atk += 33
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -913,11 +901,10 @@ class Ascalon(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 53
 				elif self.module_lvl == 2: self.base_atk += 33
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1005,23 +992,21 @@ class Ash(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 22
 				elif self.module_lvl == 2: self.base_atk += 19
 				else: self.base_atk += 14
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 33
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
 		if self.skilldmg and self.skill == 2: self.name += " vsStunned"
 		if self.moduledmg:
-			if self.module == 1: self.name += " aerial target"
+			if self.module == 1: self.name += " aerialTarget"
 			if self.module == 2: self.name += " groundEnemy"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -1089,11 +1074,10 @@ class Ashlock(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1227,11 +1211,10 @@ class Astgenne(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 74
 				elif self.module_lvl == 2: self.base_atk += 62
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1311,11 +1294,10 @@ class Aurora(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1372,17 +1354,15 @@ class Bagpipe(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 73
 				elif self.module_lvl == 2: self.base_atk += 64
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1485,11 +1465,10 @@ class Beehunter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1549,16 +1528,14 @@ class Bibeak(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
-				if self.module_lvl == 3:
-					self.base_atk += 65
+				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		if not self.talent1: self.name += " w/0 talent"
+		if not self.talent1: self.name += " w/o talent"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -1639,16 +1616,15 @@ class Blaze(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 86
 				elif self.module_lvl == 2: self.base_atk += 70
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
 		
-		if not self.talent2 and not self.skill == 2: self.name += " w/0 talent2"
+		if not self.talent2 and not self.skill == 2: self.name += " w/o talent2"
 		
 		if self.module == 1:
 			if self.moduledmg: self.name += " vsBlocked"
@@ -1722,17 +1698,15 @@ class Blemishine(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 69
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 53
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 43
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -1813,11 +1787,10 @@ class BluePoison(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 30
 				elif self.module_lvl == 2: self.base_atk += 26
 				else: self.base_atk += 20
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1891,11 +1864,10 @@ class Broca(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 42
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -1967,11 +1939,10 @@ class Bryophyta(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 52
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2178,17 +2149,15 @@ class Carnelian(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 76
 				else: self.base_atk += 66
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 95
 				elif self.module_lvl == 2: self.base_atk += 85
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2268,17 +2237,15 @@ class Ceobe(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 56
 				elif self.module_lvl == 2: self.base_atk += 49
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2290,7 +2257,6 @@ class Ceobe(Operator):
 		
 		if self.module == 2 and self.skill == 1:
 			if self.moduledmg: self.name += " vsElite"
-		
 		
 		self.buffs = buffs
 			
@@ -2320,8 +2286,6 @@ class Ceobe(Operator):
 				if self.module_lvl == 3:
 					atkbuff += 0.07
 					aspd += 7
-		
-		
 			
 		####the actual skills
 		if self.skill == 1:
@@ -2393,24 +2357,20 @@ class Chen(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 52
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
-		
 		if self.skill == 2: self.name += " DmgPerHit"
 		if self.skill == 3: self.name += " totalDMG"
-		
 		
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -2528,11 +2488,10 @@ class Chongyue(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 35
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
@@ -2614,19 +2573,17 @@ class Click(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 18
 				elif self.module_lvl == 2: self.base_atk += 15
 				else: self.base_atk += 13
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
 		
 		if not self.trait: self.name += " minDroneDmg"
 		
-		self.buffs = buffs
-			
+		self.buffs = buffs		
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -2682,11 +2639,10 @@ class Coldshot(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 75
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 53
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2769,11 +2725,10 @@ class Conviction(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 70
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2860,11 +2815,10 @@ class Dagda(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2933,11 +2887,10 @@ class Degenbrecher(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 44
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -2998,11 +2951,10 @@ class Dobermann(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 53
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3061,11 +3013,10 @@ class Doc(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 35
 				elif self.module_lvl == 2: self.base_atk += 30
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3125,11 +3076,10 @@ class Dorothy(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 57
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 42
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3249,17 +3199,15 @@ class Dusk(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 82
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 51
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3368,23 +3316,20 @@ class Ebenholz(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 58
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 135
 				elif self.module_lvl == 2: self.base_atk += 112
 				else: self.base_atk += 88
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			elif self.module == 3:
-				self.name += " ModD"
 				if self.module_lvl == 3: self.base_atk += 124
 				elif self.module_lvl == 2: self.base_atk += 102
 				else: self.base_atk += 76
-				self.name += f"{self.module_lvl}"
+				self.name += f" Mod$\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3394,14 +3339,12 @@ class Ebenholz(Operator):
 		
 		if self.module == 3 and self.talent2: self.name += " vsFallout"
 
-		
 		if self.moduledmg and self.module == 2: self.name += " +30aspd(mod,somehow)"
 		if not self.moduledmg and self.module == 3: self.name += " vsBoss"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
-		self.buffs = buffs
-			
+		self.buffs = buffs	
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -3509,14 +3452,12 @@ class Ela(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 3:
-				self.name += " ModZ"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 36
-				self.name += f"{self.module_lvl}"
+				self.name += f" Mod$\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-		
 		
 		if self.talent2: self.name += " MineDebuff"
 		else: self.name += " w/o mines"
@@ -3601,11 +3542,10 @@ class Estelle(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 52
 				elif self.module_lvl == 2: self.base_atk += 43
 				else: self.base_atk += 32
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3653,17 +3593,15 @@ class Eunectes(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 105
 				elif self.module_lvl == 2: self.base_atk += 95
 				else: self.base_atk += 80
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 80
 				else: self.base_atk += 70
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -3741,11 +3679,10 @@ class ExecutorAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3854,11 +3791,10 @@ class Exusiai(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 41
 				elif self.module_lvl == 2: self.base_atk += 35
 				else: self.base_atk += 27
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3934,27 +3870,22 @@ class Eyjafjalla(Operator):
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
 		self.skilldmg = TrTaTaSkMo[3]
-
-		
+	
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-
 		if self.skilldmg:
 			if self.skill == 1: self.name += " 2ndSkilluse"
 			if self.skill == 2: self.name += " permaResshred"
 		if not self.skilldmg and self.skill == 2: self.name += " minResshred"
-		
-
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -4039,11 +3970,10 @@ class FangAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 		else: self.module = 0
 
 		
@@ -4117,17 +4047,15 @@ class Fartooth(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 100
 				elif self.module_lvl == 2: self.base_atk += 85
 				else: self.base_atk += 70
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 120
 				elif self.module_lvl == 2: self.base_atk += 100
 				else: self.base_atk += 80
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		   ##### keep the ones that apply
@@ -4216,17 +4144,15 @@ class Fiammetta(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 48
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
@@ -4318,11 +4244,10 @@ class Firewhistle(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 58
 				elif self.module_lvl == 2: self.base_atk += 52
 				else: self.base_atk += 42
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4401,8 +4326,7 @@ class Flamebringer(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4469,17 +4393,15 @@ class Flametail(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 58
 				else: self.base_atk += 44
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4547,11 +4469,10 @@ class Flint(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4617,11 +4538,10 @@ class Folinic(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4669,26 +4589,21 @@ class Franka(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 
-
 		self.moduledmg = TrTaTaSkMo[4]
 		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 95
 				elif self.module_lvl == 2: self.base_atk += 80
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-  ##### keep the ones that apply
-
 		if self.moduledmg and self.module == 1: self.name += " vsBlocked"
 
-		
 		self.buffs = buffs
 			
 	
@@ -4754,11 +4669,10 @@ class Fuze(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4814,11 +4728,10 @@ class GavialAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 73
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4903,11 +4816,10 @@ class Gladiia(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 59
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -4994,11 +4906,10 @@ class Goldenglow(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 38
 				elif self.module_lvl == 2: self.base_atk += 32
 				else: self.base_atk += 22
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
@@ -5116,11 +5027,10 @@ class GreyThroat(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 33
 				elif self.module_lvl == 2: self.base_atk += 29
 				else: self.base_atk += 24
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -5195,15 +5105,14 @@ class Haze(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 30
 				else: self.base_atk += 20
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -5261,17 +5170,15 @@ class Hellagur(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -5343,11 +5250,10 @@ class Hibiscus(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 33
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -5538,17 +5444,15 @@ class Hoolheyak(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 32
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -5640,15 +5544,14 @@ class Horn(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 100
 				elif self.module_lvl == 2: self.base_atk += 85
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 		else: self.module = 0
 		
 		if self.talent2: self.name += " afterRevive"
@@ -5750,11 +5653,10 @@ class Hoshiguma(Operator):
 			if self.module == 1:
 				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 62
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -5865,15 +5767,14 @@ class Iana(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 	
@@ -5928,15 +5829,14 @@ class Ifrit(Operator):
 
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 72
 				elif self.module_lvl == 2: self.base_atk += 64
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6033,11 +5933,10 @@ class Indra(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6174,11 +6073,10 @@ class Irene(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 59
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 	
@@ -6265,11 +6163,10 @@ class JessicaAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 57
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 		else: self.module = 0
 
 		self.buffs = buffs
@@ -6333,11 +6230,10 @@ class Kafka(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 54
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6414,11 +6310,10 @@ class Kazemaru(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6501,11 +6396,10 @@ class Kjera(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 28
 				elif self.module_lvl == 2: self.base_atk += 23
 				else: self.base_atk += 18
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
@@ -6623,11 +6517,10 @@ class KroosAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 31
 				elif self.module_lvl == 2: self.base_atk += 27
 				else: self.base_atk += 22
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -7270,7 +7163,7 @@ class Logos(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 3:
-				self.name += " ModD"
+				self.name += " Mod$\Delta$"
 				if self.module_lvl == 3: self.base_atk += 67
 				elif self.module_lvl == 2: self.base_atk += 54
 				else: self.base_atk += 36
