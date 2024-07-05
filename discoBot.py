@@ -73,7 +73,7 @@ enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[12
 		"zt": [[250,50,"01"],[200,15,"02"],[250,50,"03"],[200,15,"04"],[700,60,"05"],[300,50,"06"],[150,10,"07"],[250,15,"08"],[300,50,"09"],[250,15,"10"],[600,80,"11"],[300,50,"12"],[1000,60,"13"],[600,60,"14"],[350,50,"15"],[900,60,"16"],[550,60,"17"]],
 		"is": [[250,40,"01"],[200,10,"02"],[180,10,"03"],[200,10,"04"],[250,40,"05"],[900,10,"06"],[120,10,"07"],[1100,10,"08"],[800,45,"09"],[500,25,"10"],[500,25,"11"],[1000,15,"12"],[1300,15,"13"],[800,45,"14"],[1000,60,"15"]]}
 
-modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7"]
+modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x0","y0","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7"]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -113,13 +113,13 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	if len(op_name) > 70: #formatting issue for too long names
 		op_name = op_name[:int(len(op_name)/2)] + "\n" + op_name[int(len(op_name)/2):]
 	
+	defences = np.clip(np.linspace(-shreds[1],(limit-shreds[1])*shreds[0], accuracy), 0, None)
+	resistances = np.clip(np.linspace(-shreds[3],(limit2-shreds[3])*shreds[2], accuracy), 0, None)
+	damages = np.zeros(2*accuracy) if split in [1,2] else np.zeros(accuracy)
 	if split == 0: #normal dps graph
-		defences = np.linspace(0,limit,accuracy)
-		damages = np.zeros(accuracy)
-		resistances = np.linspace(0,limit2,accuracy)
 		for i in range(accuracy):
-			if normal_dps: damages[i]=operator.skill_dps(max(0,defences[i]-shreds[1])*shreds[0],max(resistances[i]-shreds[3],0)*shreds[2])*(1+buffs[3])
-			else: damages[i]=operator.total_dmg(max(0,defences[i]-shreds[1])*shreds[0],max(resistances[i]-shreds[3],0)*shreds[2])*(1+buffs[3])
+			if normal_dps: damages[i]=operator.skill_dps(defences[i],resistances[i])*(1+buffs[3])
+			else: damages[i]=operator.total_dmg(defences[i],resistances[i])*(1+buffs[3])
 		xaxis = np.linspace(0,limit, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name,linestyle=style)
 		
@@ -136,41 +136,35 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	
 	elif split == 1: #split into defense first then resistance
 		zeroes = np.zeros(accuracy)
-		resistances = np.linspace(0,limit2,accuracy)
-		fullres = np.full(accuracy, limit2)
-		defences = np.linspace(0,limit,accuracy)
-		fulldef = np.full(accuracy, limit)
+		fulldef = np.full(accuracy, max(0,limit-shreds[1])*shreds[0])
 		newdefences = np.concatenate((defences,fulldef))
 		newresistances = np.concatenate((zeroes,resistances))
-		damages = np.zeros(2*accuracy)
+		
 		for i in range(2*accuracy):
 			if normal_dps: damages[i] = operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
-			else: operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
+			else: damages[i] = operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
 		xaxis = np.linspace(0,limit, 2*accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
 				defen = min(limit-1,defen)
-				if normal_dps: demanded = operator.skill_dps(defen,0)*(1+buffs[3])
-				else: demanded = operator.total_dmg(defen,0)*(1+buffs[3])
+				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				pl.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(119,res)
-				if normal_dps: demanded = operator.skill_dps(limit,res)*(1+buffs[3])
-				else: demanded = operator.total_dmg(limit,res)*(1+buffs[3])
+				if normal_dps: demanded = operator.skill_dps(max(0,limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(limit/2+res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	elif split == 2: #split into resistance first then defefense
 		zeroes = np.zeros(accuracy) #yes i know this is repetitive
-		resistances = np.linspace(0,limit2,accuracy)
-		fullres = np.full(accuracy, limit2)
-		defences = np.linspace(0,limit,accuracy)
-		fulldef = np.full(accuracy, limit)
+		fullres = np.full(accuracy, max(limit2-shreds[3],0)*shreds[2])
 		newdefences = np.concatenate((zeroes, defences))
 		newresistances = np.concatenate((resistances, fullres))
-		damages = np.zeros(2*accuracy)
+		
 		for i in range(2*accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
@@ -180,40 +174,42 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		for defen in defens:
 			if defen >= 0:
 				defen = min(limit-1,defen)
-				if normal_dps: demanded = operator.skill_dps(defen,limit2)*(1+buffs[3])
-				else: demanded = operator.total_dmg(defen,limit2)*(1+buffs[3])
+				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(limit/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(limit2-1,res)
-				if normal_dps: demanded = operator.skill_dps(0,res)*(1+buffs[3])
-				else: demanded = operator.total_dmg(0,res)*(1+buffs[3])
+				if normal_dps: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	elif split == 3: #graph with a fixed defense value
-		damages = np.zeros(accuracy)
-		resistances = np.linspace(0,limit2,accuracy)
+		#damages = np.zeros(accuracy)
+		#resistances = np.linspace(0,limit2,accuracy)
 		for i in range(accuracy):
-			damages[i]=operator.skill_dps(fixval,resistances[i])*(1+buffs[3])
+			if normal_dps: damages[i]=operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
+			else: damages[i]=operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
 		xaxis = np.linspace(0,limit, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for res in ress:
 			if res >= 0:
-				demanded = operator.skill_dps(fixval,res)*(1+buffs[3])
+				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(res*25/3000*limit/limit2*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	elif split == 4: #graph with a fixed resistance value
-		defences = np.linspace(0,limit,accuracy)
-		damages = np.zeros(accuracy)
+		#defences = np.linspace(0,limit,accuracy)
+		#damages = np.zeros(accuracy)
 		for i in range(accuracy):
-			damages[i]=operator.skill_dps(defences[i],fixval)*(1+buffs[3])
+			if normal_dps: damages[i]=operator.skill_dps(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
+			else: damages[i]=operator.total_dmg(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 		xaxis = np.linspace(0,limit, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
-				demanded = operator.skill_dps(defen,fixval)*(1+buffs[3])
+				demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	elif split == 5: #graph with the values of certain enemies -> enemy prompt
@@ -461,7 +457,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						mods.discard(-1)
 						modlvls.add(int(parsed_message[i][1]))
 						modlvls.discard(-1)
-					elif parsed_message[i] in ["0","no","mod","module","nomod","modlvl","modlv"]:
+					elif parsed_message[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
 						mods.add(0)
 						mods.discard(-1)
 					elif parsed_message[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
