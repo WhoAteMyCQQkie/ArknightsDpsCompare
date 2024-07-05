@@ -6635,11 +6635,10 @@ class LaPluma(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 30
 				elif self.module_lvl == 2: self.base_atk += 24
 				else: self.base_atk += 18
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6712,11 +6711,10 @@ class Lappland(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 32
 				else: self.base_atk += 22
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6787,11 +6785,10 @@ class Lavaalt(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 62
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 43
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -6858,11 +6855,10 @@ class Lessing(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 30
 				elif self.module_lvl == 2: self.base_atk += 24
 				else: self.base_atk += 17
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -6949,11 +6945,10 @@ class Leto(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 59
 				elif self.module_lvl == 2: self.base_atk += 52
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 	
@@ -7026,11 +7021,10 @@ class Lin(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 77
 				elif self.module_lvl == 2: self.base_atk += 70
 				else: self.base_atk += 62
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7109,11 +7103,10 @@ class Ling(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		if self.module == 2 and self.module_lvl ==3:
@@ -7212,11 +7205,10 @@ class Logos(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 3:
-				self.name += " Mod$\Delta$"
 				if self.module_lvl == 3: self.base_atk += 67
 				elif self.module_lvl == 2: self.base_atk += 54
 				else: self.base_atk += 36
-				self.name += f"{self.module_lvl}"
+				self.name += f" Mod$\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7324,14 +7316,12 @@ class Lunacub(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 68
 				elif self.module_lvl == 2: self.base_atk += 63
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-
 		
 		self.buffs = buffs
 			
@@ -7394,8 +7384,7 @@ class Lutonada(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7461,17 +7450,15 @@ class Magallan(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 34
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7550,11 +7537,10 @@ class Manticore(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 72
 				else: self.base_atk += 58
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 	
@@ -7615,11 +7601,10 @@ class Matoimaru(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 45
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7694,11 +7679,10 @@ class Meteor(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 30
 				elif self.module_lvl == 2: self.base_atk += 27
 				else: self.base_atk += 22
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7764,11 +7748,10 @@ class Meteorite(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 52
 				else: self.base_atk += 37
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7830,23 +7813,19 @@ class Mizuki(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 62
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-
 		if self.talent2: self.name += " vsLowHp"
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
@@ -7943,8 +7922,6 @@ class Mlynar(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		self.buffs = buffs
 		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
-		
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -8011,12 +7988,8 @@ class Mon3tr(Operator):
 		self.module = module if module in [0,1,2] else 2 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += " ModX"
-				self.name += f"{self.module_lvl}"
-			elif self.module == 2:
-				self.name += " ModY"
-				self.name += f"{self.module_lvl}"
+			if self.module == 1: self.name += f" ModX{self.module_lvl}"
+			elif self.module == 2: self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -8087,11 +8060,10 @@ class Morgan(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 82
 				elif self.module_lvl == 2: self.base_atk += 74
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -8150,20 +8122,17 @@ class Mostima(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 82
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 51
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-		
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -8224,11 +8193,10 @@ class Mountain(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -8236,11 +8204,9 @@ class Mountain(Operator):
 			if self.moduledmg: self.name += " >50% hp"				
 			else: self.name += " <50% hp"
 		
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
-		self.buffs = buffs
-			
+		self.buffs = buffs	
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -8258,7 +8224,6 @@ class Mountain(Operator):
 			if self.moduledmg:
 				aspd += 10
 		if self.pot > 4: cdmg += 0.1
-		
 		
 		####the actual skills
 		if self.skill == 1:
@@ -8319,7 +8284,6 @@ class Mousse(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 
-		
 		self.buffs = buffs
 			
 	
@@ -8337,22 +8301,17 @@ class Mousse(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
 			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			
 			atkbuff += 0.6 + 0.05 * self.mastery
 			final_atk2 = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg2 = max(final_atk2 * (1-res/100), final_atk2 * 0.05)
-			
 			avgdmg = (hitdmg * sp_cost + hitdmg2) / (sp_cost + 1)
-			
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
 		
 		if self.skill == 2:
 			atkbuff += 0.45 + 0.1 * self.mastery
-			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
 		return dps
 
@@ -8429,11 +8388,10 @@ class Mudrock(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 80
 				elif self.module_lvl == 2: self.base_atk += 70
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -8441,7 +8399,6 @@ class Mudrock(Operator):
 		if self.skill == 2 and self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -8459,7 +8416,6 @@ class Mudrock(Operator):
 				skillcycle = spcost / self.buffs[4] + 1.2
 				dps += skilldmg / skillcycle * self.targets
 				
-		
 		if self.skill == 3:
 			self.atk_interval = 0.7*1.6
 			atkbuff += 1 + 0.1 * self.mastery
@@ -8502,18 +8458,16 @@ class Muelsyse(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 25
 				elif self.module_lvl == 2: self.base_atk += 20
 				else: self.base_atk += 15
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " No Mod"
 		else: self.module = 0
 		
 		if not self.skill == 3: self.trait = self.trait and self.talent1
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -8533,7 +8487,6 @@ class Muelsyse(Operator):
 		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
-		
 		main = 1 if self.talent1 else 0
 		final_summonatk = summonatk * (1+atkbuff) + self.buffs[1]
 		if not self.ranged and self.talent2: final_summonatk += 250
@@ -8544,7 +8497,6 @@ class Muelsyse(Operator):
 			extra_summons += min(4,2.5/(self.summon_interval/(1+aspd/100)))
 			if self.skill != 3: extra_summons_skill =  min(4,2.5/(self.summon_interval/(1+aspd/100)) * 2) if self.skill == 2 else min(4,2.5/(self.summon_interval/(1+(aspd-35-5*self.mastery)/100)))
 			extra_summons = (50 * extra_summons + 15 * extra_summons_skill) / 65
-
 			
 		if self.skill == 3 and self.ranged:
 			extra_summons = 4 if self.skilldmg else 2
@@ -8685,28 +8637,24 @@ class NearlAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 105
 				elif self.module_lvl == 2: self.base_atk += 95
 				else: self.base_atk += 70
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 79
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-
 		if self.moduledmg: 
 			if self.module == 1: self.name += " blockedTarget"
 			if self.module == 2: self.name += " afterRevive"
 		
 		self.buffs = buffs
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -8773,16 +8721,14 @@ class Nian(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -8848,7 +8794,6 @@ class Odda(Operator):
 		
 		self.buffs = buffs
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -8911,25 +8856,21 @@ class Pallas(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 83
 				elif self.module_lvl == 2: self.base_atk += 73
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
 		
 		if not self.trait: self.name += " w/o trait"   ##### keep the ones that apply
 		if not self.talent1: self.name += " w/o vigor"
-
-		
 		if self.skill == 3 and self.skilldmg: self.name += " selfbuffS3"
 		
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets" ######when op has aoe
@@ -9008,17 +8949,15 @@ class Penance(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 43
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9027,8 +8966,6 @@ class Penance(Operator):
 		
 		self.buffs = buffs
 		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
-
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9112,19 +9049,17 @@ class Phantom(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 73
 				elif self.module_lvl == 2: self.base_atk += 62
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: 
 					self.base_atk += 75
 					self.clone_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9137,7 +9072,6 @@ class Phantom(Operator):
 		
 		self.buffs = buffs
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -9160,7 +9094,6 @@ class Phantom(Operator):
 			selfhit += max(final_atk - defense, final_atk * 0.05)
 			clonehit += max(final_clone - defense, final_clone * 0.05)
 						
-		
 		dps = selfhit /(self.atk_interval/(1+aspd/100)) / count
 		if self.talent:
 			dps += clonehit /(self.atk_interval/(1+aspd/100)) / count
@@ -9188,7 +9121,6 @@ class Pinecone(Operator):
 		self.talent1 = TrTaTaSkMo[1]
 		self.skilldmg = TrTaTaSkMo[3]
 
-		
 		if self.skill == 1 and not self.trait: self.name += " maxRange"   ##### keep the ones that apply
 		
 		if self.skill == 1 and self.talent1: self.name += " withSPboost"
@@ -9262,11 +9194,10 @@ class Platinum(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 33
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9326,7 +9257,6 @@ class Pozemka(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		
-		
 		self.talent1 = TrTaTaSkMo[1]
 		self.talent2 = TrTaTaSkMo[2]
 		self.skilldmg = TrTaTaSkMo[3]
@@ -9336,7 +9266,6 @@ class Pozemka(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3:
 					self.base_atk += 75
 					self.typewriter_atk += 70				
@@ -9344,7 +9273,7 @@ class Pozemka(Operator):
 					self.base_atk += 65
 					self.typewriter_atk += 50
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9359,9 +9288,7 @@ class Pozemka(Operator):
 			self.moduledmg = self.moduledmg and self.skilldmg
 		if self.module == 2 and self.moduledmg: self.name += " DirectFront"
 		
-		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9379,8 +9306,6 @@ class Pozemka(Operator):
 		newdef = defense * (1-defshred)
 		if self.moduledmg and self.module == 2:
 			atk_scale = 1.05
-			
-			
 			
 		if self.skill == 3:
 			self.atk_interval = 1
@@ -9423,11 +9348,10 @@ class ProjektRed(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 74
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9492,7 +9416,7 @@ class Provence(Operator):
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 40
-				self.name += f"ModX{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -9517,7 +9441,6 @@ class Provence(Operator):
 			crate += 0.05 * (self.module_lvl - 1)
 			cdmg += 0.05 * (self.module_lvl - 1)
 		if not self.talent: crate = 0.2
-			
 					
 		####the actual skills
 		if self.skill == 1:
@@ -9570,11 +9493,9 @@ class Pudding(Operator):
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9602,13 +9523,10 @@ class Pudding(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.targets > 1:
 				dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
-
 		
 		if self.skill == 2:
 			atkbuff += 0.8 + 0.1 * self.mastery
-			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
 			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
@@ -9644,11 +9562,10 @@ class Qiubai(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 48
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 
@@ -9661,12 +9578,10 @@ class Qiubai(Operator):
 		if self.skill ==3:
 			if self.skilldmg: self.name += " maxStacks"
 			else: self.name += " noStacks"
-
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9717,16 +9632,10 @@ class Quartz(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
 
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9769,32 +9678,24 @@ class Ray(Operator):
 		else: self.name = f"Ray P{self.pot} S{self.skill}"
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
+
 		self.talent1 = TrTaTaSkMo[1]
 		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
 
-		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
 		 ##### keep the ones that apply
 		if self.talent1: self.name += " with pet"
 		if self.talent2: self.name += " After3Hits"
-
-
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
 			
@@ -9817,7 +9718,6 @@ class Ray(Operator):
 			atkbuff += 3 * 0.08
 			if self.pot > 4:
 				atkbuff += 3 * 0.01
-
 			
 		####the actual skills
 		if self.skill == 2:
@@ -9830,7 +9730,6 @@ class Ray(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))  
-			
 		return dps
 	
 	def total_dmg(self, defense, res):
@@ -9865,20 +9764,17 @@ class ReedAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 42
 				else: self.base_atk += 32
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
 		##### keep the ones that apply
 		if not self.talent1 and not self.skill == 3: self.name += " w/o cinder"
 		elif not self.skill == 3: self.name += " withCinder"
-
 		if self.skilldmg and self.skill == 2: self.name += " Sandwiched"
-
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -9950,17 +9846,15 @@ class Rockrock(Operator):
 		self.trait = TrTaTaSkMo[0]
 		self.talent = TrTaTaSkMo[1]
 		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
 		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 18
 				elif self.module_lvl == 2: self.base_atk += 15
 				else: self.base_atk += 13
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 
 		else: self.module = 0
@@ -10033,11 +9927,10 @@ class Rosa(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10048,8 +9941,7 @@ class Rosa(Operator):
 		
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
-		self.buffs = buffs
-			
+		self.buffs = buffs	
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -10070,7 +9962,6 @@ class Rosa(Operator):
 				if self.module_lvl == 3: additional_scale = 0.6
 		newdef = defense * (1-defshred)
 
-			
 		####the actual skills
 		if self.skill == 1:
 			atkbuff += 0.6 + 0.15 * self.mastery
@@ -10132,11 +10023,10 @@ class Rosmontis(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 75
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10146,7 +10036,6 @@ class Rosmontis(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -10173,7 +10062,6 @@ class Rosmontis(Operator):
 			sp_cost = 2 if self.mastery == 3 else 3
 			avghit = (sp_cost * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avghit/(self.atk_interval/(1+aspd/100))
-			
 			
 		if self.skill == 2:
 			self.atk_interval = 3.15
@@ -10225,17 +10113,15 @@ class Saga(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 62
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10254,7 +10140,6 @@ class Saga(Operator):
 		atk_scale = 1
 		
 		#talent/module buffs
-
 		dmg = 0
 		if self.module == 1:
 			if self.moduledmg: atkbuff += 0.08
@@ -10263,12 +10148,10 @@ class Saga(Operator):
 				if self.module_lvl == 3: dmg = 0.15
 			
 		####the actual skills
-		
 		if self.skill == 2:
 			skill_scale = 4 if self.mastery == 3 else 3.2 + 0.2 * self.mastery
 			if self.mastery == 2: skill_scale += 0.1
 			sp_cost = 16 - self.mastery
-			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
@@ -10321,11 +10204,10 @@ class Scene(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 36
 				elif self.module_lvl == 2: self.base_atk += 28
 				else: self.base_atk += 20
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10334,7 +10216,6 @@ class Scene(Operator):
 		else: self.name += " 2Drones"
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -10384,7 +10265,6 @@ class Schwarz(Operator):
 		else: self.name = f"Schwarz P{self.pot} S{self.skill}"
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
 		self.talent1 = TrTaTaSkMo[1]
 		self.talent2 = TrTaTaSkMo[2]
 		self.moduledmg = TrTaTaSkMo[4]
@@ -10393,17 +10273,15 @@ class Schwarz(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 75
 				elif self.module_lvl == 2: self.base_atk += 65
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 120
 				elif self.module_lvl == 2: self.base_atk += 100
 				else: self.base_atk += 80
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10414,9 +10292,7 @@ class Schwarz(Operator):
 		if not self.talent1 and not self.skill == 3: self.name += " minDefshred"
 		if not self.talent2: self.name += " w/o2ndSniper"
 		if self.moduledmg and self.module == 2 and not self.skill == 3: self.name += " directFront"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
+
 		self.buffs = buffs
 			
 	
@@ -10445,7 +10321,6 @@ class Schwarz(Operator):
 		if self.module == 2 and self.moduledmg:
 			atk_scale = 1.05
 
-			
 		####the actual skills
 		if self.skill == 1:
 			skill_scale = 1.9 + 0.1 * self.mastery
@@ -10500,7 +10375,6 @@ class Shalem(Operator):
 		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
 		self.pot = pot if pot in range(1,7) else 6
 		if self.pot > 3: self.base_atk += 25
-
 		
 		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
 		self.mastery = mastery if mastery in [0,1,2,3] else 3
@@ -10510,7 +10384,6 @@ class Shalem(Operator):
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
 		self.talent1 = TrTaTaSkMo[1]
-		
 		
 		if self.talent1: self.name += " (in IS2)"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
@@ -10585,17 +10458,15 @@ class Siege(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 75
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 82
 				elif self.module_lvl == 2: self.base_atk += 74
 				else: self.base_atk += 65
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10674,14 +10545,12 @@ class SilverAsh(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 70
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-		
 		
 		if not self.trait and not self.skill == 3: self.name += " rangedAtk"   ##### keep the ones that apply
 		if self.module == 1 and self.moduledmg and self.talent1: self.name += " vsElite"
@@ -10765,17 +10634,15 @@ class Skadi(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 105
 				elif self.module_lvl == 2: self.base_atk += 90
 				else: self.base_atk += 70
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 85
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10896,21 +10763,16 @@ class Specter(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 52
 				else: self.base_atk += 34
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -10943,7 +10805,6 @@ class Specter(Operator):
 			atkbuff += 1 + 0.2 * self.mastery
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-
 		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)*(1+dmgbuff)
 			
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
@@ -10978,17 +10839,15 @@ class SpecterAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 83
 				elif self.module_lvl == 2: self.base_atk += 69
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 33
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11068,11 +10927,10 @@ class Stainless(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 45
 				elif self.module_lvl == 2: self.base_atk += 35
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11140,7 +10998,6 @@ class Surtr(Operator):
 		self.targets = max(1,targets)
 		self.skilldmg = TrTaTaSkMo[3]
 		
-	
 		if self.skill == 1:
 			if self.skilldmg: self.name += " KillingHitsOnly"
 			else: self.name += " noKills"
@@ -11216,11 +11073,10 @@ class SwireAlt(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 40
 				elif self.module_lvl == 2: self.base_atk += 35
 				else: self.base_atk += 25
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11317,11 +11173,10 @@ class TexasAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 53
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11425,8 +11280,6 @@ class Tequila(Operator):
 		self.trait = TrTaTaSkMo[0]
 		self.skilldmg = TrTaTaSkMo[3]
 
-		
-
 		if not self.trait: self.name += " 20Stacks"   ##### keep the ones that apply
 		else: self.name += " 40stacks"
 		if self.skill == 2 and not self.skilldmg: self.name += " NotCharged"
@@ -11488,11 +11341,10 @@ class Thorns(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 48
 				else: self.base_atk += 39
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11501,10 +11353,6 @@ class Thorns(Operator):
 		self.buffs = buffs
 		if self.skill == 2: self.name += f" {round(buffs[4],2)}Hits/s"
 		if self.skill == 3 and not self.skilldmg: self.name += " firstActivation"
-		
-		stacks = 4 if self.module_lvl == 3 else 3
-		#if self.module == 1 and self.module_lvl > 1: self.name += f" {stacks}PsnStacks"
-
 
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -11575,10 +11423,7 @@ class Toddifons(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
 		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
@@ -11596,7 +11441,7 @@ class Toddifons(Operator):
 		if self.talent1: self.name += " withRacism"
 		if self.moduledmg and self.module == 1: self.name += " vsHeavy"
 		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
 			
@@ -11623,8 +11468,6 @@ class Toddifons(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			hitdmg = max(final_atk * skill_scale * atk_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
-
-			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			self.atk_interval = 2.7
@@ -11648,7 +11491,6 @@ class Tomimi(Operator):
 		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
 		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
 		self.pot = pot if pot in range(1,7) else 6
-
 		
 		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
 		self.mastery = mastery if mastery in [0,1,2,3] else 3
@@ -11662,14 +11504,12 @@ class Tomimi(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 50
 				elif self.module_lvl == 2: self.base_atk += 40
 				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-		
 		
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -11724,21 +11564,17 @@ class Totter(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
 		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 55
 				elif self.module_lvl == 2: self.base_atk += 47
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11811,11 +11647,10 @@ class Typhon(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 78
 				else: self.base_atk += 60
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11905,10 +11740,8 @@ class Ulpianus(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		
 		maxkills = 10 if self.pot > 4 else 9
 		if self.talent2: self.name += f" {maxkills}kills"
-
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
@@ -11979,11 +11812,10 @@ class Utage(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12037,11 +11869,10 @@ class Vigil(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 30
 				elif self.module_lvl == 2: self.base_atk += 25
 				else: self.base_atk += 20
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12050,7 +11881,6 @@ class Vigil(Operator):
 			if not self.skilldmg: self.name += " 1wolf"
 		else:
 			self.name += " noWolves"
-		
 		
 		self.buffs = buffs
 			
@@ -12075,7 +11905,6 @@ class Vigil(Operator):
 			skill_scale = 1.7 + 0.1 * self.mastery
 			sp_cost = 5 if self.mastery == 3 else 6
 			
-			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_wolf  = self.wolf_atk * (1+atkbuff) + self.buffs[1]
 			
@@ -12092,7 +11921,6 @@ class Vigil(Operator):
 			
 			if self.talent1: dps = avghit/(self.atk_interval/(1+aspd/100)) * wolves
 			dps += hitdmg/(self.atk_interval/(1+aspd/100))
-			
 			
 		if self.skill == 3:
 			skill_scale = 0.5 if self.mastery == 3 else 0.3 + 0.05 * self.mastery
@@ -12111,7 +11939,6 @@ class Vigil(Operator):
 				if self.trait:
 					artdps += 3 * hitdmgarts/(self.atk_interval/(1+aspd/100))
 			dps = hitdps + artdps
-
 			
 		return dps
 
@@ -12139,11 +11966,10 @@ class Vigna(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12151,7 +11977,6 @@ class Vigna(Operator):
 		
 		self.buffs = buffs
 			
-	
 	def skill_dps(self, defense, res):
 		dps = 0
 		atkbuff = self.buffs[0]
@@ -12222,14 +12047,12 @@ class Virtuosa(Operator):
 		eleThreshold = 1000 if self.trait else 2000
 		eleDamage = 12000
 		eleDuration = 15
-		
 		eleBonus = 0.2 if self.pot < 5 else 0.22
 			
 		####the actual skills
 		if self.skill == 1: #todo, which will probably be a pain
 			skill_scale = 2.4 + 0.2 * self.mastery
 			sp_cost = 6
-			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
@@ -12261,7 +12084,6 @@ class Virtuosa(Operator):
 			if self.targets > 2:
 				dps += ambientEledps * (self.targets -2)			
 			
-		
 		if self.skill == 3:
 			eleBonus *= 2.2 + 0.1 * self.mastery
 			atkbuff += 1.4 + 0.15 * self.mastery
@@ -12294,7 +12116,6 @@ class Viviana(Operator):
 		self.targets = max(1,targets)
 
 		self.talent1 = TrTaTaSkMo[1]
-
 		self.skilldmg = TrTaTaSkMo[3]
 
 		
@@ -12307,7 +12128,6 @@ class Viviana(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -12340,7 +12160,6 @@ class Viviana(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
 			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
-
 			dps = hits * hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		return dps
@@ -12354,7 +12173,6 @@ class Vulcan(Operator):
 		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
 		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
 		self.pot = pot if pot in range(1,7) else 1
-
 		
 		self.skill = skill if skill in [2] else 2 ###### check implemented skills
 		self.mastery = mastery if mastery in [0,1,2,3] else 3
@@ -12372,18 +12190,13 @@ class Vulcan(Operator):
 		self.module = module if module in [0,1] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += " ModX"
-				self.name += f"{self.module_lvl}"
+			if self.module == 1: self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
-		
 
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -12394,7 +12207,6 @@ class Vulcan(Operator):
 		if self.skill == 2:
 			self.atk_interval = 2 
 			atkbuff += 1.05 + 0.15 * self.mastery
-			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
@@ -12430,11 +12242,10 @@ class Walter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 65
 				elif self.module_lvl == 2: self.base_atk += 55
 				else: self.base_atk += 45
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12542,9 +12353,6 @@ class Weedy(Operator):
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
@@ -12552,17 +12360,15 @@ class Weedy(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 72
 				elif self.module_lvl == 2: self.base_atk += 64
 				else: self.base_atk += 50
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			elif self.module == 2:
-				self.name += " ModY"
 				if self.module_lvl == 3: self.base_atk += 68
 				elif self.module_lvl == 2: self.base_atk += 60
 				else: self.base_atk += 46
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12571,7 +12377,6 @@ class Weedy(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -12589,7 +12394,6 @@ class Weedy(Operator):
 		if self.skill == 1:
 			skill_scale = 1.35 + 0.05 * self.mastery
 			sp_cost = 6 if self.mastery == 0 else 5
-			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
@@ -12610,7 +12414,6 @@ class Weedy(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
-
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 2)
 		return dps
 
@@ -12638,11 +12441,10 @@ class Whislash(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 52
 				elif self.module_lvl == 2: self.base_atk += 47
 				else: self.base_atk += 35
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12650,7 +12452,6 @@ class Whislash(Operator):
 		
 		if not self.trait: self.name += " blocking"
 
-		
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
@@ -12670,14 +12471,11 @@ class Whislash(Operator):
 		####the actual skills
 		if self.skill == 2:
 			atkbuff += 0.35 if self.mastery == 0 else 0.3 + 0.1 * self.mastery
-			
 			talentscaling = 1.7 + 0.1 * self.mastery
 			aspd += talentbuff * talentscaling
-			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(3, self.targets)
 		return dps
 
@@ -12691,7 +12489,6 @@ class Wildmane(Operator):
 		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
 		self.pot = pot if pot in range(1,7) else 6
 
-		
 		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
 		self.mastery = mastery if mastery in [0,1,2,3] else 3
 		if level != maxlvl: self.name = f"Wildmane Lv{level} P{self.pot} S{self.skill}" #####set op name
@@ -12703,17 +12500,14 @@ class Wildmane(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 40
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
-		
 		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -12766,11 +12560,10 @@ class YatoAlter(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 48
 				elif self.module_lvl == 2: self.base_atk += 43
 				else: self.base_atk += 36
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -12793,7 +12586,6 @@ class YatoAlter(Operator):
 		if self.module == 1:
 			if self.module_lvl == 2: atkbuff += 0.04
 			if self.module_lvl == 3: atkbuff += 0.07
-			
 			
 		####the actual skills
 		if self.skill == 1:
@@ -12847,11 +12639,10 @@ class ZuoLe(Operator):
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
-				self.name += " ModX"
 				if self.module_lvl == 3: self.base_atk += 90
 				elif self.module_lvl == 2: self.base_atk += 75
 				else: self.base_atk += 55
-				self.name += f"{self.module_lvl}"
+				self.name += f" ModX{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
