@@ -1,6 +1,5 @@
 # First of all: Don't Judge me for this code, I know it's neither clean nor efficient, but with the limited amount of thought I put into it, this is the best architecture I could come up with.
-# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file).
-# The start of the on_message method (lines 143ff) probably needs to be changed aswell. The upper 3 lines are used for DMs and DragonGJYs server, the 4th line is for private testing (with the same token).
+# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). Also Change line 48!
 
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators
@@ -22,14 +21,14 @@
 # clean up plotting, so that the parts are not scattered around in the code
 # efficiency boost: restructure everything so that the atkbuff calculations are done only when instancing the operator, instead of with every call of the skilldps method (may interfere with bbuff)
 # add !disclaimer prompt talking about the limits of the bots
-# optional: add detail prompt to give explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
+# add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue)
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
 # improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
 # cleanup: make more things kwargs. anything not used by ALL operators should probably be a kwarg
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
-# make it visible in the plot, which part of the name comes from where. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
+# make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 
 import discord
 import os
@@ -96,9 +95,9 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	if buffs[2] < 0: op_name += f" aspd{buffs[2]}"
 	if buffs[3] > 0: op_name += f" dmg+{int(100*buffs[3])}%"
 	if buffs[3] < 0: op_name += f" dmg{int(100*buffs[3])}%"
-	if shreds[0] != 1: op_name += f" -{int(100*(1-shreds[0]))}%def"
+	if shreds[0] != 1: op_name += f" -{int(100*(1-shreds[0])+0.0001)}%def"
 	if shreds[1] != 0: op_name += f" -{int(shreds[1])}def"
-	if shreds[2] != 1: op_name += f" -{int(100*(1-shreds[2]))}%res"
+	if shreds[2] != 1: op_name += f" -{int(100*(1-shreds[2])+0.0001)}%res"
 	if shreds[3] != 0: op_name += f" -{int(shreds[3])}res"
 	if basebuffs[0] != 1: 
 		op_name += f" +{int(100*(basebuffs[0]-1))}%bAtk"
@@ -116,7 +115,9 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	defences = np.clip(np.linspace(-shreds[1],(limit-shreds[1])*shreds[0], accuracy), 0, None)
 	resistances = np.clip(np.linspace(-shreds[3],(limit2-shreds[3])*shreds[2], accuracy), 0, None)
 	damages = np.zeros(2*accuracy) if split in [1,2] else np.zeros(accuracy)
-	if split == 0: #normal dps graph
+	
+	############### Normal DPS graph ################################
+	if split == 0:
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(defences[i],resistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(defences[i],resistances[i])*(1+buffs[3])
@@ -134,11 +135,11 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 				else: demanded = operator.total_dmg(max(0,res/limit2*limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(res*25/3000*limit/limit2*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
-	elif split == 1: #split into defense first then resistance
-		zeroes = np.zeros(accuracy)
+	############### Increments defense and THEN res ################################
+	elif split == 1: 
 		fulldef = np.full(accuracy, max(0,limit-shreds[1])*shreds[0])
 		newdefences = np.concatenate((defences,fulldef))
-		newresistances = np.concatenate((zeroes,resistances))
+		newresistances = np.concatenate((np.zeros(accuracy),resistances))
 		
 		for i in range(2*accuracy):
 			if normal_dps: damages[i] = operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
@@ -159,10 +160,10 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 				else: demanded = operator.total_dmg(max(0,limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(limit/2+res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
-	elif split == 2: #split into resistance first then defefense
-		zeroes = np.zeros(accuracy) #yes i know this is repetitive
+	############### Increments Res and THEN defense ################################
+	elif split == 2:
 		fullres = np.full(accuracy, max(limit2-shreds[3],0)*shreds[2])
-		newdefences = np.concatenate((zeroes, defences))
+		newdefences = np.concatenate((np.zeros(accuracy), defences))
 		newresistances = np.concatenate((resistances, fullres))
 		
 		for i in range(2*accuracy):
@@ -184,9 +185,8 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
-	elif split == 3: #graph with a fixed defense value
-		#damages = np.zeros(accuracy)
-		#resistances = np.linspace(0,limit2,accuracy)
+	############### DPS graph with a fixed defense value ################################
+	elif split == 3:
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
@@ -198,9 +198,8 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(res*25/3000*limit/limit2*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
-	elif split == 4: #graph with a fixed resistance value
-		#defences = np.linspace(0,limit,accuracy)
-		#damages = np.zeros(accuracy)
+	############### DPS graph with a fixed res value ################################
+	elif split == 4:
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
@@ -212,7 +211,8 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 				demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
-	elif split == 5: #graph with the values of certain enemies -> enemy prompt
+	############### Graph with images of enemies -> enemy prompt ################################
+	elif split == 5:
 		defences = [i[0] for i in enemies]
 		resistances = [i[1] for i in enemies]
 		xaxis = np.arange(len(enemies))
@@ -224,8 +224,7 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		for i in range(len(enemies)):
 			demanded = operator.skill_dps(enemies[i][0],enemies[i][1])*(1+buffs[3])
 			pl.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	return True
-		
+	return True	
 
 
 @client.event
@@ -243,11 +242,12 @@ async def on_message(message):
 		elif not message.channel.name in valid_channels: return
 	else:
 		if not message.channel.name == 'privatebottest': return
+
 	
-	if message.content.lower().startswith('!ping'):
-		await message.channel.send('Pong!')
-	if message.content.lower().startswith('!marco'):
-		await message.channel.send('Polo!')
+	if message.content.lower().startswith('!ping'): await message.channel.send('Pong!')
+	if message.content.lower().startswith('!marco'): await message.channel.send('Polo!')
+
+	
 	if message.content.lower().startswith('!ops'):
 		allops = "These are the currently available operators:"
 		for op in operators:
@@ -255,6 +255,7 @@ async def on_message(message):
 		allops = allops[:-1]
 		allops += "\n(Not all operators have all their skills implemented, check the legend of the graph)"
 		await message.channel.send(allops)
+
 	
 	if message.content.lower().startswith('!hops'):
 		allops = "These are the currently available healers:"
@@ -262,6 +263,7 @@ async def on_message(message):
 			allops += " " + op + ","
 		allops = allops[:-1]
 		await message.channel.send(allops)
+
 		
 	if message.content.lower().startswith('!help'):
 		text = """General use: !dps <opname1> <opname2> ... 
@@ -272,6 +274,7 @@ There is also a handful healers implemented. !hps <opname> ... works similar to 
 Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
 """
 		await message.channel.send(text)
+
 	
 	if message.content.lower().startswith('!prompt') or message.content.lower().startswith('!guide'):
 		text = """**Suffixes placed after the operator, affecting only that operator:**
@@ -293,6 +296,7 @@ lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/hig
 As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following: **1:Dorothy, 2:Ebenholz, 3:Ceobe, 4:Mudrock, 5:Rosa, 6:Skadi, 7:Schwarz**
 Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desperately want."""
 		await message.channel.send(text)
+
 	
 	if message.content.lower().startswith('!code'):
 		if type(message.channel)==discord.channel.DMChannel:
@@ -300,6 +304,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			await message.channel.send(disclaimer, file=discord.File('discoBot.py'))
 			await message.channel.send(file=discord.File('damageformulas.py'))
 			await message.channel.send(file=discord.File('healingformulas.py'))
+	
 	
 	if message.content.lower().startswith('!calc'):
 		#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
@@ -326,12 +331,13 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			else: output.append(letter)
 		
 		
-		#this is supposed to stop any processes after 2 seconds
+		#this stops the code after 2 seconds, but doesnt work on windows, because only unix has SIGALRM
+		#you can remove this, but an input of for example 5x5x5x5x[....]x5x5x5x5 will kill your program and possibly crash your device, because it will eat all of your memory
 		def handler(signum, frame):
 			raise TimeoutError("Operation timed out")
-
 		signal.signal(signal.SIGALRM, handler)
 		signal.alarm(2)
+		
 		try:
 			is_valid = any(parser.parse(output))
 			if is_valid:
@@ -364,21 +370,19 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		pl.clf()
 		pl.style.use('default')
 		parsed_message = message.content.lower().split()[1:]
-		alreadyDrawnOps = []
+		alreadyDrawnOps = [] #this is a global variable edited the plot_graph function. probably not a good solution
 		entries = len(parsed_message)
 		i = 0
 
 		res = [-1]
 		defen = [-1]
 		lvl = -10
-		mastery = 3
-		modlvl = 3
 		contains_data = 0
 		buffs = [0,0,0,0,0]
 		basebuffs = [1,0]
 		TrTaTaSkMo = [True,True,True,True,True] #trait talent1 talent2 skill module
 		targets = 1
-		split = 0
+		split = 0 #plot type
 		parsing_error = False
 		error_message = "Could not use the following prompts: "
 		scale = 3000
