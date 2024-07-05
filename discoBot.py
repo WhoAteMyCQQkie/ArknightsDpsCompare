@@ -743,14 +743,14 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						i+=1
 					i-=1
 			elif parsed_message[i] in ["enemy","chapter"]:
-				if parsed_message[i+1] in enemy_dict:
+				if parsed_message[i+1] in enemy_dict and contains_data == 0:
 					enemy_key = parsed_message[i+1]
 					split = 5
 					enemies = enemy_dict[parsed_message[i+1]]
 					enemies.sort(key=lambda tup: tup[0], reverse=False)
 					i += 1
 			elif parsed_message[i] in ["enemy2","chapter2"]:
-				if parsed_message[i+1] in enemy_dict:
+				if parsed_message[i+1] in enemy_dict and contains_data == 0:
 					enemy_key = parsed_message[i+1]
 					split = 5
 					enemies = enemy_dict[parsed_message[i+1]]
