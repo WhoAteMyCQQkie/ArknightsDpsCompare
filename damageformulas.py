@@ -11581,7 +11581,7 @@ class Totter(Operator):
 		if self.talent1: self.name += " vsInvis"
 		if self.moduledmg and self.module == 1: self.name += " vsHeavy"
 		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
 				
@@ -11639,6 +11639,7 @@ class Typhon(Operator):
 		else: self.name = f"Typhon P{self.pot} S{self.skill}"
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
+		self.targets = max(1,targets)
 		self.talent1 = TrTaTaSkMo[1]
 		self.talent2 = TrTaTaSkMo[2]
 		self.moduledmg = TrTaTaSkMo[4]
@@ -11658,10 +11659,12 @@ class Typhon(Operator):
 		if not self.talent2: self.name += " noCrits"
 		else:
 			if self.skill == 3: self.name += " 1Crit/salvo"
-			else: self.name += " allCrits"
+			if self.skill == 2:
+				if self.targets == 1: self.name += " 1/2Crits"
+				else: self.name += " allCrits"
 		
 		if self.moduledmg and self.module == 1: self.name += " vsHeavy"
-		
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		self.buffs = buffs
 				
 	def skill_dps(self, defense, res):
@@ -11694,8 +11697,10 @@ class Typhon(Operator):
 		if self.skill == 2:
 			atkbuff += 0.35 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
-			dps = 2 * hitdmg/(self.atk_interval/(1+aspd/100))
+			hitdmg = max(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
+			critdmg = max(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
+			if self.targets == 1: dps = (hitdmg+critdmg)/(self.atk_interval/(1+aspd/100))
+			else: dps = 2 * critdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			self.atk_interval = 5.5
 			hits = 4 if self.mastery == 0 else 5
