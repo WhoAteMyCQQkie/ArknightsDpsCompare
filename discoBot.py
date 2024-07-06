@@ -490,7 +490,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						except ValueError:
 							break
 					if buffcount == 1: buffs[0] = buffs[0]/100
-					if buffcount == 4: buffs[3] = max(0, buffs[3])/100
+					if buffcount == 4: buffs[3] = buffs[3]/100
 					i+=1
 				i-=1
 			elif parsed_message[i] in ["t","target","targets"]:
