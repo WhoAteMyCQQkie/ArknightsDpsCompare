@@ -29,6 +29,7 @@
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
+# make variable naming more consistent
 
 import discord
 import os
@@ -78,7 +79,7 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
 
-def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
+def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -112,8 +113,8 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 	if len(op_name) > 70: #formatting issue for too long names
 		op_name = op_name[:int(len(op_name)/2)] + "\n" + op_name[int(len(op_name)/2):]
 	
-	defences = np.clip(np.linspace(-shreds[1],(limit-shreds[1])*shreds[0], accuracy), 0, None)
-	resistances = np.clip(np.linspace(-shreds[3],(limit2-shreds[3])*shreds[2], accuracy), 0, None)
+	defences = np.clip(np.linspace(-shreds[1],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
+	resistances = np.clip(np.linspace(-shreds[3],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
 	damages = np.zeros(2*accuracy) if split in [1,2] else np.zeros(accuracy)
 	
 	############### Normal DPS graph ################################
@@ -121,89 +122,89 @@ def plot_graph(operator, buffs, defens, ress, split, limit = 3000, limit2 = 120,
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(defences[i],resistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(defences[i],resistances[i])*(1+buffs[3])
-		xaxis = np.linspace(0,limit, accuracy)
+		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name,linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/limit*limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/limit*limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,res/limit2*limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,res/limit2*limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/3000*limit/limit2*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				if normal_dps: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments defense and THEN res ################################
 	elif split == 1: 
-		fulldef = np.full(accuracy, max(0,limit-shreds[1])*shreds[0])
+		fulldef = np.full(accuracy, max(0,max_def-shreds[1])*shreds[0])
 		newdefences = np.concatenate((defences,fulldef))
 		newresistances = np.concatenate((np.zeros(accuracy),resistances))
 		
 		for i in range(2*accuracy):
 			if normal_dps: damages[i] = operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
 			else: damages[i] = operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
-		xaxis = np.linspace(0,limit, 2*accuracy)
+		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
-				defen = min(limit-1,defen)
+				defen = min(max_def-1,defen)
 				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				pl.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(119,res)
-				if normal_dps: demanded = operator.skill_dps(max(0,limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,limit-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(limit/2+res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				if normal_dps: demanded = operator.skill_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				pl.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments Res and THEN defense ################################
 	elif split == 2:
-		fullres = np.full(accuracy, max(limit2-shreds[3],0)*shreds[2])
+		fullres = np.full(accuracy, max(max_res-shreds[3],0)*shreds[2])
 		newdefences = np.concatenate((np.zeros(accuracy), defences))
 		newresistances = np.concatenate((resistances, fullres))
 		
 		for i in range(2*accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
-		xaxis = np.linspace(0,limit, 2*accuracy)
+		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
-				defen = min(limit-1,defen)
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(limit2-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(limit/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				defen = min(max_def-1,defen)
+				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				pl.text(max_def/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
-				res = min(limit2-1,res)
+				res = min(max_res-1,res)
 				if normal_dps: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/6000/limit2*120*limit,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				pl.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed defense value ################################
 	elif split == 3:
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
-		xaxis = np.linspace(0,limit, accuracy)
+		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for res in ress:
 			if res >= 0:
 				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/3000*limit/limit2*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed res value ################################
 	elif split == 4:
 		for i in range(accuracy):
 			if normal_dps: damages[i]=operator.skill_dps(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 			else: damages[i]=operator.total_dmg(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
-		xaxis = np.linspace(0,limit, accuracy)
+		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
@@ -307,6 +308,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 	
 	
 	if message.content.lower().startswith('!calc'):
+		
 		#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
 		grammar = nltk.CFG.fromstring("""
 			S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
@@ -321,6 +323,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		sentence = message.content.lower()[5:]
 		output = []
 		
+		#turn the input string into a format the grammar parser can read.
 		for letter in sentence:
 			if letter == ",": output.append(".")
 			elif letter == "^": 
@@ -366,47 +369,54 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 
 		
 	if message.content.lower().startswith('!dps'):
-		#read the message
+		
+		#reset plot parameters
 		pl.clf()
 		pl.style.use('default')
-		parsed_message = message.content.lower().split()[1:]
 		alreadyDrawnOps = [] #this is a global variable edited the plot_graph function. probably not a good solution
+		plot_size = 4 #plot height in inches
+		add_title = False
+		title = ""
+		show = True
+		bottomleft = False
+		textsize = 10
+		
+		#Read the input message
+		parsed_message = message.content.lower().split()[1:]
 		entries = len(parsed_message)
 		i = 0
+		parsing_error = False
+		error_message = "Could not use the following prompts: "
 
+		#Values of prefix prompts (buff, level, shred, etc.)
 		res = [-1]
 		defen = [-1]
 		lvl = -10
 		contains_data = 0
-		buffs = [0,0,0,0,0]
+		buffs = [0,0,0,0,0] #atk% flatatk aspd fragile hitsreceived. the hitsreceived should be moved to a kwarg soon
 		basebuffs = [1,0]
 		TrTaTaSkMo = [True,True,True,True,True] #trait talent1 talent2 skill module
 		targets = 1
-		split = 0 #plot type
-		parsing_error = False
-		error_message = "Could not use the following prompts: "
-		scale = 3000
-		scale2= 120
-		show = True
-		bottomleft = False
-		textsize = 10
+		shreds = [1,0,1,0] #def% def res% res. percent values are multiplied to dmg, so 20% shred = 0.8
+		normal_dps = True #normal dps vs total dmg
+		
+		#Values for the axis of the plot
+		split = 0 #plot type from 0 to 5: normal, split(def first), split(res first), fixed def, fixed res, enemy prompt
+		max_def = 3000
+		max_res = 120
 		fixval = 40
+		enemies = [] #list of [def,res,"imageIndex"]
+		enemy_key = "" #ZT, is, 13 ...
 		number_request = False #For Scaling issues, makes sure that res/def draw calls only appear AFTER setting the scale (to prevent stuff like res 90 maxres 40)
-		shreds = [1,0,1,0] #def% def res% res
-		beegness = 4
-		enemies = []
-		enemy_key = ""
-		normal_dps = True
-		bonus_dmg = False
-		add_title = False
-		title = ""
-
+		
+		
+		#Parsing the input
 		while i < entries:
 			if parsed_message[i] in op_dict and i+1==entries:
-				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 			elif parsed_message[i] in op_dict and not (parsed_message[i+1] in modifiers):
 				if contains_data > 40: break
-				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
+				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
 				i+=1
@@ -473,7 +483,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				if not -1 in modlvls and 0 in mods and len(mods) == 1:
 					mods.add(-1)
 				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
-					if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,bonus=bonus_dmg)), buffs, defen, res, split, scale, scale2, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+					if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
@@ -481,14 +491,11 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				buffcount=0
 				buffs=[0,0,0,0,buffs[4]]
 				while i < entries and buffcount < 4:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							buffs[buffcount] = int(parsed_message[i])
-							buffcount +=1
-						except ValueError:
-							break
+					try:
+						buffs[buffcount] = int(parsed_message[i])
+						buffcount +=1
+					except ValueError:
+						break
 					if buffcount == 1: buffs[0] = buffs[0]/100
 					if buffcount == 4: buffs[3] = buffs[3]/100
 					i+=1
@@ -497,13 +504,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				i+=1
 				targets = 1
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							targets = int(parsed_message[i])
-						except ValueError:
-							break
+					try:
+						targets = int(parsed_message[i])
+					except ValueError:
+						break
 					i+=1
 				i-=1
 			elif parsed_message[i] in ["t1","t2","t3","t4","t5","t6","t7","t8","t9"]: targets = int(parsed_message[i][1])
@@ -512,13 +516,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				res = [-10]
 				number_request = True
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							res.append(min(scale2,int(parsed_message[i])))
-						except ValueError:
-							break
+					try:
+						res.append(min(max_res,int(parsed_message[i])))
+					except ValueError:
+						break
 					i+=1
 				i-=1
 			elif parsed_message[i] in ["d","def","defense"]:
@@ -526,13 +527,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				number_request = True
 				defen = [-10]
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							defen.append(min(scale,int(parsed_message[i])))
-						except ValueError:
-							break
+					try:
+						defen.append(min(max_def,int(parsed_message[i])))
+					except ValueError:
+						break
 					i+=1
 				i-=1
 			
@@ -540,9 +538,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				i+=1
 				shreds = [1,0,1,0]
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					elif parsed_message[i][-1] == "%":
+					if parsed_message[i][-1] == "%":
 						try:
 							shreds[0] = max(0,(1-float(parsed_message[i][:-1])/100))
 							shreds[2] = max(0,(1-float(parsed_message[i][:-1])/100))
@@ -566,9 +562,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				shreds[2] = 1
 				shreds[3] = 0
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					elif parsed_message[i][-1] == "%":
+					if parsed_message[i][-1] == "%":
 						try:
 							shreds[2] = max(0,(1-float(parsed_message[i][:-1])/100))
 						except ValueError:
@@ -589,9 +583,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				shreds[0] = 1
 				shreds[1] = 0
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					elif parsed_message[i][-1] == "%":
+					if parsed_message[i][-1] == "%":
 						try:
 							shreds[0] = max(0,(1-float(parsed_message[i][:-1])/100))
 						except ValueError:
@@ -612,9 +604,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				basebuffs[0] = 1
 				basebuffs[1] = 0
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					elif parsed_message[i][-1] == "%":
+					if parsed_message[i][-1] == "%":
 						try:
 							basebuffs[0] = max(0,(1+float(parsed_message[i][:-1])/100))
 						except ValueError:
@@ -630,42 +620,33 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							break
 					i+=1
 				i-=1
-			
 			elif parsed_message[i] in ["lvl","level","lv"]:
 				i+=1
 				lvl = -10
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							lvl = int(parsed_message[i])
-						except ValueError:
-							break
+					try:
+						lvl = int(parsed_message[i])
+					except ValueError:
+						break
 					i+=1
 				i-=1
 			elif parsed_message[i] in ["iaps","bonk","received","hits","hit"]:
 				i+=1
 				buffs[4] = 0
 				while i < entries:
-					if parsed_message[i]=="":
-						pass
-					else:
-						try:
-							buffs[4] = float(parsed_message[i])
-						except ValueError:
-							if "/" in parsed_message[i]:
-								newStrings = parsed_message[i].split("/")
-								try:
-									buffs[4] = float(newStrings[0]) / float(newStrings[1])
-								except ValueError:
-									break
-							else:
+					try:
+						buffs[4] = float(parsed_message[i])
+					except ValueError:
+						if "/" in parsed_message[i]:
+							newStrings = parsed_message[i].split("/")
+							try:
+								buffs[4] = float(newStrings[0]) / float(newStrings[1])
+							except ValueError:
 								break
+						else:
+							break
 					i+=1
 				i-=1						
-			elif parsed_message[i] == "":
-				continue
 			elif parsed_message[i] in ["l","low"]:
 				TrTaTaSkMo = [False,False,False,False,False]
 			elif parsed_message[i] in ["h","high"]:
@@ -698,12 +679,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				TrTaTaSkMo[2] = True
 			elif parsed_message[i] in ["total", "totaldmg"]:
 				normal_dps = not normal_dps
-			elif parsed_message[i] in ["bonus", "bonusdmg"]:
-				bonus_dmg = True
 			elif parsed_message[i] in ["hide", "legend"]:
 				show = False
 			elif parsed_message[i] in ["big", "beeg", "large"]:
-				beegness = 8
+				plot_size = 8
 			elif parsed_message[i] in ["repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos"]:
 				bottomleft = True
 			elif parsed_message[i] == "split":
@@ -717,29 +696,23 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in ["maxdef","limit","range","scale"]:
 				if contains_data == 0 and not number_request:
 					i+=1
-					scale = 3000
+					max_def = 3000
 					while i < entries:
-						if parsed_message[i]=="":
-							pass
-						else:
-							try:
-								scale = min(69420,max(100, int(parsed_message[i])))
-							except ValueError:
-								break
+						try:
+							max_def = min(69420,max(100, int(parsed_message[i])))
+						except ValueError:
+							break
 						i+=1
 					i-=1
 			elif parsed_message[i] in ["maxres","reslimit","limitres","scaleres","resscale"]:
 				if contains_data == 0 and not number_request:
 					i+=1
-					scale2 = 120
+					max_res = 120
 					while i < entries:
-						if parsed_message[i]=="":
-							pass
-						else:
-							try:
-								scale2 = min(200,max(5, int(parsed_message[i])))
-							except ValueError:
-								break
+						try:
+							max_res = min(400,max(5, int(parsed_message[i])))
+						except ValueError:
+							break
 						i+=1
 					i-=1
 			elif parsed_message[i] in ["enemy","chapter"]:
@@ -761,7 +734,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					try:
 						split = 3
 						fixval = int(parsed_message[i+1])
-						fixval = max(0,min(9000,fixval))
+						fixval = max(0,min(50000,fixval))
 						i+=1
 					except ValueError:
 						pass
@@ -771,7 +744,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					try:
 						split = 4
 						fixval = int(parsed_message[i+1])
-						fixval = max(0,min(200,fixval))
+						fixval = max(0,min(400,fixval))
 						i+=1
 					except ValueError:
 						pass
@@ -780,7 +753,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					try:
 						fixval = int(parsed_message[i+1])
 						split = 3 if fixval >= 100 else 4
-						fixval = max(0,min(9000,fixval))
+						fixval = max(0,min(50000,fixval))
 						i+=1
 					except ValueError:
 						pass
@@ -793,7 +766,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in modifiers:
 				parsing_error = True
 				error_message += " " + parsed_message[i] + ","
-			elif parsed_message[i][0] in ["1","2","3","4","5","6","7","8","9"] and not parsed_message[i][-1] in ["0","1","2","3","4","5","6","7","8","9"]: #try to fix a missing space after an integer (should not have a leading 0. if the entire number is 0: should be ignorable)
+			elif parsed_message[i][0] in ["1","2","3","4","5","6","7","8","9"] and not parsed_message[i][-1] in ["0","1","2","3","4","5","6","7","8","9"]: 
+				##################try to fix a missing space after an integer like "buff 90surtr" (should not have a leading 0. if the entire number is 0: should be ignorable)
 				numberpos = 1
 				while parsed_message[i][numberpos] in ["0","1","2","3","4","5","6","7","8","9","."]:
 					numberpos += 1
@@ -804,13 +778,14 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				backsteps = 1
 				while backsteps < 5:
 					try:
-						idc = int(parsed_message[i-backsteps]) #to cause a valueerror #redneckcoding
+						_ = int(parsed_message[i-backsteps]) #to cause a valueerror #redneckcoding
 						backsteps +=1
 					except ValueError:
 						backsteps +=1
 						break
 				i-=backsteps
-			elif not parsed_message[i][0] in ["0","1","2","3","4","5","6","7","8","9"] and  parsed_message[i][-1] in ["0","1","2","3","4","5","6","7","8","9","."]: #try to fix a missing space after buff/hits etc
+			elif not parsed_message[i][0] in ["0","1","2","3","4","5","6","7","8","9"] and parsed_message[i][-1] in ["0","1","2","3","4","5","6","7","8","9","."]: 
+				#####################try to fix a missing space after buff/hits etc
 				numberpos = 2
 				wordlen = len(parsed_message[i])
 				while parsed_message[i][-numberpos] in ["0","1","2","3","4","5","6","7","8","9","."]:
@@ -820,21 +795,21 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				parsed_message.insert(i,temp[:(wordlen-numberpos+1)])
 				entries += 1
 				i -= 1
-			elif parsed_message[i].isdigit() and (i + 1) < entries:
+			elif parsed_message[i].isdigit() and (i + 1) < entries: 
+				######################swap around numbers and prompts, for cases like "5 targets"
 				if parsed_message[i+1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","iaps"]:
 					tmp = parsed_message[i]
 					parsed_message[i] = parsed_message[i+1]
 					parsed_message[i+1] = tmp
 					i -= 1
 			else:
-				
-				myKeys = list(op_dict.keys()) ### Try some autocorrection
+				myKeys = list(op_dict.keys()) ### Try some autocorrection for typos in the operator name
 				lev_dist = 1000
 				errorlimit = 0
 				promptlength = len(parsed_message[i])
 				prompt = parsed_message[i]
-				foundFit = False
-				optimizer = False
+				foundFit = False 
+				optimizer = False #True when a solution was found, but we still search for a better solution.
 				optimize_error = -10
 				if promptlength > 3: errorlimit = 1
 				if promptlength > 5: errorlimit = 2
@@ -854,10 +829,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				if not foundFit:
 					parsing_error = True
 					error_message += " " + parsed_message[i] + ","
-			
-			i+=1	
+			i+=1
 		
-		#Set final plot parameters
+		
+		#Cases where no plot is generated: no inputs or too many inputs
 		if contains_data == 0:
 			pl.close()
 			return
@@ -867,18 +842,20 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			nope = bot_mad_message[np.random.randint(0,l)]
 			await message.channel.send(nope)
 			return
-			
-		spalten = 1
-		if contains_data < 2: beegness = 4
-		if contains_data > 15 and beegness == 4:
-			textsize = 6
-		if contains_data > 26 and beegness == 4:
-			spalten = 2
-		if contains_data > 52 and beegness == 4:
-			spalten = 1
-		if contains_data > 30 and beegness == 8 and textsize == 10:
-			spalten = 2
 		
+		#prevent the legend from messing up the graphs format
+		legend_columns = 1
+		if contains_data < 2: plot_size = 4
+		if contains_data > 15 and plot_size == 4:
+			textsize = 6
+		if contains_data > 26 and plot_size == 4:
+			legend_columns = 2
+		if contains_data > 52 and plot_size == 4:
+			legend_columns = 1
+		if contains_data > 30 and plot_size == 8 and textsize == 10:
+			legend_columns = 2
+		
+
 		if split != 5:
 			pl.xlabel("Defense\nRes")
 			pl.ylabel("DPS" , rotation=0)
@@ -893,9 +870,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		ax.set_ylim(ymin = 0)
 		ax.set_xlim(xmin = 0)
 		if split != 5:
-			ax.set_xlim(xmin = 0, xmax = scale)
-		ax.xaxis.set_label_coords(0.08/beegness*4, -0.025/beegness*4)
-		ax.yaxis.set_label_coords(-0.04/beegness*4, 1+0.01/beegness*4)
+			ax.set_xlim(xmin = 0, xmax = max_def)
+		ax.xaxis.set_label_coords(0.08/plot_size*4, -0.025/plot_size*4)
+		ax.yaxis.set_label_coords(-0.04/plot_size*4, 1+0.01/plot_size*4)
 		if split == 3: #properly align the DPS comment
 			ax.yaxis.set_label_coords(0.02, 1.02)
 			if fixval > 999: ax.yaxis.set_label_coords(0.03, 1.02)
@@ -905,28 +882,22 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			ax.yaxis.set_label_coords(0.01, 1.02)
 			if fixval < 10: ax.yaxis.set_label_coords(0.0, 1.02)
 			
-		pl.grid(visible=True)
-		if show:
-			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=spalten)
-			else: pl.legend(loc="lower left",fontsize=textsize,ncol=spalten)
-		if add_title:
-			pl.title(title)
 		
 		#Setting the x-axis labels	
 		if split == 0:
-			tick_labels=["0\n0",f"{int(scale/6)}\n{int(scale2/6)}",f"{int(scale/3)}\n{int(scale2/3)}",f"{int(scale/2)}\n{int(scale2/2)}",f"{int(scale*4/6)}\n{int(scale2*4/6)}",f"{int(scale*5/6)}\n{int(scale2*5/6)}",f"{int(scale)}\n{int(scale2)}"]
+			tick_labels=["0\n0",f"{int(max_def/6)}\n{int(max_res/6)}",f"{int(max_def/3)}\n{int(max_res/3)}",f"{int(max_def/2)}\n{int(max_res/2)}",f"{int(max_def*4/6)}\n{int(max_res*4/6)}",f"{int(max_def*5/6)}\n{int(max_res*5/6)}",f"{int(max_def)}\n{int(max_res)}"]
 		if split == 1:
-			tick_labels=["0\n0",f"{int(scale/3)}\n0",f"{int(scale*4/6)}\n0",f"{int(scale)}\n0",f"{int(scale)}\n{int(scale2*2/6)}",f"{int(scale)}\n{int(scale2*4/6)}",f"{int(scale)}\n{int(scale2)}"]
+			tick_labels=["0\n0",f"{int(max_def/3)}\n0",f"{int(max_def*4/6)}\n0",f"{int(max_def)}\n0",f"{int(max_def)}\n{int(max_res*2/6)}",f"{int(max_def)}\n{int(max_res*4/6)}",f"{int(max_def)}\n{int(max_res)}"]
 		if split == 2:
-			tick_labels=["0\n0",f"0\n{int(scale2*2/6)}",f"0\n{int(scale2*4/6)}",f"0\n{int(scale2)}",f"{int(scale*2/6)}\n{int(scale2)}",f"{int(scale*4/6)}\n{int(scale2)}",f"{int(scale)}\n{int(scale2)}"]
+			tick_labels=["0\n0",f"0\n{int(max_res*2/6)}",f"0\n{int(max_res*4/6)}",f"0\n{int(max_res)}",f"{int(max_def*2/6)}\n{int(max_res)}",f"{int(max_def*4/6)}\n{int(max_res)}",f"{int(max_def)}\n{int(max_res)}"]
 		if split == 3:
-			tick_labels=["0",f"{int(scale2/6)}",f"{int(scale2/3)}",f"{int(scale2/2)}",f"{int(scale2*4/6)}",f"{int(scale2*5/6)}",f"{int(scale2)}"]
+			tick_labels=["0",f"{int(max_res/6)}",f"{int(max_res/3)}",f"{int(max_res/2)}",f"{int(max_res*4/6)}",f"{int(max_res*5/6)}",f"{int(max_res)}"]
 		if split == 4:
-			tick_labels=["0",f"{int(scale/6)}",f"{int(scale/3)}",f"{int(scale/2)}",f"{int(scale*4/6)}",f"{int(scale*5/6)}",f"{int(scale)}"]
+			tick_labels=["0",f"{int(max_def/6)}",f"{int(max_def/3)}",f"{int(max_def/2)}",f"{int(max_def*4/6)}",f"{int(max_def*5/6)}",f"{int(max_def)}"]
 		if split != 5:
-			tick_locations = np.linspace(0,scale,7)
+			tick_locations = np.linspace(0,max_def,7)
 			pl.xticks(tick_locations, tick_labels)
-		else:
+		else: #The part below this handles the enemy prompt
 			ax.set_xticklabels([])
 			xl, yl, xh, yh=np.array(ax.get_position()).ravel()
 			fig = pl.gcf()
@@ -935,16 +906,23 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				ph = len(enemies)
 				img = np.asarray(Image.open('arkbotimages/' + enemy_key + '_' + enemies[i][2] + '.png'))
 				#ax = fig.add_axes([1/(len(enemies)+1)*(i+0.67), 0, 0.1, 0.1])
-				if beegness ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
+				if plot_size ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
 				else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
 				ax.axison = False
 				ax.imshow(img)
 
 
-		
+		pl.grid(visible=True)
+		if show:
+			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns)
+			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns)
+		if add_title:
+			pl.title(title)
 		fig = pl.gcf()
-		fig.set_size_inches(2 * beegness, beegness)
+		fig.set_size_inches(2 * plot_size, plot_size)
 		pl.tight_layout()
+		
+		#Generate image and send it to the channel
 		buf = io.BytesIO()
 		pl.savefig(buf,format='png')
 		buf.seek(0)
