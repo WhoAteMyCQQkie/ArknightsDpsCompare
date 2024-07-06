@@ -1243,7 +1243,6 @@ class Astgenne(Operator):
 			sp_cost = 7 if self.mastery == 3 else 8
 			
 			atk_scale = 1.1 + 0.05 * self.mastery
-			aspd += 10
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
@@ -8364,8 +8363,7 @@ class MrNothing(Operator):
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
-
-			
+		
 class Mudrock(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
@@ -8922,6 +8920,136 @@ class Pallas(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
 				
 		return dps
+
+class Passenger(Operator):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+		maxlvl=90
+		lvl1atk = 656  #######including trust
+		maxatk = 774
+		self.atk_interval = 2.3   #### in seconds
+		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
+		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
+		self.pot = pot if pot in range(1,7) else 1
+		if self.pot > 3: self.base_atk += 32
+		
+		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
+		self.mastery = mastery if mastery in [0,1,2,3] else 3
+		if level != maxlvl: self.name = f"Passenger Lv{level} P{self.pot} S{self.skill}" #####set op name
+		else: self.name = f"Passenger P{self.pot} S{self.skill}"
+		if self.mastery == 0: self.name += "L7"
+		elif self.mastery < 3: self.name += f"M{self.mastery}"
+		self.targets = max(1,targets)
+		self.trait = TrTaTaSkMo[0]
+		self.talent1 = TrTaTaSkMo[1]
+		self.talent2 = TrTaTaSkMo[2]
+
+		
+		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
+		if level >= maxlvl-30:
+			if self.module == 1:
+				if self.module_lvl == 3: self.base_atk += 90
+				elif self.module_lvl == 2: self.base_atk += 80
+				else: self.base_atk += 65
+				self.name += f" ModX{self.module_lvl}"
+			elif self.module == 2:
+				if self.module_lvl == 3: self.base_atk += 100
+				elif self.module_lvl == 2: self.base_atk += 85
+				else: self.base_atk += 70
+				self.name += f" ModY{self.module_lvl}"
+			else: self.name += " no Mod"
+		else: self.module = 0
+		
+		if self.talent1: self.name += " vsHighHp"
+		if self.talent2: self.name += " NoClosebyEnemy"
+		
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		
+		self.buffs = buffs
+			
+	
+	def skill_dps(self, defense, res):
+		dps = 0
+		atkbuff = self.buffs[0]
+		aspd = self.buffs[2]
+		atk_scale = 1
+		
+		#talent/module buffs
+		if self.module == 1: aspd += 5
+		targetscaling = [0,1,2,3,4,5] if self.module == 2 else [0, 1, 1.85, 1.85+0.85**2, 1.85+0.85**2+0.85**3, 1.85+0.85**2+0.85**3+0.85**4]
+		if self.module == 1: targetscaling = [0, 1, 1.9, 1.9+0.9**2, 1.9+0.9**2+0.9**3, 1.9+0.9**2+0.9**3+0.9**4]
+		targets = min(5, self.targets) if self.skill == 2 else min(4, self.targets)
+		
+		dmg_scale = 1
+		if self.talent1:
+			dmg_scale = 1.25 if self.pot == 6 else 1.2
+			if self.module == 2:
+				if self.module_lvl == 2: dmg_scale += 0.05
+				if self.module_lvl == 3: dmg_scale += 0.08
+		
+		sp_boost = 0
+		if self.talent2:
+			atkbuff += 0.1 if self.pot > 2 else 0.08
+			if self.module == 1 and self.module_lvl > 1:
+				sp_boost = 0.05 + 0.1 * self.module_lvl
+		
+		####the actual skills
+		if self.skill == 1:
+			sp_cost = 5 if self.mastery == 3 else 6
+			
+			atk_scale = 2.5 if self.mastery == 3 else 2.1 + 0.1 * self.mastery
+			
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			skilldmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			
+			sp_cost = sp_cost/(1+sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(1+aspd/100)
+			atks_per_skill = int(sp_cost/atkcycle)
+			avghit = (hitdmg * atks_per_skill + skilldmg) / (atks_per_skill + 1)	
+			dps = avghit/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
+
+		
+		if self.skill == 2:
+			atkbuff += 0.3 if self.mastery == 3 else 0.2 + 0.05 * self.mastery
+			self.atk_interval = 2.3 * 0.5 if self.mastery == 3 else 2.3 * 0.6
+			
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
+		
+		if self.skill == 3:
+			skill_scale = 1.5 if self.mastery == 3 else 1.3 + 0.05 * self.mastery
+			sp_cost = 30 if self.mastery == 3 else 34 - self.mastery
+			
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			skillhit = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
+			dps += 8 * skillhit / (sp_cost/(1+sp_boost)+1.2)
+
+		return dps*dmg_scale
+
+	def total_dmg(self, defense, res):
+		if self.skill == 3:
+			atkbuff = self.buffs[0]
+			dmg_scale = 1
+			if self.talent1:
+				dmg_scale = 1.25 if self.pot == 6 else 1.2
+				if self.module == 2:
+					if self.module_lvl == 2: dmg_scale += 0.05
+					if self.module_lvl == 3: dmg_scale += 0.08
+			if self.talent2:
+				atkbuff += 0.1 if self.pot > 2 else 0.08
+				if self.module == 1 and self.module_lvl > 1:
+					sp_boost = 0.05 + 0.1 * self.module_lvl
+				skill_scale = 1.5 if self.mastery == 3 else 1.3 + 0.05 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skillhit = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			dmg = 8 * skillhit * dmg_scale
+			return(dmg)
+		else:
+			return(self.skill_dps(defense,res))
 
 class Penance(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
@@ -12410,8 +12538,6 @@ class Warmy(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		return dps
 
-
-
 class Weedy(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
@@ -12827,13 +12953,13 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 		"kafka": Kafka, "kazemaru": Kazemaru, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "lapluma": LaPluma, "pluma": LaPluma,
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lunacub": Lunacub, "lutonada": Lutonada, "magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "matoimaru": Matoimaru, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "mon3tr": Mon3tr, "kaltsit": Mon3tr, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": MumuDorothy, "muelsyse": MumuDorothy, "mumudorothy": MumuDorothy,  "mumu1": MumuDorothy, "mumu2": MumuEbenholz,"mumuebenholz": MumuEbenholz, "mumu3": MumuCeobe,"mumuceobe": MumuCeobe, "mumu4": MumuMudrock,"mumumudrock": MumuMudrock, "mumu5": MumuRosa,"mumurosa": MumuRosa, "mumu6": MumuSkadi,"mumuskadi": MumuSkadi, "mumu7": MumuSchwarz,"mumuschwarz": MumuSchwarz, 
-		"ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "odda": Odda, "pallas": Pallas, "penance": Penance, "phantom": Phantom, "pinecone": Pinecone, "platinum": Platinum, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, 
+		"ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "phantom": Phantom, "pinecone": Pinecone, "platinum": Platinum, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, 
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "surtr": Surtr, "jus": Surtr, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "thorns": Thorns, "thorn": Thorns,"toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpianus": Ulpianus, "utage": Utage, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Fuze","Gavialter","Gladiia","Goldenglow","Grani","Greythroat",
-		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Irene","Jaye","JessicaAlt","Kazemaru","Kjera","Kroos","Kroos3star","Lapluma","Lappland","LavaAlt","Lessing","Logos","Leto","Lin","Ling","Lunacub","Lutonada","Magallan","Manticore","Matoimaru","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for more info)","NearlAlter","Nian","Odda","Pallas","Penance","Phantom","Pinecone","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
+		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Irene","Jaye","JessicaAlt","Kazemaru","Kjera","Kroos","Kroos3star","Lapluma","Lappland","LavaAlt","Lessing","Logos","Leto","Lin","Ling","Lunacub","Lutonada","Magallan","Manticore","Matoimaru","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for more info)","NearlAlter","Nian","Odda","Pallas","Passenger","Penance","Phantom","Pinecone","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Schwarz","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Surtr","SwireAlt","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vigil","Vigna","Virtuosa","Viviana","Vulcan","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
 
 #copy from op_dict to show the plot. should only be used for testing
