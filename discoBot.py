@@ -15,6 +15,7 @@
 # Wisadel: Add S1 and S2, and maybe double check S3's aoe
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
+# muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
@@ -396,6 +397,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		buffs = [0,0,0,0,0] #atk% flatatk aspd fragile hitsreceived. the hitsreceived should be moved to a kwarg soon
 		basebuffs = [1,0]
 		TrTaTaSkMo = [True,True,True,True,True] #trait talent1 talent2 skill module
+		all_conditionals = False
 		targets = 1
 		shreds = [1,0,1,0] #def% def res% res. percent values are multiplied to dmg, so 20% shred = 0.8
 		normal_dps = True #normal dps vs total dmg
@@ -413,10 +415,18 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		#Parsing the input
 		while i < entries:
 			if parsed_message[i] in op_dict and i+1==entries:
-				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+				if all_conditionals:
+					for combos in itertools.product([True,False], repeat = 5):
+						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+				else:
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 			elif parsed_message[i] in op_dict and not (parsed_message[i+1] in modifiers):
+				if all_conditionals:
+					for combos in itertools.product([True,False], repeat = 5):
+						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+				else:
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 				if contains_data > 40: break
-				if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
 				i+=1
@@ -483,7 +493,11 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				if not -1 in modlvls and 0 in mods and len(mods) == 1:
 					mods.add(-1)
 				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
-					if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+					if all_conditionals:
+						for combos in itertools.product([True,False], repeat = 5):
+							if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
+					else:
+						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
@@ -685,6 +699,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				plot_size = 8
 			elif parsed_message[i] in ["repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos"]:
 				bottomleft = True
+			elif parsed_message[i] in ["conditionals", "conditional","variation","variations"]:
+				all_conditionals = True
 			elif parsed_message[i] == "split":
 				if not contains_data: split = 1
 			elif parsed_message[i] == "split2":
