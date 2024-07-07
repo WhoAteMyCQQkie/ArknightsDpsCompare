@@ -4405,7 +4405,11 @@ class Flametail(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
 			
 	
 	def skill_dps(self, defense, res):
@@ -4419,8 +4423,8 @@ class Flametail(Operator):
 		cdmg = 1
 		if self.module == 1 and self.module_lvl > 1: cdmg = 1.2 if self.module_lvl == 3 else 1.15
 		critrate = 0
-		if self.buffs[4] > 0:
-			dodgerate = 0.8 * self.buffs[4]
+		if self.hits > 0:
+			dodgerate = 0.8 * self.hits
 			atkrate = (self.atk_interval/(1+aspd/100))
 			critrate = min(1, dodgerate*atkrate)
 			
@@ -5751,7 +5755,11 @@ class Hoshiguma(Operator):
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-		if self.skill == 2 and self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0 and self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -5762,10 +5770,10 @@ class Hoshiguma(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			if self.buffs[4] > 0:
+			if self.hits > 0:
 				skill_scale = 1 if self.mastery == 3 else 0.8 + 0.05 * self.mastery
 				reflectdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-				dps += reflectdmg * self.buffs[4]	
+				dps += reflectdmg * self.hits	
 		if self.skill == 3:
 			atkbuff += 0.95 + 0.15 * self.mastery		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
@@ -8113,7 +8121,11 @@ class Mlynar(Operator):
 		if not self.trait: self.name += " -10stacks"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		self.buffs = buffs
-		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -8150,9 +8162,9 @@ class Mlynar(Operator):
 			finaldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = (finaldmg + truedmg)/(self.atk_interval/(1+aspd/100))
 			dps = dps * min(self.targets, 5)
-		if self.buffs[4] > 0:
+		if self.hits > 0:
 			truescaling = 0.15 if self.pot < 5 else 0.18
-			dps += final_atk * truescaling * self.buffs[4]
+			dps += final_atk * truescaling * self.hits
 		
 		return dps
 
@@ -8587,8 +8599,13 @@ class Mudrock(Operator):
 		else: self.module = 0
 		
 		self.buffs = buffs
-		if self.skill == 2 and self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0 and self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 			
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -8600,11 +8617,11 @@ class Mudrock(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk - defense, final_atk * 0.05)	
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
-			if self.buffs[4] > 0:
+			if self.hits > 0:
 				atk_scale = 2.1 + 0.2 * self.mastery
 				skilldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
 				spcost = 5 if self.mastery == 0 else 4
-				skillcycle = spcost / self.buffs[4] + 1.2
+				skillcycle = spcost / self.hits + 1.2
 				dps += skilldmg / skillcycle * self.targets
 				
 		if self.skill == 3:
@@ -8890,7 +8907,7 @@ class NearlAlter(Operator):
 		return dps
 
 class Nian(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 513  #######including trust
 		maxatk = 619
@@ -8926,7 +8943,11 @@ class Nian(Operator):
 		if self.module == 1 and self.module_lvl > 1 and self.moduledmg: self.name += " 3shieldsBroken"
 		
 		self.buffs = buffs
-		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0 and self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 			
 	
 	def skill_dps(self, defense, res):
@@ -8951,7 +8972,7 @@ class Nian(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps += hitdmg * self.buffs[4]
+			dps += hitdmg * self.hits
 		
 		if self.skill == 3:
 			atkbuff += 1.2 if self.mastery == 3 else 0.8 + 0.1 * self.mastery
@@ -9286,7 +9307,12 @@ class Penance(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
+		
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -9330,13 +9356,13 @@ class Penance(Operator):
 			
 			hitdmg = max(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		if self.buffs[4] > 0:
+		if self.hits > 0:
 			arts_scale = 0.5 if self.pot < 5 else 0.53
 			if self.module == 2:
 				if self.module_lvl == 2: arts_scale += 0.05
 				if self.module_lvl == 3: arts_scale += 0.08
 			artsdmg = max(final_atk * arts_scale * (1-res/100), final_atk * arts_scale * 0.05)
-			dps += artsdmg * self.buffs[4]		
+			dps += artsdmg * self.hits	
 		
 		return dps
 			
@@ -11260,7 +11286,11 @@ class Stainless(Operator):
 		if self.skill != 1 and self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
-		if self.buffs[4] > 0: self.name += f" {round(self.buffs[4],2)}hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.skill == 3: self.name += f" {round(self.hits,2)}hits/s"
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -11295,7 +11325,7 @@ class Stainless(Operator):
 			turrethitdmg = max(final_atk * turret_scale - defense, final_atk * turret_scale * 0.05)
 			turretaoedmg = max(final_atk * turret_aoe - defense, final_atk * turret_aoe * 0.05)
 			totalturret = turrethitdmg + turretaoedmg * (self.targets - 1)
-			dps += totalturret * self.buffs[4] / 5
+			dps += totalturret * self.hits / 5
 			
 		return dps
 
@@ -11742,7 +11772,11 @@ class Thorns(Operator):
 		if self.skill == 1 and not self.trait: self.name += "rangedAtk"   ##### keep the ones that apply
 		if self.talent1: self.name += " vsRanged"
 		self.buffs = buffs
-		if self.skill == 2: self.name += f" {round(buffs[4],2)}Hits/s"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 		if self.skill == 3 and not self.skilldmg: self.name += " firstActivation"
 
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
@@ -11772,7 +11806,7 @@ class Thorns(Operator):
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + artsdps + bonusdmg/(self.atk_interval/(1+aspd/100))
-		if self.skill == 2 and self.buffs[4] > 0:
+		if self.skill == 2 and self.hits > 0:
 			atk_scale = 0.8
 			cooldown = 0.75 - 0.05 * self.mastery
 			atkbuff += 0.4 + 0.05 * self.mastery
@@ -11780,10 +11814,10 @@ class Thorns(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
-			if(1/self.buffs[4] < cooldown):
+			if(1/self.hits < cooldown):
 				dps = (hitdmg/cooldown + artsdps + bonusdmg/cooldown) * min(self.targets,4)
 			else:
-				cooldown = 1/self.buffs[4]
+				cooldown = 1/self.hits
 				dps = (hitdmg/cooldown + artsdps) * min(self.targets,4)
 		if self.skill == 3:
 			bufffactor = 2 if self.skilldmg else 1
