@@ -93,9 +93,9 @@ class Blueprint(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -149,8 +149,8 @@ class Aak(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			dps = (0.75*hitdmg+0.25*critdmg)/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			aspd += 35 + 5 * self.mastery
@@ -158,8 +158,8 @@ class Aak(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			dps =  (0.75*hitdmg+0.25*critdmg)/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -215,7 +215,7 @@ class Absinthe(Operator):
 				if self.module_lvl == 3: dmg_scale += 0.08
 		newres = res
 		if self.module == 1:
-			newres = max(0,res-10)
+			newres = np.fmax(0,res-10)
 
 			
 		####the actual skills
@@ -223,14 +223,14 @@ class Absinthe(Operator):
 			atkbuff += 0.6 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)*dmg_scale	
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)*dmg_scale	
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			atk_scale = 0.75 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)*dmg_scale	
+			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)*dmg_scale	
 			dps = 4*hitdmgarts/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -290,12 +290,12 @@ class Aciddrop(Operator):
 		if self.skill == 1:
 			aspd += 70 if self.mastery == 3 else 50 + 6 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * mindmg)
+			hitdmg = np.fmax(final_atk - defense, final_atk * mindmg)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.32 if self.mastery == 0 else 0.31 + 0.03 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * mindmg)
+			hitdmg = np.fmax(final_atk - defense, final_atk * mindmg)
 			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -341,20 +341,20 @@ class Amiya(Operator):
 		if self.skill == 1:
 			aspd += 60 + 10 * self.mastery		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			atk_scale = 0.45 + 0.05 * self.mastery
 			hits = 7 if self.mastery == 0 else 8		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hits * hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
 			atkbuff += 2.3 if self.mastery == 3 else 1.6 + 0.2 * self.mastery	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			dps = final_atk/(self.atk_interval/(1+aspd/100))			
+			dps = final_atk/(self.atk_interval/(1+aspd/100)) * np.fmax(1,-defense) #this defense part has to be included			
 		return dps
 	
 	def total_dmg(self, defense, res):
@@ -400,14 +400,14 @@ class AmiyaGuard(Operator):
 		if self.skill == 1:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05)
 			dps = 2*hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			if self.skilldmg:
 				atkbuff += 3 * (0.25 + 0.05 * self.mastery)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			dps = final_atk/(self.atk_interval/(1+aspd/100))
+			dps = final_atk/(self.atk_interval/(1+aspd/100)) * np.fmax(1,-defense) #this defense part has to be included
 		return dps
 	
 	def get_name(self):
@@ -476,7 +476,7 @@ class Andreana(Operator):
 			atkbuff += 0.6+ 0.15 * self.mastery
 			if self.mastery == 3: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
@@ -484,7 +484,7 @@ class Andreana(Operator):
 			atkbuff += 1.9+ 0.15 * self.mastery
 			if self.mastery == 3: atkbuff += 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
 		
@@ -551,7 +551,7 @@ class Angelina(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			self.atk_interval = 0.285
@@ -559,14 +559,14 @@ class Angelina(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 1.05 + 0.15 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 5)
 		return dps
 
@@ -623,8 +623,8 @@ class April(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skilldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			avgdmg = (sp_cost * hitdmg + skilldmg) / (sp_cost + 1)
 			
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
@@ -632,7 +632,7 @@ class April(Operator):
 		if self.skill == 2:
 			atkbuff += 0.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -707,16 +707,16 @@ class Archetto(Operator):
 			skill_scale2= 1.5 + 0.1 * self.mastery
 			sp_cost = 3 if self.mastery == 3 else 4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
-			aoedmg = max(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			aoedmg = np.fmax(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05)
 			
 			#figuring out the chance of the talent to activate during downtime
 			base_cycle_time = (sp_cost+1)/(1+aspd/100)
 			talents_per_base_cycle = base_cycle_time / recovery_interval
 			failure_rate = 1.8 / (sp_cost + 1)  #1 over sp cost because thats the time the skill would technically be ready, the bonus is for sp lockout. (basis is a video where each attack had 14 frames, but it was 25 frames blocked)
 			talents_per_base_cycle *= 1-failure_rate
-			new_spcost = max(1,sp_cost - talents_per_base_cycle)
+			new_spcost = np.fmax(1,sp_cost - talents_per_base_cycle)
 			hitdps = hitdmg/(self.atk_interval/(1+aspd/100)) * (new_spcost-1)/new_spcost
 			skilldps = skilldmg/(self.atk_interval/(1+aspd/100)) /new_spcost
 			aoedps = aoedmg/(self.atk_interval/(1+aspd/100)) /new_spcost *(min(self.targets,4)-1)
@@ -732,8 +732,8 @@ class Archetto(Operator):
 			sp_cost = 12 - self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			targets = min(5, self.targets)
 			totalhits = [5,9,12,14,15]
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + sprecovery/sp_cost * skilldmg * totalhits[targets-1]
@@ -743,7 +743,7 @@ class Archetto(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * 3
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * 3
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 2)
 		return dps
 
@@ -815,14 +815,14 @@ class Arene(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 
 			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			skill_scale = 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * skill_scale * atk_scale  * (1-res/100), final_atk * skill_scale * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * skill_scale * atk_scale  * (1-res/100), final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(2,self.targets)
 		return dps
 
@@ -860,7 +860,7 @@ class Asbestos(Operator):
 		####the actual skills
 		if self.skill == 1:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.6 + 0.1 * self.mastery
@@ -868,7 +868,7 @@ class Asbestos(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
 
@@ -939,8 +939,8 @@ class Ascalon(Operator):
 			sp_cost = 8 if self.mastery < 2 else 7
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -954,16 +954,16 @@ class Ascalon(Operator):
 			atkbuff += 0.9 + 0.1 * self.mastery
 			if self.mastery > 1: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			self.atk_interval = 2.0
 			atkbuff += 0.2 + 0.1 * self.mastery	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
-		dps += self.targets * final_atk * talentstacks * talentscale * max(1-res/100, 0.05)
+		dps += self.targets * final_atk * talentstacks * talentscale * np.fmax(1-res/100, 0.05)
 		return dps
 
 class Ash(Operator):
@@ -1030,12 +1030,12 @@ class Ash(Operator):
 			atkbuff += 0.15 if self.mastery == 3 else 0.11 + self.mastery * 0.01	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * 2
 		if self.skill == 2:
 			self.atk_interval = 0.2	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.skilldmg:
 				skill_scale = 2.5 if self.mastery == 3 else 2.1 + 0.1 * self.mastery
@@ -1043,7 +1043,7 @@ class Ash(Operator):
 				if self.module == 1:
 					if self.module_lvl == 2: bonusdmg = 1.07
 					if self.module_lvl == 3: bonusdmg = 1.1
-				hitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05) * bonusdmg
+				hitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05) * bonusdmg
 				dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		return dps
@@ -1113,7 +1113,7 @@ class Ashlock(Operator):
 			atkbuff += 0.6 + 0.15 * self.mastery
 			if self.mastery == 3: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		if self.skill == 2:
@@ -1121,7 +1121,7 @@ class Ashlock(Operator):
 			else: interval = self.atk_interval * 0.5
 			atkbuff += 0.4 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(interval/(1+aspd/100)) * self.targets
 			
 			
@@ -1171,14 +1171,14 @@ class Astesia(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		
 		return dps
@@ -1245,8 +1245,8 @@ class Astgenne(Operator):
 			atk_scale = 1.1 + 0.05 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			skilldmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -1263,7 +1263,7 @@ class Astgenne(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.targets > 1:
@@ -1320,8 +1320,8 @@ class Aurora(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skilldmg =  max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg =  np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			avgdmg = hitdmg
 			if self.skilldmg: avgdmg = 2/3 * hitdmg + 1/3 * skilldmg
 						
@@ -1395,8 +1395,8 @@ class Bagpipe(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
-			critdmg = max(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			critdmg = np.fmax(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
 			avgdmg = crate * critdmg * min(2, self.targets) + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
 		
@@ -1407,11 +1407,11 @@ class Bagpipe(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
-			critdmg = max(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			critdmg = np.fmax(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
 			
-			skillhit = max(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skillcrit = max(final_atk *atk_scale * skill_scale *cdmg - defense, final_atk* atk_scale * skill_scale * cdmg * 0.05)
+			skillhit = np.fmax(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			skillcrit = np.fmax(final_atk *atk_scale * skill_scale *cdmg - defense, final_atk* atk_scale * skill_scale * cdmg * 0.05)
 			
 			avgdmg = crate * critdmg * min(2, self.targets) + (1-crate) * hitdmg
 			avgskill = crate * skillcrit * min(2, self.targets) + (1-crate) * skillhit
@@ -1432,8 +1432,8 @@ class Bagpipe(Operator):
 			atkbuff += 0.9 + 0.1 * self.mastery
 			self.atk_interval = 1.7
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
-			critdmg = max(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			critdmg = np.fmax(final_atk *atk_scale *cdmg - defense, final_atk* atk_scale * cdmg * 0.05)
 			avgdmg = crate * critdmg * min(2, self.targets) + (1-crate) * hitdmg
 			dps = 3*avgdmg/(self.atk_interval/(1+aspd/100)) 
 		return dps
@@ -1497,7 +1497,7 @@ class Beehunter(Operator):
 		if self.skill == 2:
 			self.atk_interval = 0.351 if self.mastery == 0 else 0.312
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -1566,9 +1566,9 @@ class Bibeak(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmg_multiplier
-			skillartsdmg = max(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmg_multiplier
+			skillartsdmg = np.fmax(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
 			sp_cost = 2 if self.mastery == 3 else 3
 			
 			avgphys = 2 * (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
@@ -1580,8 +1580,8 @@ class Bibeak(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillartsdmg = max(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillartsdmg = np.fmax(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
 			sp_cost = 10 - self.mastery
 			
 			avgarts = skillartsdmg/sp_cost * min(self.targets, 6)
@@ -1658,8 +1658,8 @@ class Blaze(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1) * min(self.targets, 3)
@@ -1668,7 +1668,7 @@ class Blaze(Operator):
 		if self.skill == 2:
 			atkbuff += 0.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * min(self.targets,3)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * min(self.targets,3)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -1733,8 +1733,8 @@ class Blemishine(Operator):
 			if self.mastery == 3: skill_scale += 0.1
 			sp_cost = 5 if self.mastery == 0 else 4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
 			atks_per_skillactivation = sp_cost / atkcycle
@@ -1748,15 +1748,15 @@ class Blemishine(Operator):
 			atkbuff += 0.7 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 0.7 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			artsfactor = 0.7 + 0.1 * self.mastery
-			artsdmg = hitdmgarts = max(final_atk * atk_scale * artsfactor * (1-res/100), final_atk * atk_scale * artsfactor * 0.05)
+			artsdmg = hitdmgarts = np.fmax(final_atk * atk_scale * artsfactor * (1-res/100), final_atk * atk_scale * artsfactor * 0.05)
 			dps = (hitdmg+artsdmg)/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -1813,15 +1813,15 @@ class BluePoison(Operator):
 			aspd += 1 + self.module_lvl
 			if self.moduledmg:
 				aspd += 8
-		artsdps = max(artsdmg * (1 - res/100), artsdmg * 0.05)
+		artsdps = np.fmax(artsdmg * (1 - res/100), artsdmg * 0.05)
 			
 		####the actual skills
 		if self.skill == 1:
 			skill_scale = 1.55 + 0.15 * self.mastery		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			
 			avgphys = (sp_cost * hitdmg + skillhitdmg * min(2,self.targets)) / (sp_cost + 1)
@@ -1830,7 +1830,7 @@ class BluePoison(Operator):
 			atkbuff += 0.2 + self.mastery * 0.1
 			if self.mastery == 0: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			targets = min(4, self.targets+1) if self.mastery > 0 else min(3, self.targets)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targets + artsdps * min(3, self.targets)
 			
@@ -1900,7 +1900,7 @@ class Broca(Operator):
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmgarts = max(final_atk *atk_scale *(1-res/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk *atk_scale *(1-res/100), final_atk * atk_scale * 0.05)
 			
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) *min(3, self.targets)
 		
@@ -1909,7 +1909,7 @@ class Broca(Operator):
 			atkbuff += 1.4 + 0.2 * self.mastery
 			if self.mastery > 1: atkbuff -= 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * atk_scale *(1-res/100), final_atk* atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale *(1-res/100), final_atk* atk_scale * 0.05)
 			
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(3,self.targets)
 		return dps
@@ -1964,8 +1964,8 @@ class Bryophyta(Operator):
 		if self.skill == 1:
 			skill_scale = 2 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 3 if self.mastery == 3 else 4
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -1974,7 +1974,7 @@ class Bryophyta(Operator):
 		if self.skill == 2:
 			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -2023,7 +2023,7 @@ class Cantabile(Operator):
 		if self.skill == 1:
 			atkbuff += 0.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
@@ -2033,7 +2033,7 @@ class Cantabile(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -2091,10 +2091,10 @@ class Caper(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * cdmg* atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skillcritdmg = max(final_atk * cdmg* atk_scale *skill_scale - defense, final_atk* cdmg* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * cdmg* atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			skillcritdmg = np.fmax(final_atk * cdmg* atk_scale *skill_scale - defense, final_atk* cdmg* atk_scale * skill_scale * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
 			skillhitdmg = skillcritdmg * crate + (1-crate) * skillhitdmg
 			sp_cost = 3 if self.mastery == 3 else 4
@@ -2109,8 +2109,8 @@ class Caper(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
 			
 			interval = 20/13.6 if not self.trait else (self.atk_interval/(1+aspd/100))
@@ -2182,7 +2182,7 @@ class Carnelian(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 2:
 			self.atk_interval = 0.9 if self.mastery == 3 else 1.2
@@ -2190,7 +2190,7 @@ class Carnelian(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			maxatkbuff = 2.8 if self.mastery == 3 else 2 + 0.2 * self.mastery
@@ -2201,7 +2201,7 @@ class Carnelian(Operator):
 			bonusscaling = 5 if self.skilldmg else 0
 			for i in range(totalatks):
 				final_atk = self.base_atk * (1+atkbuff + i * (self.atk_interval/(1+aspd/100)) /21 * maxatkbuff) + self.buffs[1]
-				damage += max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05) * (1+ min(bonusscaling,i) * 0.2)
+				damage += np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05) * (1+ min(bonusscaling,i) * 0.2)
 				
 			dps = damage/totalduration * self.targets
 		return dps
@@ -2263,7 +2263,7 @@ class Ceobe(Operator):
 		aspd = self.buffs[2]
 		atk_scale = 1
 		
-		newres= max(0, res-10) if self.module == 1 else res
+		newres= np.fmax(0, res-10) if self.module == 1 else res
 		
 		bonus_arts_scaling = 0.4
 		if self.pot > 4: bonus_arts_scaling += 0.04
@@ -2290,9 +2290,9 @@ class Ceobe(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
-			skilldmgarts = max(final_atk *atk_scale *skill_scale *(1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
-			defbonusdmg = max(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			skilldmgarts = np.fmax(final_atk *atk_scale *skill_scale *(1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
+			defbonusdmg = np.fmax(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
 			
 			atkcycle = self.atk_interval/(1+aspd/100)
 			if self.module == 2 and self.moduledmg:
@@ -2313,8 +2313,8 @@ class Ceobe(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
-			defbonusdmg = max(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
+			defbonusdmg = np.fmax(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
 			
 			dps = (hitdmgarts + defbonusdmg)/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
@@ -2324,8 +2324,8 @@ class Ceobe(Operator):
 			aspd += 10
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			defbonusdmg = max(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			defbonusdmg = np.fmax(defense * bonus_arts_scaling *(1-newres/100), defense * bonus_arts_scaling * 0.05)
 			
 			dps = (hitdmg + defbonusdmg)/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -2384,7 +2384,7 @@ class Chen(Operator):
 		atkbuff += 0.05 if self.pot < 5 else 0.06
 		newdef = defense
 		if self.module == 2:
-			newdef = max(0, defense -70)
+			newdef = np.fmax(0, defense -70)
 			if self.module_lvl == 2: atkbuff += 0.06
 			if self.module_lvl == 3: atkbuff += 0.1
 			
@@ -2396,22 +2396,22 @@ class Chen(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			skill_scale = 4.1 + 0.3 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale -newdef, final_atk * skill_scale * 0.05) * dmg
-			hitdmgarts = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg
+			hitdmg = np.fmax(final_atk * skill_scale -newdef, final_atk * skill_scale * 0.05) * dmg
+			hitdmgarts = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg
 			dps = hitdmg + hitdmgarts
 			
 		if self.skill == 3:
 			skill_scale = 2.6 + 0.2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale - newdef, final_atk *skill_scale * 0.05) * dmg
+			hitdmg = np.fmax(final_atk * skill_scale - newdef, final_atk *skill_scale * 0.05) * dmg
 			dps = 10 * hitdmg
 		return dps
 
@@ -2450,8 +2450,8 @@ class ChenAlter(Operator):
 			atkbuff += 0.7 + 0.1 * self.mastery 
 			def_shred = 200 if self.mastery == 0 else 220
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			newdefense = max(0, defense- def_shred)
-			hitdmg = max(final_atk * atk_scale - newdefense, final_atk* atk_scale * 0.05)
+			newdefense = np.fmax(0, defense- def_shred)
+			hitdmg = np.fmax(final_atk * atk_scale - newdefense, final_atk* atk_scale * 0.05)
 			
 			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
@@ -2532,9 +2532,9 @@ class Chongyue(Operator):
 				relevant_hits = int(2.5 / atk_cycle)
 				
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			normalhit = max(final_atk-defense, final_atk*0.05)
+			normalhit = np.fmax(final_atk-defense, final_atk*0.05)
 			normalcrit = normalhit * cdmg
-			skillhit = max(final_atk*atk_scale-defense, final_atk*atk_scale*0.05)
+			skillhit = np.fmax(final_atk*atk_scale-defense, final_atk*atk_scale*0.05)
 			skillcrit = skillhit * cdmg
 			avgnormal = normalcrit*normalcrate+normalhit*(1-normalcrate)
 			avgskill = (skillcrit*skillcrate+skillhit*(1-skillcrate)) * self.targets
@@ -2607,7 +2607,7 @@ class Click(Operator):
 		
 		dmgperinterval = final_atk + drone_atk
 		
-		hitdmgarts = max(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
+		hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 		dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -2673,11 +2673,11 @@ class Coldshot(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			if self.trait:
 				dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			elif self.module == 1:
-				hitdmg2 = max(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
+				hitdmg2 = np.fmax(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
 				dps = (hitdmg+hitdmg2)/(2*(self.atk_interval/(1+aspd/100))+1.6)
 			else:
 				dps = hitdmg/((self.atk_interval/(1+aspd/100))+1.6)
@@ -2688,11 +2688,11 @@ class Coldshot(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			if self.trait:
 				dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			elif self.module == 1:
-				hitdmg2 = max(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
+				hitdmg2 = np.fmax(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
 				dps = (hitdmg+hitdmg2)/(2*(self.atk_interval/(1+aspd/100))+1.6)
 			else:
 				dps = hitdmg/((self.atk_interval/(1+aspd/100))+2.4)
@@ -2756,9 +2756,9 @@ class Conviction(Operator):
 			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg1 = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skilldmg2 = max(final_atk * atk_scale * skill_scale2 - defense, final_atk* atk_scale * skill_scale2 * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg1 = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			skilldmg2 = np.fmax(final_atk * atk_scale * skill_scale2 - defense, final_atk* atk_scale * skill_scale2 * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -2773,8 +2773,8 @@ class Conviction(Operator):
 			sp_cost = 12 if self.mastery == 3 else 17 - self.mastery
 			sp_cost += 1.2 #sp lockout
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * skill_scale * atk_scale * (1-res/100), final_atk * skill_scale * atk_scale * 0.05) * self.targets
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * atk_scale * (1-res/100), final_atk * skill_scale * atk_scale * 0.05) * self.targets
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.skilldmg: 
 				dps += skilldmg / sp_cost
@@ -2847,8 +2847,8 @@ class Dagda(Operator):
 			crate = 0.6 if self.mastery else 0.5 + 0.03 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
@@ -2917,8 +2917,8 @@ class Degenbrecher(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg1 = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05) * dmg
-			hitdmg2 = max(final_atk * atk_scale * last_scale - newdef, final_atk * atk_scale * last_scale * 0.05) * dmg
+			hitdmg1 = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05) * dmg
+			hitdmg2 = np.fmax(final_atk * atk_scale * last_scale - newdef, final_atk * atk_scale * last_scale * 0.05) * dmg
 			
 			dps = (10 * hitdmg1 + hitdmg2) * min(self.targets,6)
 		return dps
@@ -2972,8 +2972,8 @@ class Dobermann(Operator):
 		if self.skill == 1:
 			skill_scale = 2 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 			sp_cost = 3 if self.mastery == 3 else 4
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -2981,7 +2981,7 @@ class Dobermann(Operator):
 		if self.skill == 2:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -3030,7 +3030,7 @@ class Doc(Operator):
 		defignore = 140 if self.pot > 4 else 120
 		if self.module == 2 and self.module_lvl > 1:
 			defignore += 30 * (self.module_lvl -1)
-		newdef = max(0, defense-defignore)
+		newdef = np.fmax(0, defense-defignore)
 		if self.trait: atk_scale = 1.2
 			
 		####the actual skills
@@ -3039,7 +3039,7 @@ class Doc(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -3114,7 +3114,7 @@ class Dorothy(Operator):
 			defshred = 0.3 + 0.02 * self.mastery
 			if self.mastery > 1: defshred -= 0.01
 			defshred = 1 - defshred
-			hitdmgmine = max(final_atk * mine_scale - defense * defshred, final_atk * mine_scale * 0.05) * cdmg
+			hitdmgmine = np.fmax(final_atk * mine_scale - defense * defshred, final_atk * mine_scale * 0.05) * cdmg
 			minedps = 0
 			if self.trait: 
 				minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
@@ -3127,22 +3127,22 @@ class Dorothy(Operator):
 				defshred = 1- defshred
 				defshred *= 5 / sp_cost  #include uptime of the debuff for auto attacks
 				defshred = 1- defshred
-			hitdmg = max(final_atk - defense * defshred, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense * defshred, final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
 		
 		
 		if self.skill == 2:
 			mine_scale = 3 if self.mastery == 3 else 2.6 + 0.1 * self.mastery
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgmine = max(final_atk * mine_scale - defense, final_atk * mine_scale * 0.05) * cdmg
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgmine = np.fmax(final_atk * mine_scale - defense, final_atk * mine_scale * 0.05) * cdmg
 			minedps = 0
 			if self.trait: minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
 		if self.skill == 3:
 			mine_scale = 3.5 if self.mastery == 3 else 2.8 + 0.2 * self.mastery
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgmine = max(final_atk * mine_scale * (1-res/100), final_atk * mine_scale * 0.05) * cdmg
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgmine = np.fmax(final_atk * mine_scale * (1-res/100), final_atk * mine_scale * 0.05) * cdmg
 			minedps = 0
 			if self.trait: minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
@@ -3162,7 +3162,7 @@ class Durin(Operator):
 		atkbuff = self.buffs[0]
 		aspd = self.buffs[2]
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -3236,7 +3236,7 @@ class Dusk(Operator):
 		freedps = 0
 		if self.talent2:
 			final_freeling = freeling_atk * (1+atkbuff) + self.buffs[1]
-			freehit = max(final_freeling - defense, final_freeling * 0.05)
+			freehit = np.fmax(final_freeling - defense, final_freeling * 0.05)
 			freedps = freehit/(freeling_interval/(1+aspd/100))
 		
 		if self.module == 2: aspd += 4 + self.module_lvl
@@ -3251,8 +3251,8 @@ class Dusk(Operator):
 			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			skilldmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -3271,13 +3271,13 @@ class Dusk(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			self.atk_interval = 2.9 * 1.4
 			atkbuff += 1 if self.mastery == 0 else 1.05 + 0.05* self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		
@@ -3383,8 +3383,8 @@ class Ebenholz(Operator):
 			self.atk_interval = 3 * 0.2 if self.mastery == 0 else 3 * 0.17 
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
-			bonusdmg = max(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.module == 3:
 				ele_gauge = 1000 if self.moduledmg else 2000
@@ -3406,8 +3406,8 @@ class Ebenholz(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.module == 3:
@@ -3482,17 +3482,17 @@ class Ela(Operator):
 		####the actual skills
 		if self.skill == 1:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
 			defshred = 500 + 100 * self.mastery
-			newdef = max(0, defense - defshred)
+			newdef = np.fmax(0, defense - defshred)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - newdef, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 			
@@ -3507,8 +3507,8 @@ class Ela(Operator):
 			atkbuff += 0.6 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05) * (1+fragile)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * (1+fragile)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * (1+fragile)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * (1+fragile)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) /(1+self.buffs[3])
 			
@@ -3560,7 +3560,7 @@ class Estelle(Operator):
 		else: atkbuff += 1.5 if self.mastery == 3 else 1.15 + 0.1 * self.mastery	
 
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-		hitdmg = max(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		return dps
 
@@ -3628,7 +3628,7 @@ class Eunectes(Operator):
 			atkbuff += 0.25 if self.mastery == 3 else 0.18 + 0.02 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
@@ -3636,14 +3636,14 @@ class Eunectes(Operator):
 			atkbuff += 1.8 if self.mastery == 3 else 1.3 + 0.15 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
 			atkbuff += 1.7 + 0.2 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -3723,22 +3723,22 @@ class ExecutorAlter(Operator):
 		if self.skill == 1:
 			atkbuff += 0.3 if self.mastery == 0 else 0.35 + 0.05 * self.mastery
 			defignore = 280 + 40 * self.mastery
-			newdef = max(0, defense - defignore)
-			critdef = max(0, defense - defignore - critdefignore)
+			newdef = np.fmax(0, defense - defignore)
+			critdef =np.fmax(0, defense - defignore - critdefignore)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - newdef, final_atk * 0.05)
-			critdmg =  max(final_atk - newdef, final_atk * 0.05) + max(final_atk - critdef, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
+			critdmg =  np.fmax(final_atk - newdef, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		if self.skill == 2:
 			atkbuff += 0.6 if self.mastery == 0 else 0.65 + 0.05 * self.mastery
-			critdef = max(0, defense - critdefignore)
+			critdef = np.fmax(0, defense - critdefignore)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg =  max(final_atk - defense, final_atk * 0.05) + max(final_atk - critdef, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
@@ -3748,11 +3748,11 @@ class ExecutorAlter(Operator):
 			scaling = 0.06 if self.mastery == 3 else 0.05
 			atkbuff += self.ammo * scaling 
 			
-			critdef = max(0, defense - critdefignore)
+			critdef = np.fmax(0, defense - critdefignore)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg =  max(final_atk - defense, final_atk * 0.05) + max(final_atk - critdef, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
@@ -3824,8 +3824,8 @@ class Exusiai(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 4
 			avgphys = (sp_cost * hitdmg + 3 * skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -3833,7 +3833,7 @@ class Exusiai(Operator):
 		elif self.skill == 2:
 			skill_scale = 1.1 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale* skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale* skill_scale * 0.05)
 			dps = 4*hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		else:
@@ -3841,7 +3841,7 @@ class Exusiai(Operator):
 			if self.mastery > 1: skill_scale += 0.01
 			self.atk_interval = 0.78 if self.mastery == 3 else 0.84
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale* skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale * skill_scale - defense, final_atk* atk_scale* skill_scale * 0.05)
 			dps = 5*hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		return dps
@@ -3899,14 +3899,14 @@ class Eyjafjalla(Operator):
 		if self.module == 1: 
 			atkbuff += 0.04 * (self.module_lvl - 1)
 			resignore = 10
-		newres = max(0, res - resignore)
+		newres = np.fmax(0, res - resignore)
 		
 		####the actual skills
 		if self.skill == 1:
 			aspd += 45 + 5 * self.mastery
 			if self.skilldmg: atkbuff += 0.45 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
@@ -3915,12 +3915,12 @@ class Eyjafjalla(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
 			resshred = 0.25 if self.mastery == 3 else 0.2
-			newres2 = max(0, res*(1-resshred)-resignore)
+			newres2 = np.fmax(0, res*(1-resshred)-resignore)
 			
-			hitdmg = max(final_atk  * (1-newres2/100), final_atk * 0.05)
-			if not self.skilldmg: hitdmg = max(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * (1-newres2/100), final_atk* atk_scale * 0.05)
-			aoeskilldmg = max(0.5 * final_atk * atk_scale * (1-newres/100), 0.5 * final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk  * (1-newres2/100), final_atk * 0.05)
+			if not self.skilldmg: hitdmg = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * (1-newres2/100), final_atk* atk_scale * 0.05)
+			aoeskilldmg = np.fmax(0.5 * final_atk * atk_scale * (1-newres/100), 0.5 * final_atk* atk_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -3936,7 +3936,7 @@ class Eyjafjalla(Operator):
 			self.atk_interval = 0.5
 			atkbuff += 0.85 + 0.15 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			maxtargets = 6 if self.mastery == 3 else 5
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets, maxtargets)
 			 
@@ -3992,9 +3992,9 @@ class FangAlter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			
-			skillhit = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			skillhit = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 
 			skillhit *= 2
 			
@@ -4012,7 +4012,7 @@ class FangAlter(Operator):
 			atkbuff += 0.95 if self.mastery == 0 else 0.9 + 0.1 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
@@ -4089,14 +4089,14 @@ class Fartooth(Operator):
 			if self.mastery == 3: atkbuff += 0.02
 			aspd += 45 if self.mastery == 3 else 35
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
 			aspd += 90 + 5 * self.mastery
 			if self.mastery == 3: aspd += 5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 3:
@@ -4106,7 +4106,7 @@ class Fartooth(Operator):
 			if self.skilldmg:
 				dmgscale = 1.4 if self.mastery == 3 else 1.3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmgscale
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmgscale
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -4172,7 +4172,7 @@ class Fiammetta(Operator):
 		#talent/module buffs
 		if self.module == 1 and self.moduledmg: atk_scale = 1.1
 		def_shred = 100 if self.module == 2 else 0
-		newdef = max(0, defense - def_shred)
+		newdef = np.fmax(0, defense - def_shred)
 		
 		if self.module == 2:
 			if self.module_lvl == 2: aspd += 5
@@ -4196,7 +4196,7 @@ class Fiammetta(Operator):
 			atkbuff += 0.6 + 0.15 * self.mastery
 			if self.mastery == 3: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		if self.skill == 3:
@@ -4207,7 +4207,7 @@ class Fiammetta(Operator):
 				elif self.mastery == 2: skill_scale = 2.0
 				elif self.mastery == 3: skill_scale = 2.2
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
 	
@@ -4279,17 +4279,17 @@ class Firewhistle(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgskill = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
-			hitdmgarts = max(final_atk * atk_scale * fire_scale * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgskill = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * fire_scale * (1-res/100), final_atk * 0.05)
 			avgdmg = 3/4 * self.targets * hitdmg + 1/4 * hitdmgskill * self.targets + hitdmgarts / 4
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			skill_scale = 0.65 if self.mastery == 0 else 0.7 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgarts
 			dps = dps * self.targets
 		return dps
@@ -4346,8 +4346,8 @@ class Flamebringer(Operator):
 		if self.skill == 1:
 			skill_scale = 1.9 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 3 if self.mastery > 1 else 4
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -4356,7 +4356,7 @@ class Flamebringer(Operator):
 			aspd += 30 + 5 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -4435,8 +4435,8 @@ class Flametail(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * 2 * min(3, self.targets)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * 2 * min(3, self.targets)
 			avghit = critrate * critdmg + (1 - critrate) * hitdmg
 			dps = avghit/(self.atk_interval/(1+aspd/100)) 
 		return dps
@@ -4500,8 +4500,8 @@ class Flint(Operator):
 		if self.skill == 1:
 			skill_scale = 2.3 if self.mastery == 3 else 1.9 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 4
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -4509,7 +4509,7 @@ class Flint(Operator):
 			atkbuff += 0.4 + 0.05 * self.mastery
 			aspd += 40 + 5 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps*dmgscale
 
@@ -4566,7 +4566,7 @@ class Folinic(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -4630,7 +4630,7 @@ class Franka(Operator):
 				atkbuff += 0.02
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk* atk_scale - defense, final_atk *atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk* atk_scale - defense, final_atk *atk_scale * 0.05)
 			critdmg = final_atk *atk_scale
 			avghit = crate * critdmg + (1-crate) * hitdmg	
 			dps = avghit/(self.atk_interval/(1+aspd/100))
@@ -4638,8 +4638,8 @@ class Franka(Operator):
 			atkbuff += 0.7 + 0.1 * self.mastery
 			crate *= 2.5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk* atk_scale - defense, final_atk *atk_scale * 0.05)
-			critdmg = final_atk * atk_scale
+			hitdmg = np.fmax(final_atk* atk_scale - defense, final_atk *atk_scale * 0.05)
+			critdmg = final_atk * atk_scale * np.fmax(1,-defense) #this defense part has to be included
 			avghit = crate * critdmg + (1-crate) * hitdmg	
 			dps = avghit/(self.atk_interval/(1+aspd/100))
 			
@@ -4695,7 +4695,7 @@ class Fuze(Operator):
 		if self.mastery < 2: atkbuff += 0.02
 
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-		hitdmg = max(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		return dps
 
@@ -4769,21 +4769,21 @@ class GavialAlter(Operator):
 			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, block)
 		
 		if self.skill == 2:
 			atkbuff += 1.4 if self.mastery == 0 else 1.35 + 0.15 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, block)
 		if self.skill == 3:
 			atkbuff += 1.4 if self.mastery == 3 else 1.0 + 0.1 * self.mastery
 			aspd += 100 if self.mastery == 3 else 80
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, block)
 			
 		return dps
@@ -4848,8 +4848,8 @@ class Gladiia(Operator):
 			sp_cost = 4 if self.mastery == 3 else 5
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -4865,7 +4865,7 @@ class Gladiia(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		if self.skill == 3:
@@ -4874,7 +4874,7 @@ class Gladiia(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
 			dps = hitdmg/1.5 * self.targets
 		return dps
 
@@ -4936,7 +4936,7 @@ class Gnosis(Operator):
 		
 		coldfragile = max(coldfragile, self.buffs[3])
 		frozenfragile = max(frozenfragile, self.buffs[3])
-		frozenres = max(0, res - 20)
+		frozenres = np.fmax(0, res - 20)
 		
 		####the actual skills
 		if self.skill == 1:
@@ -4944,15 +4944,15 @@ class Gnosis(Operator):
 			sp_cost = 4 + 1.2 #sp lockout
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
 			aspd += 130 if self.mastery == 3 else 122 + 2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			if self.skilldmg: hitdmg = max(final_atk * (1-frozenres/100), final_atk * 0.05)*(1+frozenfragile)/(1+self.buffs[3])
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			if self.skilldmg: hitdmg = np.fmax(final_atk * (1-frozenres/100), final_atk * 0.05)*(1+frozenfragile)/(1+self.buffs[3])
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(2, self.targets)
 			
 		return dps
@@ -5022,7 +5022,7 @@ class Goldenglow(Operator):
 		atk_scale = 1
 		
 		resshred = 18 if self.pot == 6 else 15
-		newres = max(res-resshred,0)
+		newres = np.fmax(res-resshred,0)
 		drone_dmg = 1.1
 		drone_explosion = 3
 		if self.pot > 2: drone_explosion += 0.15
@@ -5052,7 +5052,7 @@ class Goldenglow(Operator):
 		
 		dmgperinterval = final_atk*(3-drones) + drones * drone_atk * 0.9 + drones * drone_explosion * 0.1
 		
-		hitdmgarts = max(dmgperinterval *(1-newres/100), dmgperinterval * 0.05)
+		hitdmgarts = np.fmax(dmgperinterval *(1-newres/100), dmgperinterval * 0.05)
 		dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -5091,7 +5091,7 @@ class Grani(Operator):
 
 		atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.06 * self.mastery
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
@@ -5153,10 +5153,10 @@ class GreyThroat(Operator):
 			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * cdmg - defense, final_atk * atk_scale * cdmg * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
-			skillcrit = max(final_atk * atk_scale * skill_scale * cdmg - defense, final_atk* atk_scale * skill_scale * cdmg * 0.05) * 2
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * cdmg - defense, final_atk * atk_scale * cdmg * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
+			skillcrit = np.fmax(final_atk * atk_scale * skill_scale * cdmg - defense, final_atk* atk_scale * skill_scale * cdmg * 0.05) * 2
 			avgnorm = crate * critdmg + (1-crate) * hitdmg
 			avgskill = crate * skillcrit + (1-crate) * skilldmg
 			
@@ -5173,8 +5173,8 @@ class GreyThroat(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * cdmg - defense, final_atk * atk_scale * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * cdmg - defense, final_atk * atk_scale * cdmg * 0.05)
 			avgnorm = crate * critdmg + (1-crate) * hitdmg
 			dps = 3 * avgnorm/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -5222,7 +5222,7 @@ class Haze(Operator):
 			resignore = 10
 			if self.module_lvl == 2: resshred += 0.04
 			if self.module_lvl == 3: resshred += 0.07
-		newres = max(0, res-resignore) * (1-resshred)
+		newres = np.fmax(0, res-resignore) * (1-resshred)
 
 		if self.skill == 1:
 			atkbuff += 0.5 + 0.1 * self.mastery
@@ -5231,7 +5231,7 @@ class Haze(Operator):
 			aspd += 45 + 5 * self.mastery
 			
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk * (1-newres/100), final_atk * 0.05)
+		hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -5300,8 +5300,8 @@ class Hellagur(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * 2
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -5309,13 +5309,13 @@ class Hellagur(Operator):
 		if self.skill == 2:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05) * 2
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * 2
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
 			atkbuff += 0.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
 		return dps
 
@@ -5371,13 +5371,13 @@ class Hibiscus(Operator):
 			atkbuff += 1 if self.mastery == 3 else 0.6 + 0.15* self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05) * dmg
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			scale = 1.4 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * scale * (1-res/100), final_atk * scale * 0.05) * dmg
+			hitdmg = np.fmax(final_atk * scale * (1-res/100), final_atk * scale * 0.05) * dmg
 			dps = hitdmg * min(self.targets,2 )
 		return dps
 
@@ -5432,15 +5432,15 @@ class Highmore(Operator):
 		if self.skill == 1:
 			skill_scale = 1.35 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
 		else:
 			atkbuff += 0.6 if self.mastery == 3 else 0.5 + 0.03 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 			
 		return dps
@@ -5490,8 +5490,8 @@ class Hoederer(Operator):
 		if self.skill == 1:
 			skill_scale = 2 + 0.2 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
@@ -5500,12 +5500,12 @@ class Hoederer(Operator):
 			if self.skilldmg: self.atk_interval = 3 
 			atkbuff += 0.28 + 0.04 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,maxtargets)
 		if self.skill == 3:
 			atkbuff += 0.9 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + 200
 			dps = dps * min(2, self.targets)
 		return dps
@@ -5570,7 +5570,7 @@ class Hoolheyak(Operator):
 			atk_scale = 1.2 if self.pot < 5 else 1.23
 			if self.module == 1:
 				if self.module_lvl > 1: atk_scale += 0.05 * self.module_lvl
-		newres = max(res-10,0) if self.module == 1 else res
+		newres = np.fmax(res-10,0) if self.module == 1 else res
 		dmg_scale = 1
 		if self.module == 2 and self.talent2:
 			dmg_scale += 0.1 * (self.module_lvl -1)
@@ -5583,8 +5583,8 @@ class Hoolheyak(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05) * dmg_scale
-			skilldmg = max(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05) * dmg_scale
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
 
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
@@ -5601,7 +5601,7 @@ class Hoolheyak(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
 			dps = 9 * hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
@@ -5609,7 +5609,7 @@ class Hoolheyak(Operator):
 			skill_scale = 3.8 if self.mastery == 0 else 3.9 + 0.1 * self.mastery
 			if not self.skilldmg: skill_scale *= 2/3	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05) * dmg_scale
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
 		return dps
 	
@@ -5682,8 +5682,8 @@ class Horn(Operator):
 			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -5702,15 +5702,15 @@ class Horn(Operator):
 				elif self.mastery == 3: arts_scale = 0.6
 				else: arts_scale = 0.5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
-			artsdmg = max(final_atk * atk_scale * arts_scale * (1-res/100), final_atk * atk_scale * arts_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			artsdmg = np.fmax(final_atk * atk_scale * arts_scale * (1-res/100), final_atk * atk_scale * arts_scale * 0.05)
 			dps = (hitdmg+artsdmg)/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			self.atk_interval = 1.0
 			atkbuff += 0.4 + 0.1 * self.mastery
 			if self.skilldmg: atkbuff += 0.4 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) 			
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 			
 		return dps
@@ -5768,16 +5768,16 @@ class Hoshiguma(Operator):
 				
 		if self.skill == 2:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.hits > 0:
 				skill_scale = 1 if self.mastery == 3 else 0.8 + 0.05 * self.mastery
-				reflectdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+				reflectdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 				dps += reflectdmg * self.hits	
 		if self.skill == 3:
 			atkbuff += 0.95 + 0.15 * self.mastery		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
 
@@ -5831,15 +5831,15 @@ class Humus(Operator):
 		if self.skill == 1:
 			skill_scale = 2.2 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 3
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
 		else:
 			if self.skilldmg: atkbuff += 0.72 + 0.06 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 			
 		return dps
@@ -5898,7 +5898,7 @@ class Iana(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05) * (1+fragile)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * (1+fragile)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) /(1+self.buffs[3])
 		return dps
@@ -5972,7 +5972,7 @@ class Ifrit(Operator):
 			elif self.mastery > 1: aspd += 5 * (self.mastery - 1)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			newres = res * (1-resshred)
-			hitdmgarts = max(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		if self.skill == 2:
@@ -5982,9 +5982,9 @@ class Ifrit(Operator):
 			burn_scale = 0.99
 			newres = res * (1-resshred)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
-			skilldmgarts = max(final_atk *atk_scale *skill_scale *(1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
-			burndmg = max(final_atk *burn_scale *(1-newres/100), final_atk * burn_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			skilldmgarts = np.fmax(final_atk *atk_scale *skill_scale *(1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
+			burndmg = np.fmax(final_atk *burn_scale *(1-newres/100), final_atk * burn_scale * 0.05)
 			
 			sp_cost = sp_cost / (1+sp_recovered/recovery_interval) + 1.2 #talent bonus recovery + sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -5998,9 +5998,9 @@ class Ifrit(Operator):
 			atk_scale *= 1.1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			flatshred = 20 if self.mastery == 3 else 10 + 3 * self.mastery
-			newres = max(0, res-flatshred)
+			newres = np.fmax(0, res-flatshred)
 			newres = newres * (1-resshred)
-			hitdmgarts = max(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts * self.targets
 		return dps
 
@@ -6057,11 +6057,11 @@ class Indra(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			atkbuff += 1.1 + 0.1 * self.mastery
 			newdef = defense * (1 - (0.45 + 0.05 * self.mastery)) 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skilldmg = max(final_atk - newdef, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 
 			dps = 0.2*(4*hitdmg + skilldmg)/(self.atk_interval/(1+aspd/100))
 		
@@ -6070,7 +6070,7 @@ class Indra(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		return dps
@@ -6124,8 +6124,8 @@ class Ines(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1] + stolenatk
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 3
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + skillhitdmg * min(1, (1+aspd/100)*3/4)
 		if self.skill == 2:
@@ -6133,12 +6133,12 @@ class Ines(Operator):
 			aspdsteal = 7 if self.mastery == 3 else 6
 			aspd += aspdsteal * 10 if self.skilldmg else aspdsteal
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1] + stolenatk	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 1.2 if self.mastery == 0 else 1.3 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1] + stolenatk
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
 		return dps
 		
@@ -6204,7 +6204,7 @@ class Irene(Operator):
 		#talent/module buffs
 		newdef = defense
 		if self.module == 2:
-			newdef = max(0, defense -70)
+			newdef = np.fmax(0, defense -70)
 			if self.module_lvl == 2:
 				atkbuff += 0.06 if self.talent2 else 0.03
 			if self.module_lvl == 3:
@@ -6219,9 +6219,9 @@ class Irene(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 3:
@@ -6229,10 +6229,10 @@ class Irene(Operator):
 			hits = 10 if self.mastery == 0 else 12
 			skill_scale = 2.3 if self.mastery == 0 else 2.2 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			initialhit1 = max(final_atk * skill_scale1 - newdef, final_atk *skill_scale1 * 0.05)
-			initialhit2 = max(final_atk * skill_scale1 - newdef2, final_atk * skill_scale1 * 0.05)
-			hitdmg1 = max(final_atk * skill_scale - newdef, final_atk *skill_scale * 0.05)
-			hitdmg2 = max(final_atk * skill_scale - newdef2, final_atk *skill_scale * 0.05)
+			initialhit1 = np.fmax(final_atk * skill_scale1 - newdef, final_atk *skill_scale1 * 0.05)
+			initialhit2 = np.fmax(final_atk * skill_scale1 - newdef2, final_atk * skill_scale1 * 0.05)
+			hitdmg1 = np.fmax(final_atk * skill_scale - newdef, final_atk *skill_scale * 0.05)
+			hitdmg2 = np.fmax(final_atk * skill_scale - newdef2, final_atk *skill_scale * 0.05)
 			dps = 0.5*initialhit1 + 0.5* initialhit2
 			levduration = 4 if self.mastery == 3 else 3
 			if not self.talent1: return (dps + hits * (0.5*hitdmg1+0.5*hitdmg2))
@@ -6296,7 +6296,7 @@ class Jaye(Operator):
 			atkbuff += 0.4 if self.mastery == 0 else 0.45 + 0.05 * self.mastery
 			
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -6339,20 +6339,20 @@ class JessicaAlter(Operator):
 		if self.skill == 1:
 			atkbuff += 0.55 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)		
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.6 + 0.05 * self.mastery
 			self.atk_interval = 0.3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)		
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 2.7 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.1
 			self.atk_interval = 1.8
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)		
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -6423,7 +6423,7 @@ class Kafka(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -6497,8 +6497,8 @@ class Kazemaru(Operator):
 			if self.mastery == 2: skill_scale = 3.3
 			if self.mastery == 3: skill_scale = 3.5	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -6508,8 +6508,8 @@ class Kazemaru(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_atk2 = self.clone_atk * (1.9 + 0.1 * self.mastery)
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg2 = max(final_atk2 - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk2 - defense, final_atk * 0.05)
 
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
@@ -6600,16 +6600,16 @@ class Kjera(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			drone_atk = drone_dmg * final_atk
 			dmgperinterval = final_atk + drone_atk
-			hitdmgarts = max(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
+			hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.4 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			drone_atk = drone_dmg * final_atk
 			dmgperinterval = final_atk + 2 * drone_atk
-			res2 = max(0,res-15)
-			hitdmgarts = max(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
-			hitdmgfreeze = max(dmgperinterval *(1-res2/100), dmgperinterval * 0.05)
+			res2 = np.fmax(0,res-15)
+			hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
+			hitdmgfreeze = np.fmax(dmgperinterval *(1-res2/100), dmgperinterval * 0.05)
 			damage = hitdmgfreeze * self.freezeRate + hitdmgarts * (1 - self.freezeRate)
 			dps = damage/(self.atk_interval/(1+aspd/100))
 			
@@ -6642,10 +6642,10 @@ class Kroos(Operator):
 
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-		hitdmg = max(final_atk - defense, final_atk * 0.05)
-		hitcrit = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
-		skilldmg = max(final_atk * 1.4 - defense, final_atk * 1.4 * 0.05) * 2
-		skillcrit =  max(final_atk * 1.4 * cdmg - defense, final_atk * 1.4 * cdmg * 0.05) * 2
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		hitcrit = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+		skilldmg = np.fmax(final_atk * 1.4 - defense, final_atk * 1.4 * 0.05) * 2
+		skillcrit =  np.fmax(final_atk * 1.4 * cdmg - defense, final_atk * 1.4 * cdmg * 0.05) * 2
 		avghit = crate * hitcrit + (1-crate) * hitdmg
 		avgskill = crate * skillcrit + (1-crate) * skilldmg
 
@@ -6713,8 +6713,8 @@ class KroosAlter(Operator):
 
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 		
-		normalhit = max(final_atk * atk_scale -defense, final_atk * atk_scale * 0.05)
-		crithit = max(final_atk * atk_scale * crit_scale -defense, final_atk * atk_scale * crit_scale * 0.05)
+		normalhit = np.fmax(final_atk * atk_scale -defense, final_atk * atk_scale * 0.05)
+		crithit = np.fmax(final_atk * atk_scale * crit_scale -defense, final_atk * atk_scale * crit_scale * 0.05)
 
 		dps = hits*(0.2*crithit+0.8*normalhit)/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -6775,8 +6775,8 @@ class LaPluma(Operator):
 		if self.skill == 1:
 			skill_scale = 1.35 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -6789,7 +6789,7 @@ class LaPluma(Operator):
 			if self.skilldmg:
 				atkbuff += 0.5 if self.mastery == 3 else 0.4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 			
 		return dps
@@ -6855,15 +6855,15 @@ class Lappland(Operator):
 			atkbuff += 0.55 + 0.05* self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + bonusdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.9 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(2,self.targets) + bonusdmg/(self.atk_interval/(1+aspd/100)) * min(2,self.targets)
 		return dps*(1+fragile)/(1+self.buffs[3])
 	
@@ -6923,7 +6923,7 @@ class Lavaalt(Operator):
 			atkbuff += 0.14 + 0.02 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
 			if self.skilldmg and self.targets > 1:
 				dps *= 2
@@ -6932,7 +6932,7 @@ class Lavaalt(Operator):
 			atk_scale = 0.5 if self.mastery == 3 else 0.4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts * self.targets
 			if self.skilldmg:
 				dps *= 2	
@@ -7009,19 +7009,19 @@ class Lee(Operator):
 		if self.skill == 1:
 			atkbuff += 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			aspd += 30 if self.mastery == 3 else 20
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 3:
 			atkbuff += 0.37 if self.mastery == 0 else 0.35 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
 		return dps
 	
@@ -7109,8 +7109,8 @@ class Lessing(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1) * min(self.targets, 3)
@@ -7119,12 +7119,12 @@ class Lessing(Operator):
 		if self.skill == 2:
 			atkbuff += 0.35 if self.mastery == 0 else 0.3 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = 2 * hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			if self.skilldmg: atk_scale *= 2.2 if self.mastery == 3 else 1.8 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps =  hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -7194,14 +7194,14 @@ class Leto(Operator):
 				aspd += 10
 				atkbuff += 0.02
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
 			atkbuff += 0.8 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(2, self.targets)
 		
 		return dps
@@ -7250,18 +7250,18 @@ class Lin(Operator):
 			atkbuff += 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 2:
 			aspd += 130 if self.mastery == 3 else 90 + 10 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			atkbuff += 1.6 + 0.15 * self.mastery
 			if self.mastery > 1: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
 
@@ -7358,17 +7358,17 @@ class Ling(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrag = max(final_dragon * (1-res/100), final_dragon * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrag = np.fmax(final_dragon * (1-res/100), final_dragon * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons
 		if self.skill == 2:
 			skill_scale = 3.7 if self.mastery == 0 else 3.6 + 0.3 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrag = max(final_dragon * (1-res/100), final_dragon * 0.05)
-			skilldmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
-			skilldmgdrag = max(final_dragon * skill_scale * (1-res/100), final_dragon * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrag = np.fmax(final_dragon * (1-res/100), final_dragon * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skilldmgdrag = np.fmax(final_dragon * skill_scale * (1-res/100), final_dragon * skill_scale * 0.05)
 			sp_cost = 16 - self.mastery + 1.2 #sp lockout
 			dpsskill = (skilldmg + dragons * skilldmgdrag) * min(self.targets,2) / sp_cost			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons + dpsskill
@@ -7377,9 +7377,9 @@ class Ling(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			block = 4 if self.skilldmg else 2
-			hitdmgdrag = max(final_dragon - defense, final_dragon * 0.05) * min(self.targets, block)
+			hitdmgdrag = np.fmax(final_dragon - defense, final_dragon * 0.05) * min(self.targets, block)
 			skilldmg = hitdmg * 0.2
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons + skilldmg * 2 * dragons * self.targets
@@ -7443,7 +7443,7 @@ class Logos(Operator):
 			if self.module_lvl == 2: bonuschance += 0.1
 			if self.module_lvl == 3: bonuschance += 0.2
 		falloutdmg = 0.6 if self.module_lvl == 3 else 0.4
-		newres = max(0,res-10)
+		newres = np.fmax(0,res-10)
 		shreddmg = 165 if self.pot > 2 else 150	
 		####the actual skills
 		if self.skill == 1:
@@ -7451,8 +7451,8 @@ class Logos(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-newres/100), final_atk * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (max(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
 			#if self.targets == 1: bonusdmg = 0
 			dps = (hitdmg+bonusdmg)/(self.atk_interval/(1+aspd/100))
 			if self.module == 3 and self.talent1:
@@ -7467,8 +7467,8 @@ class Logos(Operator):
 			scaling = 0.5 if self.mastery == 0 else 0.45 + 0.1 * self.mastery
 			if self.skilldmg: scaling *= 3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * scaling * (1-newres/100), final_atk * scaling * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (max(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			hitdmg = np.fmax(final_atk * scaling * (1-newres/100), final_atk * scaling * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
 			#if self.targets == 1: bonusdmg = 0
 			dps = (hitdmg+bonusdmg) * 2
 			if self.module == 3 and self.talent1:
@@ -7482,8 +7482,8 @@ class Logos(Operator):
 		if self.skill == 3:
 			atkbuff += 3 if self.mastery == 3 else 2.2 + 0.3 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-newres/100), final_atk * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (max(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + max(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
 			#if self.targets == 1: bonusdmg = 0
 			dps = (hitdmg+bonusdmg)/(self.atk_interval/(1+aspd/100)) * min(self.targets,4)
 			if self.module == 3 and self.talent1:
@@ -7552,16 +7552,16 @@ class Lunacub(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			aspd += 110 + 10 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -7608,15 +7608,15 @@ class Lutonada(Operator):
 		if self.skill == 1:
 			skill_scale = 2 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = 3 if self.mastery == 3 else 4
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			skill_scale = 0.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg / 2 * self.targets
 		return dps
 	
@@ -7703,8 +7703,8 @@ class Magallan(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = max(final_drone * (1-res/100), final_drone * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrone = np.fmax(final_drone * (1-res/100), final_drone * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+(aspd+bonusaspd)/100)) * drones * self.targets
 		if self.skill == 3:
 			atkbuff += 1.5 if self.mastery == 3 else 1 + 0.15 * self.mastery
@@ -7712,8 +7712,8 @@ class Magallan(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = max(final_drone - defense, final_drone * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+(aspd+bonusaspd)/100)) * drones * self.targets
 		return dps
 
@@ -7777,7 +7777,7 @@ class Manticore(Operator):
 			self.atk_interval = 5.2
 			atkbuff += 0.6 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
@@ -7834,7 +7834,7 @@ class Matoimaru(Operator):
 			atkbuff += 1.05 + 0.15 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -7859,7 +7859,7 @@ class Melantha(Operator):
 		aspd = self.buffs[2]	
 		atkbuff += 0.58
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -7925,8 +7925,8 @@ class Meteor(Operator):
 			defshred = 0.35 if self.mastery == 3 else 0.3 + 0.01 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale * talentscale - defense * (1-defshred), final_atk * atk_scale * talentscale * 0.05)
-			skilldmg = max(final_atk * atk_scale * talentscale * skill_scale - defense * (1-defshred), final_atk * atk_scale * talentscale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * talentscale - defense * (1-defshred), final_atk * atk_scale * talentscale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * talentscale * skill_scale - defense * (1-defshred), final_atk * atk_scale * talentscale * skill_scale * 0.05)
 			avgdmg = (sp_cost * hitdmg + skilldmg) / (sp_cost + 1)
 			
 			dps = avgdmg/(self.atk_interval/(1+aspd/100))
@@ -7977,17 +7977,17 @@ class Meteorite(Operator):
 		crate = 0.3
 		newdef = defense
 		if self.module == 2:
-			newdef = max(0, defense - 100)
+			newdef = np.fmax(0, defense - 100)
 			crate += 0.1 * (self.module_lvl - 1)
 
 		skill_scale = 1.7 + 0.15 * self.mastery
 			
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-		hitdmg = max(final_atk - newdef, final_atk * 0.05)
-		hitcrit = max(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
-		skillhitdmg = max(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05)
-		skillcritdmg = max(final_atk * cdmg *skill_scale - newdef, final_atk * cdmg * skill_scale * 0.05)
+		hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
+		hitcrit = np.fmax(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
+		skillhitdmg = np.fmax(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05)
+		skillcritdmg = np.fmax(final_atk * cdmg *skill_scale - newdef, final_atk * cdmg * skill_scale * 0.05)
 		sp_cost = 3 if self.mastery == 3 else 4
 		avghit = crate * hitcrit + (1-crate) * hitdmg
 		avgskill = crate * skillcritdmg + (1-crate) * skillhitdmg
@@ -8066,10 +8066,10 @@ class Mizuki(Operator):
 			sp_cost = 8 if self.mastery < 2 else 7
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitbonus = max(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skillbonus = max(final_atk * bonusdmg * skill_scale * (1-res/100), final_atk * bonusdmg * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitbonus = np.fmax(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			skillbonus = np.fmax(final_atk * bonusdmg * skill_scale * (1-res/100), final_atk * bonusdmg * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -8088,8 +8088,8 @@ class Mizuki(Operator):
 			bonustargets += 1
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgarts = max(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets + hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets, bonustargets)
 		
 		if self.skill == 3:
@@ -8097,8 +8097,8 @@ class Mizuki(Operator):
 			bonustargets += 2
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgarts = max(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets + hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets, bonustargets)
 		
 		return dps
@@ -8152,27 +8152,27 @@ class Mlynar(Operator):
 		if self.skill == 1:
 			atk_scale *= 1.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			finaldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			finaldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = finaldmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			self.atk_interval = 1.5
 			atk_scale *= 1.6 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			finaldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			finaldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = 2 * finaldmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 3:
 			atkbuff += stacks * 0.05
 			atk_scale *= 1.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			truedmg = final_atk * 0.12 if self.mastery == 3 else final_atk * 0.11
-			finaldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			truedmg = final_atk * 0.12 * np.fmax(1,-defense) if self.mastery == 3 else final_atk * 0.11 * np.fmax(1,-defense) #this defense part has to be included
+			finaldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = (finaldmg + truedmg)/(self.atk_interval/(1+aspd/100))
 			dps = dps * min(self.targets, 5)
 		if self.hits > 0:
 			truescaling = 0.15 if self.pot < 5 else 0.18
-			dps += final_atk * truescaling * self.hits
+			dps += final_atk * truescaling * self.hits * np.fmax(1,-defense) #this defense part has to be included
 		
 		return dps
 
@@ -8230,7 +8230,7 @@ class Mon3tr(Operator):
 		####the actual skills
 		if self.skill == 1:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
@@ -8238,7 +8238,7 @@ class Mon3tr(Operator):
 			if self.mastery == 2: atkbuff += 0.05
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))*min(self.targets,3)
 		
 		if self.skill == 3:
@@ -8306,7 +8306,7 @@ class Morgan(Operator):
 		####the actual skills
 		skill_scale = 1.6 + 0.1 * self.mastery
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(skill_scale * final_atk * atk_scale - defense, skill_scale * final_atk * atk_scale * 0.05)
+		hitdmg = np.fmax(skill_scale * final_atk * atk_scale - defense, skill_scale * final_atk * atk_scale * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 
 		return dps
@@ -8361,19 +8361,19 @@ class Mostima(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			skill_scale = 1.1 + self.mastery * 0.1
 			if self.mastery < 2: skill_scale += 0.1
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk  * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk  * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg
 		if self.skill == 3:
 			atkbuff += 1.7 if self.mastery == 3 else 1.2 + 0.15 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps * self.targets
 
@@ -8445,12 +8445,12 @@ class Mountain(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			normalhitdmg = max(final_atk-defense, final_atk*0.05)
-			crithitdmg = max(final_atk*cdmg-defense, final_atk*cdmg*0.05)
+			normalhitdmg = np.fmax(final_atk-defense, final_atk*0.05)
+			crithitdmg = np.fmax(final_atk*cdmg-defense, final_atk*cdmg*0.05)
 			avghit = crate * crithitdmg + (1-crate) * normalhitdmg
 			
-			normalskilldmg = max(final_atk * atk_scale -defense, final_atk*0.05)
-			critskilldmg = max(final_atk * atk_scale * cdmg - defense, final_atk * cdmg * atk_scale * 0.05)
+			normalskilldmg = np.fmax(final_atk * atk_scale -defense, final_atk*0.05)
+			critskilldmg = np.fmax(final_atk * atk_scale * cdmg - defense, final_atk * cdmg * atk_scale * 0.05)
 			avgskill = crate * critskilldmg + (1-crate) * normalskilldmg
 			avgskill = avgskill * min(self.targets,2)
 			
@@ -8460,8 +8460,8 @@ class Mountain(Operator):
 		if self.skill == 2:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			normalhitdmg = max(final_atk - defense, final_atk * 0.05)
-			crithitdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			normalhitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			crithitdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avgdmg = normalhitdmg * (1-crate) + crithitdmg * crate
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets , 2)
 		if self.skill == 3:
@@ -8469,8 +8469,8 @@ class Mountain(Operator):
 			atkbuff += 0.7 + 0.1 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			normalhitdmg = max(final_atk-defense, final_atk*0.05)
-			crithitdmg = max(final_atk*cdmg-defense, final_atk*cdmg*0.05)
+			normalhitdmg = np.fmax(final_atk-defense, final_atk*0.05)
+			crithitdmg = np.fmax(final_atk*cdmg-defense, final_atk*cdmg*0.05)
 			crate = 0.55 + 0.05 * self.mastery
 			if self.mastery == 3: crate += 0.05
 			avgdmg = normalhitdmg * (1-crate) + crithitdmg * crate
@@ -8512,10 +8512,10 @@ class Mousse(Operator):
 			sp_cost = 4 if self.mastery == 3 else 5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			atkbuff += 0.6 + 0.05 * self.mastery
 			final_atk2 = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg2 = max(final_atk2 * (1-res/100), final_atk2 * 0.05)
+			hitdmg2 = np.fmax(final_atk2 * (1-res/100), final_atk2 * 0.05)
 			avgdmg = (hitdmg * sp_cost + hitdmg2) / (sp_cost + 1)
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
 		
@@ -8523,7 +8523,7 @@ class Mousse(Operator):
 			atkbuff += 0.45 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
 		return dps
 
@@ -8573,7 +8573,7 @@ class MrNothing(Operator):
 			if self.skilldmg:
 				aspd += 28 if self.mastery > 1 else 25
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 		
@@ -8623,11 +8623,11 @@ class Mudrock(Operator):
 		
 		if self.skill == 2:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)	
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)	
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 			if self.hits > 0:
 				atk_scale = 2.1 + 0.2 * self.mastery
-				skilldmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
+				skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
 				spcost = 5 if self.mastery == 0 else 4
 				skillcycle = spcost / self.hits + 1.2
 				dps += skilldmg / skillcycle * self.targets
@@ -8637,7 +8637,7 @@ class Mudrock(Operator):
 			atkbuff += 1 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)		
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		return dps
 	
@@ -8700,13 +8700,13 @@ class Muelsyse(Operator):
 			aspd += 35 + 5 * self.mastery
 			
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		main = 1 if self.talent1 else 0
 		final_summonatk = summonatk * (1+atkbuff) + self.buffs[1]
 		if not self.ranged and self.talent2: final_summonatk += 250
-		summondamage = max(final_summonatk * (1-res/100), final_summonatk * 0.05) if self.arts else max(final_summonatk - defense, final_summonatk * 0.05)
+		summondamage = np.fmax(final_summonatk * (1-res/100), final_summonatk * 0.05) if self.arts else np.fmax(final_summonatk - defense, final_summonatk * 0.05)
 		extra_summons = 0
 		extra_summons_skill = 0
 		if self.ranged and self.talent1: 
@@ -8891,7 +8891,7 @@ class NearlAlter(Operator):
 			atkbuff += 0.55 + 0.05 * self.mastery
 			aspd += 38 + 4 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
@@ -8900,7 +8900,7 @@ class NearlAlter(Operator):
 			elif self.mastery == 2: atkbuff += 0.25
 			elif self.mastery == 3: atkbuff += 0.4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 3:
@@ -8909,7 +8909,7 @@ class NearlAlter(Operator):
 			elif self.mastery == 2: atkbuff += 0.25
 			elif self.mastery == 3: atkbuff += 0.4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))  
 			
 		return dps
@@ -8955,7 +8955,7 @@ class Nian(Operator):
 			self.hits = kwargs['hits']
 		except KeyError:
 			self.hits = 0
-		if self.hits > 0 and self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
+		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 			
 	
 	def skill_dps(self, defense, res):
@@ -8972,20 +8972,20 @@ class Nian(Operator):
 		if self.skill == 1:
 			atkbuff += 0.3 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			atk_scale = 0.7 if self.mastery == 0 else 0.6 + 0.1 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps += hitdmg * self.hits
 		
 		if self.skill == 3:
 			atkbuff += 1.2 if self.mastery == 3 else 0.8 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -9029,10 +9029,10 @@ class Odda(Operator):
 			skill_scale = 1.8 + 0.2 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
 				
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			splashhitdmg = max(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			splashskillhitdmg = max(0.5 * final_atk * atk_scale * skill_scale - defense, 0.5 * final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			splashhitdmg = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			splashskillhitdmg = np.fmax(0.5 * final_atk * atk_scale * skill_scale - defense, 0.5 * final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			avgsplash = (sp_cost * splashhitdmg + splashskillhitdmg) / (sp_cost + 1)
@@ -9043,9 +9043,9 @@ class Odda(Operator):
 			atkbuff += 0.7 + 0.1 * self.mastery	
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -9120,8 +9120,8 @@ class Pallas(Operator):
 		if self.skill == 1:
 			skill_scale = 1.45 + 0.1 * self.mastery			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + 2* skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100))
@@ -9129,7 +9129,7 @@ class Pallas(Operator):
 		if self.skill == 2:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
 		
 		if self.skill == 3:
@@ -9138,7 +9138,7 @@ class Pallas(Operator):
 				atkbuff += 0.4 + 0.05 * self.mastery
 				if self.mastery == 3: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
 				
 		return dps
@@ -9222,8 +9222,8 @@ class Passenger(Operator):
 			atk_scale = 2.5 if self.mastery == 3 else 2.1 + 0.1 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			skilldmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			
 			sp_cost = sp_cost/(1+sp_boost) + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -9237,7 +9237,7 @@ class Passenger(Operator):
 			self.atk_interval = 2.3 * 0.5 if self.mastery == 3 else 2.3 * 0.6
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
 		
 		if self.skill == 3:
@@ -9245,8 +9245,8 @@ class Passenger(Operator):
 			sp_cost = 30 if self.mastery == 3 else 34 - self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			skillhit = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			skillhit = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targetscaling[targets]
 			dps += 8 * skillhit / (sp_cost/(1+sp_boost)+1.2)
 
@@ -9267,7 +9267,7 @@ class Passenger(Operator):
 					sp_boost = 0.05 + 0.1 * self.module_lvl
 				skill_scale = 1.5 if self.mastery == 3 else 1.3 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skillhit = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skillhit = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dmg = 8 * skillhit * dmg_scale
 			return(dmg)
 		else:
@@ -9342,8 +9342,8 @@ class Penance(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgarts = max(final_atk *atk_scale *(1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *atk_scale *(1-res/100), final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			hitsbetween = 3 if self.mastery == 3 else 4
@@ -9352,7 +9352,7 @@ class Penance(Operator):
 		if self.skill == 2:
 			atk_scale = 1.1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *atk_scale *(1-res/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk *atk_scale *(1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts * self.targets
 		
 		if self.skill == 3:
@@ -9362,14 +9362,14 @@ class Penance(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)		
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.hits > 0:
 			arts_scale = 0.5 if self.pot < 5 else 0.53
 			if self.module == 2:
 				if self.module_lvl == 2: arts_scale += 0.05
 				if self.module_lvl == 3: arts_scale += 0.08
-			artsdmg = max(final_atk * arts_scale * (1-res/100), final_atk * arts_scale * 0.05)
+			artsdmg = np.fmax(final_atk * arts_scale * (1-res/100), final_atk * arts_scale * 0.05)
 			dps += artsdmg * self.hits	
 		
 		return dps
@@ -9446,8 +9446,8 @@ class Phantom(Operator):
 			atkbuff += rate
 			final_atk = self.base_atk * (1+atkbuff + mainbuff) + self.buffs[1]
 			final_clone = self.clone_atk * (1+atkbuff) + self.buffs[1]
-			selfhit += max(final_atk - defense, final_atk * 0.05)
-			clonehit += max(final_clone - defense, final_clone * 0.05)
+			selfhit += np.fmax(final_atk - defense, final_atk * 0.05)
+			clonehit += np.fmax(final_clone - defense, final_clone * 0.05)
 						
 		dps = selfhit /(self.atk_interval/(1+aspd/100)) / count
 		if self.talent:
@@ -9501,7 +9501,7 @@ class Pinecone(Operator):
 		if self.skill == 1:
 			skill_scale = 2 if self.mastery == 3 else 1.8 + 0.05 * self.mastery
 			defignore = 250 if self.mastery == 3 else 210 + 10 * self.mastery
-			newdef = max(0, defense - defignore)
+			newdef = np.fmax(0, defense - defignore)
 			sp_cost = 9 if self.mastery == 3 else 10
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
@@ -9509,8 +9509,8 @@ class Pinecone(Operator):
 			sprec_boost = 0.5 if self.pot > 4 else 0.45
 			if self.talent1: sp_cost = sp_cost / (1+ sprec_boost)
 
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets + skilldmg / sp_cost * self.targets
 		
@@ -9519,7 +9519,7 @@ class Pinecone(Operator):
 			atkbuff += 0.6 if self.skilldmg else 0.2
 			atk_scale = 1.5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
 
@@ -9589,7 +9589,7 @@ class Platinum(Operator):
 		atkcycle = self.atk_interval/(1+aspd/100)
 		actual_scale = atkcycle/talent_windup * (max_talent_scale - 1) + 1
 		if atkcycle > talent_windup: actual_scale = max_talent_scale
-		hitdmg = max(final_atk * atk_scale * actual_scale - defense, final_atk * atk_scale * actual_scale * 0.05)
+		hitdmg = np.fmax(final_atk * atk_scale * actual_scale - defense, final_atk * atk_scale * actual_scale * 0.05)
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 	
@@ -9669,13 +9669,13 @@ class Pozemka(Operator):
 			if self.mastery < 2: skill_scale2 += 0.05
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
 			if self.moduledmg or self.skilldmg:
-				hitdmg = max(final_atk * atk_scale * skill_scale2 - newdef, final_atk * atk_scale * skill_scale2 * 0.05)	
+				hitdmg = np.fmax(final_atk * atk_scale * skill_scale2 - newdef, final_atk * atk_scale * skill_scale2 * 0.05)	
 			
 			hitdmgTW = 0
 			if self.talent1:
-				hitdmgTW = max(self.typewriter_atk * skill_scale2 - newdef, self.typewriter_atk * skill_scale2 * 0.05)
+				hitdmgTW = np.fmax(self.typewriter_atk * skill_scale2 - newdef, self.typewriter_atk * skill_scale2 * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgTW
 
 		return dps
@@ -9738,7 +9738,7 @@ class ProjektRed(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * mindmg)
+			hitdmg = np.fmax(final_atk - defense, final_atk * mindmg)
 
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -9802,8 +9802,8 @@ class Provence(Operator):
 			if self.skilldmg: atkbuff += 4 * (0.16 + 0.03 * self.mastery)
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avghit =  crate * critdmg + (1-crate) * hitdmg
 			
 			dps = avghit/(self.atk_interval/(1+aspd/100))
@@ -9811,8 +9811,8 @@ class Provence(Operator):
 			atkbuff += 1.6 + 0.2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avghit =  crate * critdmg + (1-crate) * hitdmg
 			
 			dps = avghit/(self.atk_interval/(1+aspd/100))
@@ -9873,7 +9873,7 @@ class Pudding(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.targets > 1:
@@ -9882,7 +9882,7 @@ class Pudding(Operator):
 		if self.skill == 2:
 			atkbuff += 0.8 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if self.targets > 1:
@@ -9964,8 +9964,8 @@ class Qiubai(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmgarts = max(final_atk * atk_scale *  (1+extrascale) * (1-res/100), final_atk* atk_scale * (1+extrascale) * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale *  (1+extrascale) * (1-res/100), final_atk* atk_scale * (1+extrascale) * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmgarts+bonusdmg)/(self.atk_interval/(1+aspd/100)) * min(3, self.targets)
 		return dps
 	
@@ -10005,14 +10005,14 @@ class Quartz(Operator):
 		if self.skill == 1:
 			atkbuff += 0.5 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			aspd += 65 + 5 * self.mastery
 			skill_scale = 1.2 if self.mastery == 3 else 1
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps * min(self.targets,2)
 
@@ -10078,12 +10078,12 @@ class Ray(Operator):
 		if self.skill == 2:
 			atkbuff += 0.9 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atk_scale *= 2.7 + 0.2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))  
 		return dps
 	
@@ -10154,7 +10154,7 @@ class ReedAlter(Operator):
 				aspd += 10
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmgarts = max(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
@@ -10162,7 +10162,7 @@ class ReedAlter(Operator):
 			if self.mastery == 0: atk_scale = 1.9
 			multiplier = 2 if self.skilldmg else 1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(1-res/100,  0.05) *final_atk * atk_scale * dmg_scale * multiplier
+			hitdmgarts = np.fmax(1-res/100,  0.05) *final_atk * atk_scale * dmg_scale * multiplier
 			dps = hitdmgarts/0.8 * self.targets  #/1.5 * 3 (or /0.5) is technically the limit, the /0.8 come from the balls taking 2.4 for a rotation 
 			
 		if self.skill == 3:
@@ -10171,9 +10171,9 @@ class ReedAlter(Operator):
 			atk_scale = 0.3 + 0.1 * self.mastery
 			dmg_scale = 1.32 if self.pot > 2 else 1.3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			directhits = max(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
+			directhits = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
 			atkdps = min(self.targets,2) * directhits/(self.atk_interval/(1+aspd/100))
-			skillhits = max(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
+			skillhits = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
 			skilldps = self.targets * skillhits
 			dps = atkdps + skilldps
 			
@@ -10260,7 +10260,7 @@ class Rockrock(Operator):
 		
 		dmgperinterval = final_atk + drone_atk
 		
-		hitdmgarts = max(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
+		hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 		dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -10330,22 +10330,22 @@ class Rosa(Operator):
 			if self.mastery == 3: atkbuff -= 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			extradmg = max(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
 			dps = (hitdmg+extradmg)/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.6 + 0.1 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			extradmg = max(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
 			dps = (hitdmg+extradmg)/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		if self.skill == 3:
 			atkbuff += 0.1 + 0.05 * self.mastery
 			maxtargets = 4 if self.mastery > 1 else 3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			extradmg = max(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
 			dps = (hitdmg+extradmg) * min(self.targets,maxtargets)
 			
 		return dps
@@ -10410,7 +10410,7 @@ class Rosmontis(Operator):
 		if self.module == 1: 
 			defshred += 30 * (self.module_lvl - 1)
 			bonushits = 2
-		newdef = max(0, defense- defshred)
+		newdef = np.fmax(0, defense- defshred)
 	
 		####the actual skills
 		if self.skill == 1:
@@ -10418,9 +10418,9 @@ class Rosmontis(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - newdef, final_atk  * 0.05)
-			bonushitdmg = max(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
-			skillhitdmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - newdef, final_atk  * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
+			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avghit = (sp_cost * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avghit/(self.atk_interval/(1+aspd/100))
@@ -10435,16 +10435,16 @@ class Rosmontis(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - newdef, final_atk * 0.05)
-			bonushitdmg = max(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
+			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
 			dps = (hitdmg+ bonushitdmg)/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			self.atk_interval = 1.05
-			if self.skilldmg: newdef= max(0, newdef - 160)
+			if self.skilldmg: newdef= np.fmax(0, newdef - 160)
 			atkbuff += 0.75 if self.mastery == 3 else 0.4 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - newdef, final_atk * 0.05)
-			bonushitdmg = max(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
+			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk  * 0.05) * bonushits
 			dps = (hitdmg+ bonushitdmg)/(self.atk_interval/(1+aspd/100)) * self.targets * min(self.targets,2)
 		return dps
 	
@@ -10516,8 +10516,8 @@ class Saga(Operator):
 			sp_cost = 16 - self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,6)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,6)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -10532,7 +10532,7 @@ class Saga(Operator):
 			self.atk_interval = 1.55
 			atkbuff += 1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps * (1+dmg)
 
@@ -10595,8 +10595,8 @@ class Scene(Operator):
 			atkbuff += 0.3 + 0.1 * self.mastery
 			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = max(final_drone - defense , final_drone * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrone = np.fmax(final_drone - defense , final_drone * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+aspd/100)) * drones
 		if self.skill == 2:
 			
@@ -10605,8 +10605,8 @@ class Scene(Operator):
 			atkbuff += 1.3 if self.mastery == 3 else 0.8 + 0.15 * self.mastery
 			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = max(final_drone - defense, final_drone * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+aspd/100)) * drones
 		return dps
 	
@@ -10689,12 +10689,12 @@ class Schwarz(Operator):
 			crate2 = 0.7 + self.mastery * 0.03
 			if self.mastery == 3: crate2 = 0.8		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			if self.talent1: hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			else: hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
-			if self.talent1: skilldmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
-			else: skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
-			skillcrit = max(final_atk * atk_scale * cdmg* skill_scale - newdef, final_atk * atk_scale * cdmg* skill_scale * 0.05)
+			if self.talent1: hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			else: hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
+			if self.talent1: skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			else: skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			skillcrit = np.fmax(final_atk * atk_scale * cdmg* skill_scale - newdef, final_atk * atk_scale * cdmg* skill_scale * 0.05)
 			avghit = crate * critdmg + (1-crate) * hitdmg
 			avgskill = crate2 * skillcrit + (1-crate2) * skilldmg
 			
@@ -10705,9 +10705,9 @@ class Schwarz(Operator):
 			crate = 0.5 if self.mastery == 3 else 0.45
 			atkbuff += 1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			if self.talent1: hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			else: hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
+			if self.talent1: hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			else: hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
 			avghit = crate * critdmg + (1-crate) * hitdmg
 			dps = avghit/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
@@ -10715,7 +10715,7 @@ class Schwarz(Operator):
 			atkbuff += 1.4 + 0.1 * self.mastery
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			critdmg = max(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * cdmg - newdef, final_atk * atk_scale * cdmg * 0.05)
 			dps = critdmg/(self.atk_interval/(1+aspd/100))	
 		
 		return dps
@@ -10773,8 +10773,8 @@ class Shalem(Operator):
 			countinghits = int(3 /(self.atk_interval/(1+aspd/100))) + 1
 			nocrit = (1-crate)**countinghits
 			
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
-			shreddmg = max(final_atk * (1-newres/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			shreddmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit) 
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		
@@ -10786,8 +10786,8 @@ class Shalem(Operator):
 			countinghits =  (6 * int(3 /(self.atk_interval/(1+aspd/100))) + 3)/self.targets + 1
 			nocrit = (1-crate)**countinghits
 			
-			hitdmg = max(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-			shreddmg = max(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			shreddmg = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit)
 			dps = 6 * avgdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -10861,8 +10861,8 @@ class Siege(Operator):
 			
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * self.targets
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * self.targets
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -10877,7 +10877,7 @@ class Siege(Operator):
 			self.atk_interval = 2.05
 			atk_scale = 3.2 + 0.2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -10949,22 +10949,22 @@ class SilverAsh(Operator):
 			skill_scale = 2.25 + 0.2 * self.mastery	
 			if self.mastery == 3: skill_scale += 0.05		
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avgphys = (sp_cost * hitdmg + 2* skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(1+aspd/100)) + bonusdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + bonusdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 1.4 + 0.2 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 6) + bonusdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,6)	
 		return dps
 	
@@ -11037,18 +11037,18 @@ class Skadi(Operator):
 				atkbuff += 0.02
 				aspd += 10
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 1.2 + 0.15 * self.mastery
 			if self.mastery == 3: atkbuff += 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			atkbuff += 1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		return dps
@@ -11102,7 +11102,7 @@ class Skalter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			skilldmg = final_atk * skill_scale
+			skilldmg = final_atk * skill_scale * np.fmax(1,-defense) #this defense part has to be included
 			if self.talent1: skilldmg *= 2
 			dps = skilldmg * self.targets
 		return dps
@@ -11167,7 +11167,7 @@ class Specter(Operator):
 			atkbuff += 1 + 0.2 * self.mastery
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)*(1+dmgbuff)
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)*(1+dmgbuff)
 			
 		dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -11234,7 +11234,7 @@ class SpecterAlter(Operator):
 			if self.module == 1:
 				atkbuff += 0.15
 				doll_scale = 0.2 + 0.2 * self.module_lvl
-			hitdmg = max(final_atk * doll_scale * (1-res/100), final_atk * doll_scale * 0.05)
+			hitdmg = np.fmax(final_atk * doll_scale * (1-res/100), final_atk * doll_scale * 0.05)
 			return hitdmg
 			
 		####the actual skills
@@ -11242,14 +11242,14 @@ class SpecterAlter(Operator):
 			atkbuff += 1.2 + 0.1 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 1.0 + 0.1 * self.mastery
 			aspd += 34 if self.mastery == 0 else 32 + 6 * self.mastery
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
 			self.atk_interval = 2.2
@@ -11257,7 +11257,7 @@ class SpecterAlter(Operator):
 			dmgbonus = 1.6 if self.mastery == 0 else 1.7
 			if not self.skilldmg: dmgbonus = 1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmgbonus
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmgbonus
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
@@ -11320,25 +11320,25 @@ class Stainless(Operator):
 		if self.skill == 1:
 			skill_scale = 1.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			
 		if self.skill == 2:
 			atkbuff += 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		if self.skill == 3:
 			atkbuff += 0.4 + 0.05 * self.mastery
 			aspd += 40 + 5 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if not self.skilldmg: dps = 0
 			turret_scale = 2.6 if self.mastery == 0 else 2.55 + 0.15 * self.mastery
 			turret_aoe = 1.2 + 0.1 * self.mastery
-			turrethitdmg = max(final_atk * turret_scale - defense, final_atk * turret_scale * 0.05)
-			turretaoedmg = max(final_atk * turret_aoe - defense, final_atk * turret_aoe * 0.05)
+			turrethitdmg = np.fmax(final_atk * turret_scale - defense, final_atk * turret_scale * 0.05)
+			turretaoedmg = np.fmax(final_atk * turret_aoe - defense, final_atk * turret_aoe * 0.05)
 			totalturret = turrethitdmg + turretaoedmg * (self.targets - 1)
 			dps += totalturret * self.hits / 5
 			
@@ -11380,7 +11380,7 @@ class Surtr(Operator):
 		atk_scale = 1
 		resignore = 20
 		if self.pot > 4: resignore = 22
-		newres = max(0, res - resignore)
+		newres = np.fmax(0, res - resignore)
 			
 		####the actual skills
 		if self.skill == 1:
@@ -11390,8 +11390,8 @@ class Surtr(Operator):
 				atk_scale += 0.1
 				hits = 2
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
-			skilldmgarts = max(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
+			skilldmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			avghit = (hits * hitdmgarts + skilldmgarts)/(hits + 1)
 			if self.skilldmg:
 				avghit = skilldmgarts	
@@ -11401,8 +11401,8 @@ class Surtr(Operator):
 			if self.mastery == 3: atkbuff += 0.1
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			atk_scale = 1.6 if self.mastery == 3 else 1.5
-			one_target_dmg = max(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
-			two_target_dmg = max(final_atk * (1-newres/100), final_atk * 0.05)
+			one_target_dmg = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
+			two_target_dmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
 			dps = one_target_dmg/(self.atk_interval/(1+aspd/100))
 			if self.targets > 1:
 				dps = 2 * two_target_dmg/(self.atk_interval/(1+aspd/100))
@@ -11410,7 +11410,7 @@ class Surtr(Operator):
 			atkbuff += 2.4 + 0.3 * self.mastery
 			maxtargets = 4 if self.mastery == 3 else 3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets,maxtargets)
 		return dps
 
@@ -11472,14 +11472,14 @@ class Suzuran(Operator):
 			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery
 			aspd += 15 + 5 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			atkbuff += 0.3 if self.mastery == 0 else 0.15 + 0.15 * self.mastery
 			max_targets = 2 if self.mastery == 0 else 3
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, max_targets)
 			
 		return dps*(1+fragile)/(1+self.buffs[3])
@@ -11545,7 +11545,7 @@ class SwireAlt(Operator):
 		if self.skill == 1:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			atkcycle= (self.atk_interval/(1+aspd/100))
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			if not self.skilldmg: dps = dps * (3/atkcycle-1) /(3/atkcycle)
 		
@@ -11554,8 +11554,8 @@ class SwireAlt(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skilldmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			if self.skilldmg: skilldmg *= 2
 			
 			atkcycle= (self.atk_interval/(1+aspd/100))
@@ -11565,7 +11565,7 @@ class SwireAlt(Operator):
 		
 		if self.skill == 3:
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * 2
 		return dps
 
@@ -11645,12 +11645,12 @@ class TexasAlter(Operator):
 			atkbuff += 0.55 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 
 			artsdmg = 320 + 30 * self.mastery
 			if self.mastery == 3: artsdmg -= 10
 			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + max(artsdmg *(1-res/100), artsdmg * 0.05)
+			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + np.fmax(artsdmg *(1-res/100), artsdmg * 0.05)
 		
 		if self.skill == 2:
 			resshred = 0.2
@@ -11660,7 +11660,7 @@ class TexasAlter(Operator):
 			atkbuff += 0.4 + 0.05 * self.mastery
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk *(1-newres/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			
 			dps = 2*hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
@@ -11669,8 +11669,8 @@ class TexasAlter(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			maxtargets = 4 if self.mastery == 3 else 3
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgarts = max(final_atk * skillscale *(1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * skillscale *(1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 			dps += hitdmgarts * min(self.targets, maxtargets)
 			
@@ -11739,13 +11739,13 @@ class Tequila(Operator):
 			atk_scale = 1.7 if self.mastery == 3 else 1.5 + 0.05 * self.mastery
 			aspd += 38 + 4 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atk_scale = 2 + 0.1 * self.mastery
 			maxtargets = 3 if self.skilldmg else 2
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, maxtargets)
 		
 		return dps
@@ -11806,20 +11806,20 @@ class Thorns(Operator):
 			aspd += 4 + self.module_lvl
 		bonus = 0.1 if self.module == 1 else 0
 		#talent1
-		artsdps = 140 if self.pot > 4 else 125
+		artsdps = np.fmax((140-res/100),140 * 0.05) if self.pot > 4 else np.fmax((125-res/100),125 * 0.05)
 		if self.module == 1 and self.module_lvl == 3: artsdps += 10
 		if self.talent1: artsdps *= 2
 		stacks = 1
 		if self.module == 1 and self.module_lvl > 1: stacks = 4 if self.module_lvl == 3 else 3
-		artsdps = artsdps * max((1-res/100),0.05) * stacks
+		artsdps = artsdps * stacks
 		
 		if self.skill == 1:
 			atkbuff += 0.6 + 0.15 * self.mastery
 			if self.mastery == 3: atkbuff -= 0.05
 			atk_scale = 1 if self.trait else 0.8
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + artsdps + bonusdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2 and self.hits > 0:
 			atk_scale = 0.8
@@ -11827,21 +11827,23 @@ class Thorns(Operator):
 			atkbuff += 0.4 + 0.05 * self.mastery
 			if self.mastery == 3: atkbuff += 0.05
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			if(1/self.hits < cooldown):
 				dps = (hitdmg/cooldown + artsdps + bonusdmg/cooldown) * min(self.targets,4)
 			else:
 				cooldown = 1/self.hits
 				dps = (hitdmg/cooldown + artsdps) * min(self.targets,4)
+		elif self.skill == 2:
+			return defense*0
 		if self.skill == 3:
 			bufffactor = 2 if self.skilldmg else 1
 			aspd += bufffactor * (16 + 3 * self.mastery)
 			atkbuff += bufffactor * (0.4 + 0.05 * self.mastery)
 			if self.mastery == 3: atkbuff += 0.05 * bufffactor
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			bonusdmg = max(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + artsdps + bonusdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -11907,7 +11909,7 @@ class Toddifons(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * skill_scale * atk_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			self.atk_interval = 2.7
@@ -11916,8 +11918,8 @@ class Toddifons(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
-			hitdmg2 = max(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05) * self.targets
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg2 = np.fmax(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05) * self.targets
 			
 			dps = (hitdmg+hitdmg2)/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -11970,15 +11972,15 @@ class Tomimi(Operator):
 		if self.skill == 1:
 			aspd += 60 + 10 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			crate = 0.7 + 0.1 * self.mastery
 			atk_scale = 1.9 + 0.15 * self.mastery
 			if self.mastery == 3: atk_scale = 2.2
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			critdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			avgnormal = (1-crate) * hitdmg
 			avgstun = crate / 3 * hitdmg
 			avgcrit = crate / 3 * critdmg
@@ -12045,8 +12047,8 @@ class Totter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = max(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,2)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,2)
 			sp_cost = 3
 			
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
@@ -12057,8 +12059,8 @@ class Totter(Operator):
 			skill_scale = 2.1 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			if self.targets == 1: hitdmg = max(final_atk * skill_scale *  atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			if self.targets == 1: hitdmg = np.fmax(final_atk * skill_scale *  atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
 		return dps
 
@@ -12132,13 +12134,13 @@ class Typhon(Operator):
 				aspd += 45
 			else: aspd += 35
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = max(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)		
+			hitdmg = np.fmax(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)		
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 2:
 			atkbuff += 0.35 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
 			if self.targets == 1: dps = (hitdmg+critdmg)/(self.atk_interval/(1+aspd/100))
 			else: dps = 2 * critdmg/(self.atk_interval/(1+aspd/100))
 		if self.skill == 3:
@@ -12146,8 +12148,8 @@ class Typhon(Operator):
 			hits = 4 if self.mastery == 0 else 5
 			atk_scale *= 1.6 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
-			critdmg = max(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
 			totaldmg = hits * hitdmg
 			if self.talent2:
 				totaldmg = (hits-1)*hitdmg + critdmg
@@ -12212,12 +12214,12 @@ class Ulpianus(Operator):
 		if self.skill == 2:
 			atkbuff += 1.3 + 0.1 * self.mastery
 			final_atk = (self.base_atk + bonusbase_atk) * (1+atkbuff) + self.buffs[1]	+ flatbuff
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
 		if self.skill == 3:
 			atkbuff += 2.3 + 0.1 * self.mastery
 			final_atk = (self.base_atk + bonusbase_atk) * (1+atkbuff) + self.buffs[1]	+ flatbuff
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
@@ -12281,7 +12283,7 @@ class Utage(Operator):
 		if self.skill == 2:
 			atkbuff += 0.8 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -12343,8 +12345,8 @@ class Vigil(Operator):
 			if self.trait:
 				atk_scale = 1.5
 				defignore = 200 if self.pot > 4 else 175
-		newdef = max(0, defense - defignore)
-		wolfdef = max(0, defense - 200) if self.pot > 4 else max(0, defense - 175)
+		newdef = np.fmax(0, defense - defignore)
+		wolfdef = np.fmax(0, defense - 200) if self.pot > 4 else np.fmax(0, defense - 175)
 		####the actual skills
 		if self.skill == 2:
 			skill_scale = 1.7 + 0.1 * self.mastery
@@ -12353,9 +12355,9 @@ class Vigil(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_wolf  = self.wolf_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			hitdmgwolf = max(final_wolf - wolfdef, final_wolf * 0.05)
-			hitdmgwolfskill = max(final_wolf * skill_scale - wolfdef, final_wolf * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			hitdmgwolf = np.fmax(final_wolf - wolfdef, final_wolf * 0.05)
+			hitdmgwolfskill = np.fmax(final_wolf * skill_scale - wolfdef, final_wolf * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = 1.25/(1+aspd/100)
@@ -12373,9 +12375,9 @@ class Vigil(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			final_wolf  = self.wolf_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			hitdmgwolf = max(final_wolf - wolfdef, final_wolf * 0.05)
-			hitdmgarts = max(final_atk * skill_scale * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			hitdmgwolf = np.fmax(final_wolf - wolfdef, final_wolf * 0.05)
+			hitdmgarts = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * 0.05)
 			hitdps = 3 * hitdmg/(self.atk_interval/(1+aspd/100))
 			artdps = 0
 			if self.talent1:
@@ -12445,8 +12447,8 @@ class Vigna(Operator):
 		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 		final_atk_crit = self.base_atk * (1+atkbuff+cdmg) + self.buffs[1]
 		
-		hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-		critdmg = max(final_atk_crit * atk_scale - defense, final_atk_crit * atk_scale * 0.05)
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		critdmg = np.fmax(final_atk_crit * atk_scale - defense, final_atk_crit * atk_scale * 0.05)
 		avgdmg = crate * critdmg + (1-crate) * hitdmg
 		dps = avgdmg/(self.atk_interval/(1+aspd/100))
 		return dps
@@ -12500,9 +12502,9 @@ class Virtuosa(Operator):
 			sp_cost = 6
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 
-			skilldmg =max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skilldmg =np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -12520,12 +12522,12 @@ class Virtuosa(Operator):
 			eleThreshold = eleThreshold / (1 + eleBonus)
 			eleApplicationTarget = final_atk * 0.1 + extraEle / (self.atk_interval/(1+aspd/100))
 			eleApplicationBase = final_atk * 0.1
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			artsdps = hitdmgarts/(self.atk_interval/(1+aspd/100))
 			targetEledps = eleDamage / (eleDuration + eleThreshold/eleApplicationTarget)
 			ambientEledps = eleDamage / (eleDuration + eleThreshold/eleApplicationBase)
 			
-			dps = min(self.targets, 2) * (artsdps + targetEledps)
+			dps = np.fmin(self.targets, 2) * (artsdps + targetEledps)
 			if self.targets > 2:
 				dps += ambientEledps * (self.targets -2)			
 			
@@ -12534,7 +12536,7 @@ class Virtuosa(Operator):
 			atkbuff += 1.4 + 0.15 * self.mastery
 			if self.mastery > 1: atkbuff -= 0.05
 			eleThreshold = eleThreshold / (1 + eleBonus)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = np.fmax(1,-defense) * self.base_atk * (1+atkbuff) + self.buffs[1] #this is so stupid lol, but defense or res HAS to be included
 			eleApplication = final_atk * 0.1
 			applicationDuration = eleThreshold / eleApplication
 			dps = self.targets * eleDamage / (eleDuration + applicationDuration)			
@@ -12594,8 +12596,8 @@ class Viviana(Operator):
 			cdmg = 1.5 if self.mastery == 3 else 1.4
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
-			skilldmg = 2 * max(final_atk * cdmg * (1-res/100), final_atk * cdmg * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			skilldmg = 2 * np.fmax(final_atk * cdmg * (1-res/100), final_atk * cdmg * 0.05) * dmg_scale
 			avgdmg = crate * skilldmg + (1-crate) * hitdmgarts
 			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		if self.skill == 3:
@@ -12604,7 +12606,7 @@ class Viviana(Operator):
 			hits = 3 if self.skilldmg else 2
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
 			dps = hits * hitdmgarts/(self.atk_interval/(1+aspd/100))
 		
 		return dps
@@ -12654,7 +12656,7 @@ class Vulcan(Operator):
 			atkbuff += 1.05 + 0.15 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
 		return dps
 
@@ -12715,7 +12717,7 @@ class W(Operator):
 		if self.module == 1 and self.moduledmg:
 			atk_scale = 1.1
 		
-		newdef = defense if self.module != 2 else max(0, defense - 100)
+		newdef = defense if self.module != 2 else np.fmax(0, defense - 100)
 		if self.module == 2 and self.talent2: atkbuff += 0.1 * (self.module_lvl - 1)
 		
 		stundmg = 0.21 if self.pot > 4 else 0.18
@@ -12729,8 +12731,8 @@ class W(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
 			dps = (hitdmg/(self.atk_interval/(1+aspd/100)) + skilldmg / sp_cost) * self.targets
 			
 		if self.skill == 2:
@@ -12739,8 +12741,8 @@ class W(Operator):
 			if self.mastery > 1: sp_cost += 1
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk* atk_scale * skill_scale * 0.05) * (1+stundmg)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk* atk_scale * skill_scale * 0.05) * (1+stundmg)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -12758,8 +12760,8 @@ class W(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
 			dps = (hitdmg/(self.atk_interval/(1+aspd/100)) + skilldmg * min(targets, self.targets) / sp_cost) * self.targets
 		
 		return dps
@@ -12835,9 +12837,9 @@ class Walter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - newdef, final_atk  * 0.05)
-			bonushitdmg = max(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
-			skillhitdmg = max(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk - newdef, final_atk  * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
+			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
 			avghit = (sp_cost * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avghit/(self.atk_interval/(1+aspd/100))
@@ -12849,8 +12851,8 @@ class Walter(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			bonushitdmg = max(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
 			dps = (hitdmg+ bonushitdmg)/(self.atk_interval/(1+aspd/100)) * self.targets
 		
 		if self.skill == 3:
@@ -12861,11 +12863,11 @@ class Walter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			mainhitdmg = max(final_atk * maintargetscale *skill_scale - defense, final_atk * maintargetscale * skill_scale * 0.05)
-			aoehitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			mainaftershocks = max(final_atk * maintargetscale * skill_scale * 0.5 - defense, final_atk * skill_scale * maintargetscale * 0.5 * 0.05)
-			aoeaftershocks = max(final_atk * 0.5 - defense, final_atk * 0.5 * 0.05)
-			shadowexplosion = max(final_atk * shadowexplosion - defense, final_atk * shadowexplosion * 0.05)
+			mainhitdmg = np.fmax(final_atk * maintargetscale *skill_scale - defense, final_atk * maintargetscale * skill_scale * 0.05)
+			aoehitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			mainaftershocks = np.fmax(final_atk * maintargetscale * skill_scale * 0.5 - defense, final_atk * skill_scale * maintargetscale * 0.5 * 0.05)
+			aoeaftershocks = np.fmax(final_atk * 0.5 - defense, final_atk * 0.5 * 0.05)
+			shadowexplosion = np.fmax(final_atk * shadowexplosion - defense, final_atk * shadowexplosion * 0.05)
 			if self.targets == 1:
 				dps = (mainhitdmg + mainaftershocks * bonushits + shadowexplosion)/(self.atk_interval/(1+aspd/100))
 			else:
@@ -12875,7 +12877,7 @@ class Walter(Operator):
 		
 		shadowthorns = 1 #if self.talent2 else 0
 		if self.skill == 3: shadowthorns += 2
-		shadowhit = max(self.shadow_atk * (1-res/100), self.shadow_atk * 0.05) * shadowthorns
+		shadowhit = np.fmax(self.shadow_atk * (1-res/100), self.shadow_atk * 0.05) * shadowthorns
 		dps += shadowhit/4
 		return dps
 	
@@ -12935,11 +12937,11 @@ class Warmy(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			falloutdmg += 3.2 * final_atk if self.pot > 4 else 3 * final_atk
-			newres = max(0,res-20)
+			newres = np.fmax(0,res-20)
 			elegauge = 1000 if self.skilldmg else 2000
 			
-			hitdmg1 = max(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmg2 = max(final_atk * (1-newres/100), final_atk * 0.05)
+			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
 			dpsNorm = hitdmg1/(self.atk_interval/(1+aspd/100))
 			dpsFallout = hitdmg2/(self.atk_interval/(1+aspd/100))
 			timeToFallout = elegauge/(dpsNorm * 0.15)
@@ -12950,7 +12952,7 @@ class Warmy(Operator):
 			self.atk_interval = 2.5
 			atkbuff += 1.7 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = max(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgele = final_atk * 0.5
 			hitdmg = hitdmgarts + hitdmgele if self.skilldmg else hitdmgarts
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
@@ -13017,8 +13019,8 @@ class Weedy(Operator):
 			sp_cost = 6 if self.mastery == 0 else 5
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = max(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -13034,7 +13036,7 @@ class Weedy(Operator):
 
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 2)
 		return dps
 
@@ -13096,7 +13098,7 @@ class Whislash(Operator):
 			aspd += talentbuff * talentscaling
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(3, self.targets)
 		return dps
 
@@ -13143,13 +13145,13 @@ class Wildmane(Operator):
 		if self.skill == 1:
 			aspd += 135 if self.mastery == 3 else 100 + 10 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		
 		if self.skill == 2:
 			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
@@ -13214,21 +13216,21 @@ class YatoAlter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			hitdmgarts = max(final_atk * extra_arts * (1-res/100), final_atk * extra_arts * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmgarts = np.fmax(final_atk * extra_arts * (1-res/100), final_atk * extra_arts * 0.05)
 			dps = (hitdmg+hitdmgarts)/(self.atk_interval/(1+aspd/100)) * 10 / 3
 		if self.skill == 2:
 			extra_arts *= 2.1 if self.mastery == 0 else 2.05 + 0.15 * self.mastery
 			atk_scale *= 1.5 if self.mastery == 3 else 1.3 + 0.05 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			hitdmgarts = max(final_atk * atk_scale * extra_arts * (1-res/100), final_atk * atk_scale * extra_arts * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * extra_arts * (1-res/100), final_atk * atk_scale * extra_arts * 0.05)
 			dps = (hitdmg+ hitdmgarts) * self.targets * 16
 		if self.skill == 3:
 			skill_scale = 3 if self.mastery == 3 else 2.6 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = max(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			hitdmgarts = max(final_atk * skill_scale * extra_arts * (1-res/100), final_atk * skill_scale * extra_arts * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * skill_scale * extra_arts * (1-res/100), final_atk * skill_scale * extra_arts * 0.05)
 			dps = (hitdmg+ hitdmgarts)*self.targets
 		return dps
 
@@ -13302,8 +13304,8 @@ class ZuoLe(Operator):
 			sp_cost = 4 if self.mastery == 3 else 5
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skilldmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			
 			sp_cost = sp_cost / sp_recovery + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
@@ -13317,7 +13319,7 @@ class ZuoLe(Operator):
 		if self.skill == 2:
 			atkbuff += 1.4 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 2)
 		
 		if self.skill == 3:
@@ -13326,9 +13328,9 @@ class ZuoLe(Operator):
 			sp_cost = 28 - self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = max(final_atk - defense, final_atk * 0.05)
-			skilldmg = max(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
-			skilldmg2= max(2*final_atk * atk_scale - defense, 2*final_atk* atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
+			skilldmg2= np.fmax(2*final_atk * atk_scale - defense, 2*final_atk* atk_scale * 0.05)
 			sp_cost = sp_cost / sp_recovery + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(1+aspd/100)
 			atks_per_skillactivation = sp_cost / atkcycle
@@ -13393,16 +13395,17 @@ if __name__ == "__main__":
 				print(f"The following request has returned 0 damage:\n"+ operator.get_name())
 	print("Seems to be working just fine.\nMake sure you added the new operator to the operator dictionary.")
 	
-	if len(list(test_ops.keys())) != 0:
+	if len(list(op_dict.keys())) != 0:
 		defences = np.linspace(0,3000,301)
 		damages = np.zeros(301)
 		resistances = np.linspace(0,120,301)
-		for x in test_ops.keys():
+		for x in op_dict.keys():
 			for skill in [1,2,3]:
-				operator = test_ops[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0,1],bonus=False)
+				operator = op_dict[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0],bonus=False,hits = 1)
 				op_name = operator.get_name()
-				for i in range(301):
-					damages[i] = operator.skill_dps(defences[i],resistances[i])
+				damages= operator.skill_dps(defences,resistances)
+				#for i in range(301):
+				#	damages[i] = operator.skill_dps(defences[i],resistances[i])
 				pl.plot(defences, damages, label=op_name)
 		pl.legend()
 		pl.show()

@@ -80,7 +80,7 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
 
-def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
+def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -120,9 +120,8 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 	
 	############### Normal DPS graph ################################
 	if split == 0:
-		for i in range(accuracy):
-			if normal_dps: damages[i]=operator.skill_dps(defences[i],resistances[i])*(1+buffs[3])
-			else: damages[i]=operator.total_dmg(defences[i],resistances[i])*(1+buffs[3])
+		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name,linestyle=style)
 		
@@ -143,9 +142,8 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 		newdefences = np.concatenate((defences,fulldef))
 		newresistances = np.concatenate((np.zeros(accuracy),resistances))
 		
-		for i in range(2*accuracy):
-			if normal_dps: damages[i] = operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
-			else: damages[i] = operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
+		if normal_dps: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		else: damages = operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
@@ -168,9 +166,8 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 		newdefences = np.concatenate((np.zeros(accuracy), defences))
 		newresistances = np.concatenate((resistances, fullres))
 		
-		for i in range(2*accuracy):
-			if normal_dps: damages[i]=operator.skill_dps(newdefences[i],newresistances[i])*(1+buffs[3])
-			else: damages[i]=operator.total_dmg(newdefences[i],newresistances[i])*(1+buffs[3])
+		if normal_dps: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		else: damages=operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
@@ -189,9 +186,11 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 	
 	############### DPS graph with a fixed defense value ################################
 	elif split == 3:
-		for i in range(accuracy):
-			if normal_dps: damages[i]=operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
-			else: damages[i]=operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],resistances[i])*(1+buffs[3])
+		defences = np.empty(accuracy); 
+		defences.fill(max(0,fixval-shreds[1])*shreds[0])
+		
+		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
@@ -202,9 +201,11 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 	
 	############### DPS graph with a fixed res value ################################
 	elif split == 4:
-		for i in range(accuracy):
-			if normal_dps: damages[i]=operator.skill_dps(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
-			else: damages[i]=operator.total_dmg(defences[i],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
+		resistances = np.empty(accuracy); 
+		resistances.fill(max(fixval-shreds[3],0)*shreds[2])
+		
+		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
+		else: damages = operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = pl.plot(xaxis, damages, label=op_name)
 		
@@ -219,8 +220,8 @@ def plot_graph(operator, buffs, defens, ress, split, max_def = 3000, max_res = 1
 		resistances = [i[1] for i in enemies]
 		xaxis = np.arange(len(enemies))
 		damages = np.zeros(len(enemies))
-		for i in range(len(enemies)):
-			damages[i] = operator.skill_dps(defences[i],resistances[i])*(1+buffs[3])
+
+		damages = operator.skill_dps(np.array(defences),np.array(resistances))*(1+buffs[3])
 		p = pl.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
 		pl.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i in range(len(enemies)):
