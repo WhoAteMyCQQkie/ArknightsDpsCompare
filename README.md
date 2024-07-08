@@ -18,7 +18,7 @@ For the scuffed enemy prompt to work you need a directory "arkbotimages" contain
 Here, this is part of the .gitignore, because I just took those images from the wiki and I'm not sure about copyright etc. + it needs a rework anyway.
 
 4. Disclaimer:
-The bot just calculates the dps based on the damage per hit and the attack interval. It does not take extra frames for animations into account. For example Exusiais skill 3 just multiplies the damage by 5, even though each shot takes some time.
+The bot just calculates the dps based on the damage per hit and the attack interval. It does not take extra frames for animations into account and for the sp lockout of skills like horn s1 it just assumes a duration of 1.2 seconds. For example Exusiais skill 3 just multiplies the damage by 5, even though each shot takes some time.
 Likewise, Gladiias calculations ignore the potentially very long animations, favoring her dps numbers. For the total damage, the dps is multiplied with the skill duration, regardless of whether the duration aligns with the attack interval or not,
 so you may get the damage of 17.42 attacks. Lastly, for necrosis delta modules, the average uptime with the current dps is assumed. This may also be unrealistic, since logos may not even trigger the fallout against very high res enemies.
 Tl;dr the numbers are not 100% accurate and the user has to do some thinking on their own. The bot is best used to compare operators to themselves (masteries, module levels, etc.).

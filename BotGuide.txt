@@ -1,0 +1,57 @@
+All the available commands:
+!dps (main feature, plots between 1 and 40 operators dps)
+!ops (lists the implemented operators)
+!hps (heal per second for operators that can heal)
+!hops (lists the implemented healers)
+!calc (calculates the input, accepts numbers and +-x/()*^, usually * is used for multiplication over x, but discord kinda sucks there)
+!help (gives a overview of what the bot can do)
+!guide (gives a overview of the available prompts)
+
+
+Below is a full list of all the possible prompts to change the !dps outputs. The bot doesn't care about lower/upper case. For many inputs it also accepts synonyms.
+
+################### Suffixes placed AFTER the operator, only affecting that one operator
+s1 -> s3 for skills
+p1 -> p6 for potentials
+m0 -> m3 for masteries
+0,x,y,d for the module
+0,1,2,3 for module lvl (combineable -> x2,y1,...)
+#By adding multiple suffixes of one type behind the operator, all combinations will be plottet, so !dps lapluma s1 s2 m0 m1 m2 m3 results in 8 plots.
+
+################### Prefixes placed BEFORE the operators, affecting ALL following operators. Not giving a <value> resets to the default.
+targets <enemy_number>
+level <operator_lvl>
+buff <atk%> <flatatk> <aspd> <fragile> for dmg increases (warfarin: buff 90, suzuran: buff 0 0 0 46)
+hits <receivedHitsPerSecond> for operators like Penance or Hoshiguma S2
+res/def <value1> <value2> ... <valueX> will display the dps number at those res/def values.
+resshred/defshred <value(s)> here you can either write XX% or just YY for a flat shred (or both). (as of now percentage shreds do no correctly work with operators that have flat shreds on their own)
+bbuff <values(s)> changes the base atk of the operator. works like the shreds with % or flat values. example bbuff 20% 100
+total (switches to total damage over the skill duration, only implemented for a few operators yet)
+(avg (not yet implemented, gives average dmg including skill downtime))
+
+################### Prefixes for conditional damage, affecting all following operators. By default all are set to high.
+lowtrait/hightrait (drone casters, instructor guards, lords, ...)
+lowtalent1/hightalent1 (la pluma kill stacks, rosa defignore,...)
+lowtalent2/hightalent2 (Horn revive, typhon crit, ...)
+lowskill/highskill (overdrive, 2nd activations, ...)
+lowmodule/highmodule (marksman vs aerial, centurion vs blocked, ...)
+low/high sets all 5 values.
+conditionals will plot all possible variations (in theory up to 32, realistically below 10)
+#the input can be shortened to L1/h1 for trait, L2/h2 for talent1, ..., L5/h5 for module
+
+################### Prompts for the axis scale, that need to be added before any operators
+maxres/maxdef <value> changes the maximum of the scale. these work together with the following (mutually exclusive) prompts
+split/split2 will separate the def increase from the res increase. split2 increases res first.
+fixdef/fixres <value> will fix the def/res to that value, only displaying an increase in res/def. 
+fix <value> does the same and chooses res for values <100, else def.
+chapter <XY> replaces the def/res scale with a set of enemies. for XY (map labels) so far only 13,zt and is are accepted. chapter2 <XY> sorts by res instead of def
+
+#################### More prompts
+color (needs to be placed before any operators, switches to a colorblind mode)
+hide (removes the legend)
+tiny (reduces the (font)size of the legend)
+left (moves the legend from top right to bottom left)
+big (doubles the size of the graph)
+text (anything after "text" will be put as title of the graph, so further prompts will be ignored)
+
+#the !hps command uses mostly the same, but it comes with a "boost" prompt, that includes sp recovery buffs like ptilopsis.
