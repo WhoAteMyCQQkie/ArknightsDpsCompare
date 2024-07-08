@@ -6141,6 +6141,14 @@ class Ines(Operator):
 			hitdmg = max(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
 		return dps
+		
+	def get_name(self):
+		if self.skill == 3:
+			skillbuff = 1.2 if self.mastery == 0 else 1.3 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + skillbuff) + self.buffs[1]
+			nukedmg = final_atk * (1.4 + 0.2 * self.mastery) * (1+self.buffs[3])
+			self.name += f" ShadowDmg:{int(nukedmg)}"
+		return self.name
 
 class Irene(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -10125,8 +10133,7 @@ class ReedAlter(Operator):
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
-		self.buffs = buffs
-			
+		self.buffs = buffs	
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -10171,6 +10178,14 @@ class ReedAlter(Operator):
 			dps = atkdps + skilldps
 			
 		return dps
+	
+	def get_name(self):
+		if self.skill == 3:
+			skillbuff = 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
+			final_atk = self.base_atk * (1+self.buffs[0] + skillbuff) + self.buffs[1]
+			nukedmg = final_atk * (1.1 + 0.1 * self.mastery) * (1+self.buffs[3])
+			self.name += f" ExplosionDmg:{int(nukedmg)}"
+		return self.name
 
 class Rockrock(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
