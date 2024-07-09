@@ -11539,7 +11539,7 @@ class SwireAlt(Operator):
 		self.skilldmg = TrTaTaSkMo[3]
 		self.moduledmg = TrTaTaSkMo[4]
 		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
+		self.module = module if module in [0,1,2] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
 			if self.module == 1:
@@ -11547,6 +11547,11 @@ class SwireAlt(Operator):
 				elif self.module_lvl == 2: self.base_atk += 35
 				else: self.base_atk += 25
 				self.name += f" ModX{self.module_lvl}"
+			elif self.module == 2:
+				if self.module_lvl == 3: self.base_atk += 81
+				elif self.module_lvl == 2: self.base_atk += 71
+				else: self.base_atk += 57
+				self.name += f" ModY{self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -11560,6 +11565,7 @@ class SwireAlt(Operator):
 		
 		if self.skilldmg and self.skill == 2: self.name += " 2HitBottles"
 		if not self.skilldmg and self.skill == 1: self.name += " heals>attacks"
+		if self.module == 2 and self.talent1: self.name += " maxModStacks"
 		 ######when op has aoe
 		
 		self.buffs = buffs
@@ -11574,6 +11580,7 @@ class SwireAlt(Operator):
 		if self.talent1:
 			atkbuff += self.stacks * 0.04
 			if self.module == 1 and self.module_lvl > 1: atkbuff += self.stacks * 0.01
+			if self.module == 2: atkbuff += 0.2
 			
 		####the actual skills
 		if self.skill == 1:
@@ -11608,6 +11615,7 @@ class SwireAlt(Operator):
 
 			atk = self.stacks * 0.04
 			if self.module == 1 and self.module_lvl > 1: atk += self.stacks * 0.01
+			if self.module == 2: atk += 0.2
 			
 			skill_scale = 1.2 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
