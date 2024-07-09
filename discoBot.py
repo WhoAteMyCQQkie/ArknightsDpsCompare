@@ -273,6 +273,7 @@ example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
 !guide will show you the available modifiers to the graphs, !ops lists the available operators.
 There is also a handful healers implemented. !hps <opname> ... works similar to !dps. !hops shows the available healers.
 Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
+If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 """
 		await message.channel.send(text)
 
@@ -298,14 +299,6 @@ As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following:
 Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desperately want."""
 		await message.channel.send(text)
 
-	
-	if message.content.lower().startswith('!code'):
-		if type(message.channel)==discord.channel.DMChannel:
-			disclaimer = "make sure to read the commentary at the beginning of discoBot.py"
-			await message.channel.send(disclaimer, file=discord.File('discoBot.py'))
-			await message.channel.send(file=discord.File('damageformulas.py'))
-			await message.channel.send(file=discord.File('healingformulas.py'))
-	
 	
 	if message.content.lower().startswith('!calc'):
 		
