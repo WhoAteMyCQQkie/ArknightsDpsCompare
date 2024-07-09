@@ -2434,6 +2434,17 @@ class ChenAlter(Operator):
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
 		
+		self.module = module if module in [0,1] else 1 ##### check valid modules
+		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
+		if level >= maxlvl-30:
+			if self.module == 1:
+				if self.module_lvl == 3: self.base_atk += 60
+				elif self.module_lvl == 2: self.base_atk += 45
+				else: self.base_atk += 30
+				self.name += f" ModX{self.module_lvl}"
+			else: self.name += " no Mod"
+		else: self.module = 0
+		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
@@ -2443,7 +2454,7 @@ class ChenAlter(Operator):
 		dps = 0
 		atkbuff = self.buffs[0]
 		aspd = self.buffs[2] + 8 #im not going to include the water buff for now
-		atk_scale = 1.5 #from trait, may need rework after module release
+		atk_scale = 1.6 if self.module == 1 else 1.5
 			
 		####the actual skills
 		if self.skill == 3:
@@ -2455,7 +2466,17 @@ class ChenAlter(Operator):
 			
 			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
 		return dps
-			
+	
+	def total_dmg(self, defense, res):
+		ammo = 16
+		saverate = 0.22 if self.pot > 4 else 0.2
+		if self.module == 1:
+			if self.module_lvl == 2: saverate += 0.03
+			if self.module_lvl == 3: saverate += 0.05
+		ammo = ammo / (1-saverate)
+		dmg = self.skill_dps(defense,res) * ammo * (self.atk_interval/(1+self.buffs[2]/100))
+		return dmg	
+
 class Chongyue(Operator):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -13395,13 +13416,13 @@ if __name__ == "__main__":
 				print(f"The following request has returned 0 damage:\n"+ operator.get_name())
 	print("Seems to be working just fine.\nMake sure you added the new operator to the operator dictionary.")
 	
-	if len(list(op_dict.keys())) != 0:
+	if len(list(test_ops.keys())) != 0:
 		defences = np.linspace(0,3000,301)
 		damages = np.zeros(301)
 		resistances = np.linspace(0,120,301)
-		for x in op_dict.keys():
+		for x in test_ops.keys():
 			for skill in [1,2,3]:
-				operator = op_dict[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0],bonus=False,hits = 1)
+				operator = test_ops[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0],bonus=False,hits = 1)
 				op_name = operator.get_name()
 				damages= operator.skill_dps(defences,resistances)
 				#for i in range(301):
