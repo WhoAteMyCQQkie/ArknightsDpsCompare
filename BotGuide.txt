@@ -24,7 +24,7 @@ level <operator_lvl>
 buff <atk%> <flatatk> <aspd> <fragile> for dmg increases (warfarin: buff 90, suzuran: buff 0 0 0 46)
 hits <receivedHitsPerSecond> for operators like Penance or Hoshiguma S2
 res/def <value1> <value2> ... <valueX> will display the dps number at those res/def values.
-resshred/defshred <value(s)> here you can either write XX% or just YY for a flat shred (or both). (as of now percentage shreds do no correctly work with operators that have flat shreds on their own)
+resshred/defshred <value(s)> here you can either write XX% or just YY for a flat shred (or both).
 bbuff <values(s)> changes the base atk of the operator. works like the shreds with % or flat values. example bbuff 20% 100
 total (switches to total damage over the skill duration, only implemented for a few operators yet)
 (avg (not yet implemented, gives average dmg including skill downtime))

@@ -5,7 +5,6 @@
 # implement the missing operators
 # implement more healers (and probably fix the kwargs situation before many more are added)
 # implement various total_dmg methods for operators
-# defshred/resshred compatible with operators doing that on their own (-> pass on as kwarg and read the kward for those operators)
 
 #TODO: specific Minijobs that really should be done asap
 # hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
@@ -282,7 +281,7 @@ Errors do happen, so feel free to double check the results. The Bot will also re
 		text = """**Suffixes placed after the operator, affecting only that operator:**
 S1,S2,S3, sl7,M0,..,M3, P1,..,P6, mod0,modx,mody,modd or just 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 **Prefixes that affect all following operators (not adding a value resets to default values):**
-targets <value>, res <value>/def <value>, buff <atk%> <flatAtk> <aspd> <fragile>, level <OpLevel>, hits <receivedHitsPerSecond> (either like 0.33 or 1/3), bbuff <value> (base atk, flat:123, percentage: 25% or 0.25), resshred/defshred (same as bbuff, this does currently not scale correctly with operators having shred themselves)
+targets <value>, res <value>/def <value>, buff <atk%> <flatAtk> <aspd> <fragile>, level <OpLevel>, hits <receivedHitsPerSecond> (either like 0.33 or 1/3), bbuff <value> (base atk, flat:123, percentage: 25% or 0.25), resshred/defshred (same as bbuff, percent or flat)
 **Conditional damage prefixes, affecting all following operators:**
 lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule
 *(just writing low/high sets all 5. you can also use low1,..,low5 or high1,..,high5 for trait,talent1,talent2,skill,module)*
@@ -572,6 +571,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							break
 					i+=1
 				i-=1
+				input_kwargs["shreds"] = shreds
 			elif parsed_message[i] in ["resshred","resdebuff","shredres","debuffres","reshred","resignore"]:
 				i+=1
 				shreds[2] = 1
@@ -593,6 +593,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							break
 					i+=1
 				i-=1
+				input_kwargs["shreds"] = shreds
 			elif parsed_message[i] in ["defshred","defdebuff","shreddef","debuffdef","defignore"]:
 				i+=1
 				shreds[0] = 1
@@ -614,6 +615,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							break
 					i+=1
 				i-=1
+				input_kwargs["shreds"] = shreds
 			elif parsed_message[i] in ["basebuff","baseatk","base","bbuff","batk"]:
 				i+=1
 				basebuffs[0] = 1

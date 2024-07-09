@@ -2448,6 +2448,10 @@ class ChenAlter(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
+		try:
+			self.shreds = kwargs['shreds']
+		except KeyError:
+			self.shreds = [1,0,1,0]
 			
 	
 	def skill_dps(self, defense, res):
@@ -2455,13 +2459,18 @@ class ChenAlter(Operator):
 		atkbuff = self.buffs[0]
 		aspd = self.buffs[2] + 8 #im not going to include the water buff for now
 		atk_scale = 1.6 if self.module == 1 else 1.5
+				
 			
 		####the actual skills
 		if self.skill == 3:
 			atkbuff += 0.7 + 0.1 * self.mastery 
 			def_shred = 200 if self.mastery == 0 else 220
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			if self.shreds[0] < 1 and self.shreds[0] > 0:
+				defense = defense / self.shreds[0]
 			newdefense = np.fmax(0, defense- def_shred)
+			if self.shreds[0] < 1 and self.shreds[0] > 0:
+				newdefense *= self.shreds[0]
 			hitdmg = np.fmax(final_atk * atk_scale - newdefense, final_atk* atk_scale * 0.05)
 			
 			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
@@ -5962,6 +5971,10 @@ class Ifrit(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
+		try:
+			self.shreds = kwargs['shreds']
+		except KeyError:
+			self.shreds = [1,0,1,0]
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -6019,8 +6032,12 @@ class Ifrit(Operator):
 			atk_scale *= 1.1 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			flatshred = 20 if self.mastery == 3 else 10 + 3 * self.mastery
+			if self.shreds[2] < 1 and self.shreds[2] > 0:
+				res = res / self.shreds[0]
 			newres = np.fmax(0, res-flatshred)
 			newres = newres * (1-resshred)
+			if self.shreds[2] < 1 and self.shreds[2] > 0:
+				newres *= self.shreds[2]
 			hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts * self.targets
 		return dps
@@ -10437,6 +10454,10 @@ class Rosmontis(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
 		self.buffs = buffs
+		try:
+			self.shreds = kwargs['shreds']
+		except KeyError:
+			self.shreds = [1,0,1,0]
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -10479,7 +10500,15 @@ class Rosmontis(Operator):
 			dps = (hitdmg+ bonushitdmg)/(self.atk_interval/(1+aspd/100)) * self.targets
 		if self.skill == 3:
 			self.atk_interval = 1.05
-			if self.skilldmg: newdef= np.fmax(0, newdef - 160)
+			if self.skilldmg:
+				if self.shreds[0] < 1 and self.shreds[0] > 0:
+					defense = defense / self.shreds[0]
+				newdef= np.fmax(0, defense - 160)
+				if self.shreds[0] < 1 and self.shreds[0] > 0:
+					newdef *= self.shreds[0]
+				newdef = np.fmax(0,newdef - defshred)
+			else:
+				newdef = np.fmax(0, defense- defshred)
 			atkbuff += 0.75 if self.mastery == 3 else 0.4 + 0.1 * self.mastery
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
