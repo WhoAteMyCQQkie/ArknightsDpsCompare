@@ -78,7 +78,7 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
 
-def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
+def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -114,10 +114,10 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 	
 	defences = np.clip(np.linspace(-shreds[1],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
 	resistances = np.clip(np.linspace(-shreds[3],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
-	damages = np.zeros(2*accuracy) if split in [1,2] else np.zeros(accuracy)
+	damages = np.zeros(2*accuracy) if graph_type in [1,2] else np.zeros(accuracy)
 	
 	############### Normal DPS graph ################################
-	if split == 0:
+	if graph_type == 0:
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
@@ -135,7 +135,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments defense and THEN res ################################
-	elif split == 1: 
+	elif graph_type == 1: 
 		fulldef = np.full(accuracy, max(0,max_def-shreds[1])*shreds[0])
 		newdefences = np.concatenate((defences,fulldef))
 		newresistances = np.concatenate((np.zeros(accuracy),resistances))
@@ -159,7 +159,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 				pl.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments Res and THEN defense ################################
-	elif split == 2:
+	elif graph_type == 2:
 		fullres = np.full(accuracy, max(max_res-shreds[3],0)*shreds[2])
 		newdefences = np.concatenate((np.zeros(accuracy), defences))
 		newresistances = np.concatenate((resistances, fullres))
@@ -183,7 +183,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 				pl.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed defense value ################################
-	elif split == 3:
+	elif graph_type == 3:
 		defences = np.empty(accuracy); 
 		defences.fill(max(0,fixval-shreds[1])*shreds[0])
 		
@@ -198,7 +198,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed res value ################################
-	elif split == 4:
+	elif graph_type == 4:
 		resistances = np.empty(accuracy); 
 		resistances.fill(max(fixval-shreds[3],0)*shreds[2])
 		
@@ -213,7 +213,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], split=0, max_d
 				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Graph with images of enemies -> enemy prompt ################################
-	elif split == 5:
+	elif graph_type == 5:
 		defences = [i[0] for i in enemies]
 		resistances = [i[1] for i in enemies]
 		xaxis = np.arange(len(enemies))
@@ -403,7 +403,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		input_kwargs = dict()  #for now only hits, soon the shreds are added to correct calculations for flat shredders, later maybe also stacks and other operator specific boni (looking at you, mumu)
 		
 		#Values for the axis of the plot
-		split = 0 #plot type from 0 to 5: normal, split(def first), split(res first), fixed def, fixed res, enemy prompt
+		graph_type = 0 #plot type from 0 to 5: normal, split(def first), split(res first), fixed def, fixed res, enemy prompt
 		max_def = 3000
 		max_res = 120
 		fixval = 40
@@ -417,15 +417,15 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			if parsed_message[i] in op_dict and i+1==entries:
 				if all_conditionals:
 					for combos in itertools.product([True,False], repeat = 5):
-						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 			elif parsed_message[i] in op_dict and not (parsed_message[i+1] in modifiers):
 				if all_conditionals:
 					for combos in itertools.product([True,False], repeat = 5):
-						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 				if contains_data > 40: break
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
@@ -495,9 +495,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
 					if all_conditionals:
 						for combos in itertools.product([True,False], repeat = 5):
-							if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
+							if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
 					else:
-						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, split, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
@@ -704,9 +704,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in ["conditionals", "conditional","variation","variations"]:
 				all_conditionals = True
 			elif parsed_message[i] == "split":
-				if not contains_data: split = 1
+				if not contains_data: graph_type = 1
 			elif parsed_message[i] == "split2":
-				if not contains_data: split = 2
+				if not contains_data: graph_type = 2
 			elif parsed_message[i] in ["small","font","tiny"]:
 				textsize = 6
 			elif parsed_message[i] in ["color","colour","colorblind","colourblind","blind"]:
@@ -736,21 +736,21 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in ["enemy","chapter"]:
 				if parsed_message[i+1] in enemy_dict and contains_data == 0:
 					enemy_key = parsed_message[i+1]
-					split = 5
+					graph_type = 5
 					enemies = enemy_dict[parsed_message[i+1]]
 					enemies.sort(key=lambda tup: tup[0], reverse=False)
 					i += 1
 			elif parsed_message[i] in ["enemy2","chapter2"]:
 				if parsed_message[i+1] in enemy_dict and contains_data == 0:
 					enemy_key = parsed_message[i+1]
-					split = 5
+					graph_type = 5
 					enemies = enemy_dict[parsed_message[i+1]]
 					enemies.sort(key=lambda tup: tup[1], reverse=False)
 					i += 1
 			elif parsed_message[i] in ["fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense"]:
 				if contains_data == 0: 
 					try:
-						split = 3
+						graph_type = 3
 						fixval = int(parsed_message[i+1])
 						fixval = max(0,min(50000,fixval))
 						i+=1
@@ -760,7 +760,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in ["fixres","fixedres","fixresistance","fixedresistance","setres","resresistance"]:
 				if contains_data == 0: 
 					try:
-						split = 4
+						graph_type = 4
 						fixval = int(parsed_message[i+1])
 						fixval = max(0,min(400,fixval))
 						i+=1
@@ -770,7 +770,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				if contains_data == 0: 
 					try:
 						fixval = int(parsed_message[i+1])
-						split = 3 if fixval >= 100 else 4
+						graph_type = 3 if fixval >= 100 else 4
 						fixval = max(0,min(50000,fixval))
 						i+=1
 					except ValueError:
@@ -873,46 +873,46 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		if contains_data > 30 and plot_size == 8 and textsize == 10:
 			legend_columns = 2
 		
-
-		if split != 5:
+		pl.grid(visible=True)
+		if graph_type != 5:
 			pl.xlabel("Defense\nRes")
 			pl.ylabel("DPS" , rotation=0)
-		if split == 3: 
+		if graph_type == 3: 
 			pl.xlabel("Res")
 			pl.ylabel(f"DPS (vs {fixval}def)" , rotation=0)
-		if split == 4: 
+		if graph_type == 4: 
 			pl.xlabel("Defense")
 			pl.ylabel(f"DPS (vs {fixval}res)" , rotation=0)
 		
 		ax = pl.gca()
 		ax.set_ylim(ymin = 0)
 		ax.set_xlim(xmin = 0)
-		if split != 5:
+		if graph_type != 5:
 			ax.set_xlim(xmin = 0, xmax = max_def)
 		ax.xaxis.set_label_coords(0.08/plot_size*4, -0.025/plot_size*4)
 		ax.yaxis.set_label_coords(-0.04/plot_size*4, 1+0.01/plot_size*4)
-		if split == 3: #properly align the DPS comment
+		if graph_type == 3: #properly align the DPS comment
 			ax.yaxis.set_label_coords(0.02, 1.02)
 			if fixval > 999: ax.yaxis.set_label_coords(0.03, 1.02)
 			if fixval < 100: ax.yaxis.set_label_coords(0.01, 1.02)
 			if fixval < 10: ax.yaxis.set_label_coords(0.0, 1.02)
-		if split == 4: 
+		if graph_type == 4: 
 			ax.yaxis.set_label_coords(0.01, 1.02)
 			if fixval < 10: ax.yaxis.set_label_coords(0.0, 1.02)
 			
 		
 		#Setting the x-axis labels	
-		if split == 0:
+		if graph_type == 0:
 			tick_labels=["0\n0",f"{int(max_def/6)}\n{int(max_res/6)}",f"{int(max_def/3)}\n{int(max_res/3)}",f"{int(max_def/2)}\n{int(max_res/2)}",f"{int(max_def*4/6)}\n{int(max_res*4/6)}",f"{int(max_def*5/6)}\n{int(max_res*5/6)}",f"{int(max_def)}\n{int(max_res)}"]
-		if split == 1:
+		if graph_type == 1:
 			tick_labels=["0\n0",f"{int(max_def/3)}\n0",f"{int(max_def*4/6)}\n0",f"{int(max_def)}\n0",f"{int(max_def)}\n{int(max_res*2/6)}",f"{int(max_def)}\n{int(max_res*4/6)}",f"{int(max_def)}\n{int(max_res)}"]
-		if split == 2:
+		if graph_type == 2:
 			tick_labels=["0\n0",f"0\n{int(max_res*2/6)}",f"0\n{int(max_res*4/6)}",f"0\n{int(max_res)}",f"{int(max_def*2/6)}\n{int(max_res)}",f"{int(max_def*4/6)}\n{int(max_res)}",f"{int(max_def)}\n{int(max_res)}"]
-		if split == 3:
+		if graph_type == 3:
 			tick_labels=["0",f"{int(max_res/6)}",f"{int(max_res/3)}",f"{int(max_res/2)}",f"{int(max_res*4/6)}",f"{int(max_res*5/6)}",f"{int(max_res)}"]
-		if split == 4:
+		if graph_type == 4:
 			tick_labels=["0",f"{int(max_def/6)}",f"{int(max_def/3)}",f"{int(max_def/2)}",f"{int(max_def*4/6)}",f"{int(max_def*5/6)}",f"{int(max_def)}"]
-		if split != 5:
+		if graph_type != 5:
 			tick_locations = np.linspace(0,max_def,7)
 			pl.xticks(tick_locations, tick_labels)
 		else: #The part below this handles the enemy prompt
@@ -930,7 +930,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				ax.imshow(img)
 
 
-		pl.grid(visible=True)
+		
 		if show:
 			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns)
 			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns)
