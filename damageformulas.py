@@ -8351,10 +8351,15 @@ class Mostima(Operator):
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
 		self.targets = max(1,targets)
 
-		self.module = module if module in [0,2] else 2 ##### check valid modules
+		self.module = module if module in [0,1,2] else 2 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
 		if level >= maxlvl-30:
-			if self.module == 2:
+			if self.module == 1:
+				if self.module_lvl == 3: self.base_atk += 80
+				elif self.module_lvl == 2: self.base_atk += 68
+				else: self.base_atk += 55
+				self.name += f" ModX{self.module_lvl}"
+			elif self.module == 2:
 				if self.module_lvl == 3: self.base_atk += 82
 				elif self.module_lvl == 2: self.base_atk += 68
 				else: self.base_atk += 51
