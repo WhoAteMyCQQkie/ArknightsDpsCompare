@@ -9496,6 +9496,18 @@ class Pinecone(Operator):
 		self.trait = TrTaTaSkMo[0]
 		self.talent1 = TrTaTaSkMo[1]
 		self.skilldmg = TrTaTaSkMo[3]
+		
+		self.module = module if module in [0,1] else 1 ##### check valid modules
+		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
+		if level >= maxlvl-30:
+			if self.module == 1:
+				if self.module_lvl == 3: self.base_atk += 40
+				elif self.module_lvl == 2: self.base_atk += 36
+				else: self.base_atk += 30
+				self.name += f" ModX{self.module_lvl}"
+			else: self.name += " No Mod"
+		else: self.module = 0
+		
 
 		if self.skill == 1 and not self.trait: self.name += " maxRange"   ##### keep the ones that apply
 		
@@ -9516,7 +9528,7 @@ class Pinecone(Operator):
 		atk_scale = 1
 		
 		#talent/module buffs
-		if self.trait: atk_scale = 1.5
+		if self.trait: atk_scale = 1.6 if self.module == 1 else 1.5
 			
 		####the actual skills
 		if self.skill == 1:
@@ -9528,6 +9540,7 @@ class Pinecone(Operator):
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			sp_cost += 1.2 #sp lockout
 			sprec_boost = 0.5 if self.pot > 4 else 0.45
+			if self.module == 1 and self.module_lvl == 3: sprec_boost += 0.05
 			if self.talent1: sp_cost = sp_cost / (1+ sprec_boost)
 
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
