@@ -34,6 +34,7 @@ class Example(Healer):
 		else: self.name = f"OPBNAME P{self.pot} S{self.skill}"
 		if self.mastery == 0: self.name += "L7"
 		elif self.mastery < 3: self.name += f"M{self.mastery}"
+		self.targets = max(1,self.targets)
 
 		self.module = module if module in [0,1,2] else 1 ##### check valid modules
 		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
@@ -56,34 +57,28 @@ class Example(Healer):
 			
 	
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 20
-		skillcost = 50
 		atkbuff = self.buffs[0]
 		aspd = self.buffs[2]
 
-		
-		#talent/module buffs
-		if self.talent1:
-			atkbuff += 0.12
-
-		if self.module == 1:
-			atkbuff += 0.12
-			if self.pot > 4: atkbuff += 0.02
 			
 		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.4
-			atk_scale = 1
+			final_atk_down = self.base_atk * (1+atkbuff) + self.buffs[1]
+			duration = 30 + 2 * self.mastery
+			sp_cost = 50 - self.mastery
+			sp_cost = sp_cost / (1 + self.boost)
+			
+			atkbuff += 0.4 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			
+			skill_scale = 1
 			aspd += 10
 			
+			skill_hps = final_atk * skill_scale / (self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
+			skilldown_hps = final_atk_down /(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
+			avg_hps = (duration * skill_hps + sp_cost * skilldown_hps) / (duration + sp_cost)
+			self.name += f": **{int(skill_hps)}**/{int(skilldown_hps)}/*{int(avg_hps)}*"
 		
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		basehps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+buffs[3])
-		avghps = (basehps * skillcost/(1+buffs[4]) + skillhps * skillduration)/(skillduration + skillcost/(1+buffs[4]))
-		self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}*"
 		return self.name
 
 class Eyjaberry(Healer):
@@ -478,6 +473,99 @@ class Quercus(Healer):
 			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
 		return self.name
 
+class Shu(Healer):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
+		maxlvl=90
+		lvl1atk = 442  #######including trust
+		maxatk = 529
+		self.atk_interval = 1.2   #### in seconds
+		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
+		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
+		self.pot = pot if pot in range(1,7) else 1
+		if self.pot > 3: self.base_atk += 25
+		
+		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
+		self.mastery = mastery if mastery in [0,1,2,3] else 3
+		if level != maxlvl: self.name = f"Shu Lv{level} P{self.pot} S{self.skill}" #####set op name
+		else: self.name = f"Shu P{self.pot} S{self.skill}"
+		if self.mastery == 0: self.name += "L7"
+		elif self.mastery < 3: self.name += f"M{self.mastery}"
+		self.targets = max(1,targets)
+		
+		self.module = module if module in [0,1,2] else 1 ##### check valid modules
+		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
+		if level >= maxlvl-30:
+			if self.module == 1:
+				self.name += " ModX"
+				if self.module_lvl == 3: self.base_atk += 50
+				elif self.module_lvl == 2: self.base_atk += 40
+				else: self.base_atk += 30
+				self.name += f"{self.module_lvl}"
+			else: self.name += " no Mod"
+		else: self.module = 0
+		self.buffs = buffs
+		self.boost = boost
+			
+	
+	def skill_hps(self, **kwargs):
+		skillhps = 0
+		basehps = 0
+		avghps = 0
+		skillduration = 20
+		skillcost = 50
+		atkbuff = self.buffs[0]
+		aspd = self.buffs[2]
+
+		
+		#talent/module buffs
+		grassheal = 75 if self.pot > 4 else 70
+		if self.module == 1 and self.module_lvl > 1: grassheal += 10
+		grassheal *= self.targets
+			
+		####the actual skills
+		if self.skill == 1:
+			skill_scale = 1.5 + 0.1 * self.mastery
+			sp_cost = 5 if self.mastery == 0 else 4
+			sp_cost= sp_cost/(1+self.boost) + 1.2
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_hps = final_atk * skill_scale * (1+ self.buffs[3])
+			avg_skill_hps = final_atk * skill_scale * (1+ self.buffs[3]) / sp_cost
+			self.name += f": **{int(skill_hps+grassheal)}**/{int(grassheal)}/*{int(avg_skill_hps+grassheal)}* or **{int(skill_hps+grassheal*1.15)}**/{int(grassheal)}/*{int(avg_skill_hps*1.15+grassheal)}* below 50%, {grassheal} coming from grass."
+		
+		if self.skill == 2:
+			self.atk_interval = 2.5
+			grassheal_skill = grassheal * 1.5 if self.mastery == 3 else grassheal * 1.4
+			atkbuff += 0.9 + 0.1 * self.mastery
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			sp_cost = 25 if self.mastery == 3 else 30
+			sp_cost = sp_cost/(1+self.boost)
+			duration = 25
+			skill_hps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3]) * min(self.targets,2)
+			avg_skill_hps = skill_hps * duration / (duration + sp_cost)
+			avg_grass = (grassheal_skill * duration + grassheal * sp_cost) / (duration+sp_cost)
+			self.name += f": **{int(skill_hps+grassheal_skill)}**/{int(grassheal)}/*{int(avg_skill_hps+avg_grass)}* or **{int(skill_hps*1.15+grassheal_skill)}**/{int(grassheal)}/*{int(avg_skill_hps*1.15+avg_grass)}* below 50%, {int(grassheal_skill)}/{grassheal}/{int(avg_grass)} coming from grass."
+		
+		if self.skill == 3:
+			atkbuff = 0.34 if self.mastery == 0 else 0.32 + 0.06 * self.mastery
+			duration = 30
+			sp_cost = 45
+			if self.mastery == 0: sp_cost = 50
+			elif self.mastery != 3: sp_cost = 47
+			sp_cost = sp_cost / (1 + self.boost)
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_hps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
+			avg_skill_hps = skill_hps * duration / (duration + sp_cost)
+			self.name += f": **{int(skill_hps+grassheal)}**/{int(grassheal)}/*{int(avg_skill_hps+grassheal)}* or **{int(skill_hps+grassheal*1.15)}**/{int(grassheal)}/*{int(avg_skill_hps*1.15+grassheal)}* below 50%."
+			aspd += 25 if self.mastery > 1 else 20
+			atkbuff += 0.25 if self.mastery > 1 else 0.2
+			
+			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_hps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
+			avg_skill_hps = skill_hps * duration / (duration + sp_cost)
+			self.name += f" With enemies around:**{int(skill_hps+grassheal*1.15)}**/{int(grassheal)}/*{int(avg_skill_hps*1.15+grassheal)}*, {grassheal} coming from grass"
+
+		return self.name
+
 class Silence(Healer):
 	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=80
@@ -548,9 +636,9 @@ class Silence(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "silence": Silence}
+healer_dict = {"eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
 
-healers = ["Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus"]
+healers = ["Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu"]
 
 if __name__ == "__main__":
 	for operator in healer_dict.values():
