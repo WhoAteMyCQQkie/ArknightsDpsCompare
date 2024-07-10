@@ -896,6 +896,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			legend_columns = 2
 		
 		pl.grid(visible=True)
+		if show:
+			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns)
+			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns)
+		
 		if graph_type != 5:
 			pl.xlabel("Defense\nRes")
 			pl.ylabel("DPS" , rotation=0)
@@ -953,9 +957,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 
 
 		
-		if show:
-			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns)
-			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns)
+		
 		if add_title:
 			pl.title(title)
 		fig = pl.gcf()
