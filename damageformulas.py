@@ -1,6 +1,8 @@
-import math #fu Kjera
+import math  # fu Kjera
+
 import numpy as np
 import pylab as pl
+
 
 class Operator:
 	
@@ -13516,6 +13518,8 @@ class ZuoLe(Operator):
 
 ################################################################################################################################################################################
 import numpy as np
+
+
 def levenshtein(word1, word2):
 	m = len(word1)
 	n = len(word2)

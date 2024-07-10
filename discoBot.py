@@ -30,24 +30,25 @@
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make variable naming more consistent
 
-import discord
-import os
-import numpy as np
-import pylab as pl
-from PIL import Image
-import damageformulas as df
-import healingformulas as hf
 import io
 import itertools
-import nltk
-import subprocess
+import os
 import signal
+import subprocess
+
+import discord
+import matplotlib.pyplot as plt
+import nltk
+import numpy as np
+from PIL import Image
+
+import damageformulas as df
+import healingformulas as hf
 
 ##############################################
 #Bot Settings for the channels it will respond to
 valid_channels = ['operation-room','bot-spam']
 respond_to_dm = True
-
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -84,7 +85,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	if plotnumbers > 9: style = '--'
 	if plotnumbers > 19: style = '-.'
 	if plotnumbers > 29: style = ':'
-	
+
 	#Setting the name of the operator
 	op_name = ""
 	if buffs[0] > 0: op_name += f" atk+{int(100*buffs[0])}%"
@@ -121,18 +122,18 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = pl.plot(xaxis, damages, label=op_name,linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name,linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
 				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				if normal_dps: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments defense and THEN res ################################
 	elif graph_type == 1: 
@@ -143,20 +144,20 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = pl.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
 				defen = min(max_def-1,defen)
 				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
-				pl.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(119,res)
 				if normal_dps: demanded = operator.skill_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Increments Res and THEN defense ################################
 	elif graph_type == 2:
@@ -167,20 +168,20 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = pl.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
 				defen = min(max_def-1,defen)
 				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(max_def/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(max_def/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(max_res-1,res)
 				if normal_dps: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed defense value ################################
 	elif graph_type == 3:
@@ -190,12 +191,12 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = pl.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name)
 		
 		for res in ress:
 			if res >= 0:
 				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed res value ################################
 	elif graph_type == 4:
@@ -205,12 +206,12 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = pl.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name)
 		
 		for defen in defens:
 			if defen >= 0:
 				demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
-				pl.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Graph with images of enemies -> enemy prompt ################################
 	elif graph_type == 5:
@@ -220,11 +221,11 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		damages = np.zeros(len(enemies))
 
 		damages = operator.skill_dps(np.array(defences),np.array(resistances))*(1+buffs[3])
-		p = pl.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
-		pl.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
+		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
+		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i in range(len(enemies)):
 			demanded = operator.skill_dps(enemies[i][0],enemies[i][1])*(1+buffs[3])
-			pl.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	return True	
 
 
@@ -364,8 +365,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 	if message.content.lower().startswith('!dps'):
 		
 		#reset plot parameters
-		pl.clf()
-		pl.style.use('default')
+		plt.clf()
+		plt.style.use('default')
 		alreadyDrawnOps = [] #this is a global variable edited the plot_graph function. probably not a good solution
 		plot_size = 4 #plot height in inches
 		add_title = False
@@ -732,7 +733,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			elif parsed_message[i] in ["small","font","tiny"]:
 				textsize = 6
 			elif parsed_message[i] in ["color","colour","colorblind","colourblind","blind"]:
-				pl.style.use('tableau-colorblind10')
+				plt.style.use('tableau-colorblind10')
 			elif parsed_message[i] in ["maxdef","limit","range","scale"]:
 				if contains_data == 0 and not number_request:
 					i+=1
@@ -874,10 +875,10 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		
 		#Cases where no plot is generated: no inputs or too many inputs
 		if contains_data == 0:
-			pl.close()
+			plt.close()
 			return
 		if contains_data > 40:
-			pl.close()
+			plt.close()
 			l = len(bot_mad_message)
 			nope = bot_mad_message[np.random.randint(0,l)]
 			await message.channel.send(nope)
@@ -895,22 +896,22 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		if contains_data > 30 and plot_size == 8 and textsize == 10:
 			legend_columns = 2
 		
-		pl.grid(visible=True)
+		plt.grid(visible=True)
 		if show:
-			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
-			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
+			if not bottomleft: plt.legend(loc="upper right",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
+			else: plt.legend(loc="lower left",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
 		
 		if graph_type != 5:
-			pl.xlabel("Defense\nRes")
-			pl.ylabel("DPS" , rotation=0)
+			plt.xlabel("Defense\nRes")
+			plt.ylabel("DPS" , rotation=0)
 		if graph_type == 3: 
-			pl.xlabel("Res")
-			pl.ylabel(f"DPS (vs {fixval}def)" , rotation=0)
+			plt.xlabel("Res")
+			plt.ylabel(f"DPS (vs {fixval}def)" , rotation=0)
 		if graph_type == 4: 
-			pl.xlabel("Defense")
-			pl.ylabel(f"DPS (vs {fixval}res)" , rotation=0)
+			plt.xlabel("Defense")
+			plt.ylabel(f"DPS (vs {fixval}res)" , rotation=0)
 		
-		ax = pl.gca()
+		ax = plt.gca()
 		ax.set_ylim(ymin = 0)
 		ax.set_xlim(xmin = 0)
 		if graph_type != 5:
@@ -940,11 +941,11 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			tick_labels=["0",f"{int(max_def/6)}",f"{int(max_def/3)}",f"{int(max_def/2)}",f"{int(max_def*4/6)}",f"{int(max_def*5/6)}",f"{int(max_def)}"]
 		if graph_type != 5:
 			tick_locations = np.linspace(0,max_def,7)
-			pl.xticks(tick_locations, tick_labels)
+			plt.xticks(tick_locations, tick_labels)
 		else: #The part below this handles the enemy prompt
 			ax.set_xticklabels([])
 			xl, yl, xh, yh=np.array(ax.get_position()).ravel()
-			fig = pl.gcf()
+			fig = plt.gcf()
 			axes = [None] * len(enemies)
 			for i,ax in enumerate(axes):
 				ph = len(enemies)
@@ -959,17 +960,17 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		
 		
 		if add_title:
-			pl.title(title)
-		fig = pl.gcf()
+			plt.title(title)
+		fig = plt.gcf()
 		fig.set_size_inches(2 * plot_size, plot_size)
-		pl.tight_layout()
+		plt.tight_layout()
 		
 		#Generate image and send it to the channel
 		buf = io.BytesIO()
-		pl.savefig(buf,format='png')
+		plt.savefig(buf,format='png')
 		buf.seek(0)
 		file = discord.File(buf, filename='plot.png')
-		pl.close()
+		plt.close()
 		if parsing_error:
 			await message.channel.send(error_message[:-1], file=file)
 		else:
