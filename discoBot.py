@@ -32,7 +32,6 @@
 
 import io
 import itertools
-import os
 import signal
 import subprocess
 
@@ -47,19 +46,19 @@ import healingformulas as hf
 
 ##############################################
 #Bot Settings for the channels it will respond to
-valid_channels = ['operation-room','bot-spam']
-respond_to_dm = True
+VALID_CHANNELS = ['operation-room','bot-spam']
+RESPOND_TO_DM = True
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
-onPi = True
+ON_PI = True
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
 try:
-	with open("testrun.txt") as file:
-		_ = file.readline()
-		onPi = False
-except:
+	with open("testrun.txt", encoding="utf-8") as testfile:
+		_ = testfile.readline()
+		ON_PI = False
+except OSError:
 	pass
 
 #Operator data from the other scripts
@@ -79,7 +78,7 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
 
-def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps =[], shreds = [1,0,1,0], enemies = [],basebuffs=[1,0],normal_dps = True, plotnumbers = 0):
+def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps = [], shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -185,7 +184,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	
 	############### DPS graph with a fixed defense value ################################
 	elif graph_type == 3:
-		defences = np.empty(accuracy); 
+		defences = np.empty(accuracy)
 		defences.fill(max(0,fixval-shreds[1])*shreds[0])
 		
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
@@ -200,7 +199,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	
 	############### DPS graph with a fixed res value ################################
 	elif graph_type == 4:
-		resistances = np.empty(accuracy); 
+		resistances = np.empty(accuracy)
 		resistances.fill(max(fixval-shreds[3],0)*shreds[2])
 		
 		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
@@ -223,25 +222,24 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		damages = operator.skill_dps(np.array(defences),np.array(resistances))*(1+buffs[3])
 		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
 		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
-		for i in range(len(enemies)):
-			demanded = operator.skill_dps(enemies[i][0],enemies[i][1])*(1+buffs[3])
+		for i, enemy in enumerate(enemies):
+			demanded = operator.skill_dps(enemy[0],enemy[1])*(1+buffs[3])
 			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	return True	
 
-
 @client.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+	print('We have logged in as {0.user}'.format(client))
 
 @client.event
 async def on_message(message):
 	if message.author == client.user:
 		return
 	
-	if onPi:
-		if type(message.channel)==discord.channel.DMChannel and respond_to_dm:
+	if ON_PI:
+		if isinstance(message.channel, discord.channel.DMChannel) and RESPOND_TO_DM:
 			pass
-		elif not message.channel.name in valid_channels: return
+		elif not message.channel.name in VALID_CHANNELS: return
 	else:
 		if not message.channel.name == 'privatebottest': return
 
@@ -342,9 +340,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				for letter in output:
 					command += letter
 				command = "print("+command+")"
-				result = subprocess.run(['python', '-c', command], capture_output=True, text=True,timeout=1)
+				result = subprocess.run(['python', '-c', command], capture_output=True, text=True, timeout=1, check=False)
 				if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
-				if(len(str(result.stdout)) < 200):
+				if len(str(result.stdout)) < 200:
 					await message.channel.send(str(result.stdout))
 				else:
 					await message.channel.send("Result too large.")
@@ -389,7 +387,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		contains_data = 0
 		buffs = [0,0,0,0] #atk% flatatk aspd fragile hitsreceived. the hitsreceived should be moved to a kwarg soon
 		basebuffs = [1,0]
-		TrTaTaSkMo = [True,True,True,True,True] #trait talent1 talent2 skill module
+		active_operator_kit_aspects = [True,True,True,True,True] #trait talent1 talent2 skill module
 		all_conditionals = False
 		targets = 1
 		shreds = [1,0,1,0] #def% def res% res. percent values are multiplied to dmg, so 20% shred = 0.8
@@ -413,13 +411,13 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					for combos in itertools.product([True,False], repeat = 5):
 						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
-			elif parsed_message[i] in op_dict and not (parsed_message[i+1] in modifiers):
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+			elif parsed_message[i] in op_dict and not parsed_message[i+1] in modifiers:
 				if all_conditionals:
 					for combos in itertools.product([True,False], repeat = 5):
 						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
+					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 				if contains_data > 40: break
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
@@ -491,7 +489,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						for combos in itertools.product([True,False], repeat = 5):
 							if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
 					else:
-						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,TrTaTaSkMo,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
@@ -648,9 +646,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						input_kwargs["hits"] = float(parsed_message[i])
 					except ValueError:
 						if "/" in parsed_message[i]:
-							newStrings = parsed_message[i].split("/")
+							new_strings = parsed_message[i].split("/")
 							try:
-								input_kwargs["hits"] = (float(newStrings[0]) / float(newStrings[1]))
+								input_kwargs["hits"] = (float(new_strings[0]) / float(new_strings[1]))
 							except ValueError:
 								break
 						else:
@@ -687,35 +685,35 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					i+=1
 				i-=1		
 			elif parsed_message[i] in ["l","low"]:
-				TrTaTaSkMo = [False,False,False,False,False]
+				active_operator_kit_aspects = [False,False,False,False,False]
 			elif parsed_message[i] in ["h","high"]:
-				TrTaTaSkMo = [True,True,True,True,True]
+				active_operator_kit_aspects = [True,True,True,True,True]
 			elif parsed_message[i] in ["low1","l1","lowtrait","traitlow"]:
-				TrTaTaSkMo[0] = False
+				active_operator_kit_aspects[0] = False
 			elif parsed_message[i] in ["high1","h1","hightrait","traithigh"]:
-				TrTaTaSkMo[0] = True
+				active_operator_kit_aspects[0] = True
 			elif parsed_message[i] in ["low2","l2","lowtalent","talentlow","lowtalent1","talent1low"]:
-				TrTaTaSkMo[1] = False
+				active_operator_kit_aspects[1] = False
 			elif parsed_message[i] in ["high2","h2","hightalent","talenthigh","hightalent1","talent1high"]:
-				TrTaTaSkMo[1] = True
+				active_operator_kit_aspects[1] = True
 			elif parsed_message[i] in ["low3","l3","talentlow","lowtalent2","talent2low"]:
-				TrTaTaSkMo[2] = False
+				active_operator_kit_aspects[2] = False
 			elif parsed_message[i] in ["high3","h3","talenthigh","hightalent2","talent2high"]:
-				TrTaTaSkMo[2] = True
+				active_operator_kit_aspects[2] = True
 			elif parsed_message[i] in ["low4","l4","lows","slow","lowskill","skilllow"]:
-				TrTaTaSkMo[3] = False
+				active_operator_kit_aspects[3] = False
 			elif parsed_message[i] in ["high4","h4","highs","shigh","highskill","skillhigh"]:
-				TrTaTaSkMo[3] = True
+				active_operator_kit_aspects[3] = True
 			elif parsed_message[i] in ["low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow"]:
-				TrTaTaSkMo[4] = False
+				active_operator_kit_aspects[4] = False
 			elif parsed_message[i] in ["high5","h5","highm","mhigh","highmod","modhigh","highmodule","modulehigh"]:
-				TrTaTaSkMo[4] = True
+				active_operator_kit_aspects[4] = True
 			elif parsed_message[i] == "lowtalents":
-				TrTaTaSkMo[1] = False
-				TrTaTaSkMo[2] = False
+				active_operator_kit_aspects[1] = False
+				active_operator_kit_aspects[2] = False
 			elif parsed_message[i] == "hightalents":
-				TrTaTaSkMo[1] = True
-				TrTaTaSkMo[2] = True
+				active_operator_kit_aspects[1] = True
+				active_operator_kit_aspects[2] = True
 			elif parsed_message[i] in ["total", "totaldmg"]:
 				normal_dps = not normal_dps
 			elif parsed_message[i] in ["hide", "legend"]:
@@ -844,19 +842,19 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					parsed_message[i+1] = tmp
 					i -= 1
 			else:
-				myKeys = list(op_dict.keys()) ### Try some autocorrection for typos in the operator name
-				lev_dist = 1000
+				my_keys = list(op_dict.keys()) ### Try some autocorrection for typos in the operator name
+				#lev_dist = 1000
 				errorlimit = 0
 				promptlength = len(parsed_message[i])
 				prompt = parsed_message[i]
-				foundFit = False 
+				found_fit = False 
 				optimizer = False #True when a solution was found, but we still search for a better solution.
 				optimize_error = -10
 				if promptlength > 3: errorlimit = 1
 				if promptlength > 5: errorlimit = 2
 				if promptlength > 8: errorlimit = 3
 				if promptlength < 15:
-					for key in myKeys:
+					for key in my_keys:
 						if optimizer:
 							if df.levenshtein(key, prompt) < optimize_error: #dont just stop at the first fit, but rather at the best fit.
 								parsed_message[i] = key
@@ -866,8 +864,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							i-=1
 							optimizer = True
 							optimize_error = df.levenshtein(key, prompt)
-							foundFit = True
-				if not foundFit:
+							found_fit = True
+				if not found_fit:
 					parsing_error = True
 					error_message += " " + parsed_message[i] + ","
 			i+=1
@@ -944,6 +942,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			plt.xticks(tick_locations, tick_labels)
 		else: #The part below this handles the enemy prompt
 			ax.set_xticklabels([])
+			#pylint: disable=unused-variable
 			xl, yl, xh, yh=np.array(ax.get_position()).ravel()
 			fig = plt.gcf()
 			axes = [None] * len(enemies)
@@ -992,7 +991,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		modlvl = 3
 		contains_data = 0
 		buffs = [0,0,0,0]
-		TrTaTaSkMo = [True,True,True,True,True] #trait talent1 talent2 skill module
+		active_operator_kit_aspects = [True,True,True,True,True] #trait talent1 talent2 skill module
 		boost = 0
 		healer_message = ""
 		parsing_error = False
@@ -1003,7 +1002,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,targets,buffs,boost)).skill_hps() + "\n"
 				contains_data += 1
 				if contains_data > 19: break
-			elif parsed_message[i] in healer_dict and not (parsed_message[i+1] in modifiers):
+			elif parsed_message[i] in healer_dict and not parsed_message[i+1] in modifiers:
 				contains_data += 1
 				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,targets,buffs,boost)).skill_hps() + "\n"
 				if contains_data > 19: break
@@ -1147,16 +1146,16 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				backsteps = 1
 				while backsteps < 5:
 					try:
-						idc = int(parsed_message[i-backsteps])
+						idc = int(parsed_message[i-backsteps]) #TODO: This may not need to be assigned at all
 						backsteps +=1
 					except ValueError:
 						backsteps +=1
 						break
 				i-=backsteps
-			elif not parsed_message[i][0] in ["0","1","2","3","4","5","6","7","8","9"] and  parsed_message[i][-2] in ["0","1","2","3","4","5","6","7","8","9","."]: #try to fix a missing space after buff/hits etc
+			elif not parsed_message[i][0].isdigit() and  parsed_message[i][-2].isdigit(): #try to fix a missing space after buff/hits etc
 				numberpos = 2
 				wordlen = len(parsed_message[i])
-				while parsed_message[i][-numberpos] in ["0","1","2","3","4","5","6","7","8","9","."]:
+				while parsed_message[i][-numberpos].isdigit():
 					numberpos += 1
 				temp = parsed_message[i]
 				parsed_message[i] = parsed_message[i][(wordlen-numberpos+1):]
@@ -1164,19 +1163,19 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				entries += 1
 				i -= 1
 			else:
-				myKeys = list(healer_dict.keys()) ### Try some autocorrection
-				lev_dist = 1000
+				my_keys = list(healer_dict.keys()) ### Try some autocorrection
+				#lev_dist = 1000
 				errorlimit = 0
 				promptlength = len(parsed_message[i])
 				prompt = parsed_message[i]
-				foundFit = False
+				found_fit = False
 				optimizer = False
 				optimize_error = -10
 				if promptlength > 3: errorlimit = 1
 				if promptlength > 5: errorlimit = 2
 				if promptlength > 8: errorlimit = 3
 				if promptlength < 15:
-					for key in myKeys:
+					for key in my_keys:
 						if optimizer:
 							if df.levenshtein(key, prompt) < optimize_error: #dont just stop at the first fit, but rather at the best fit.
 								parsed_message[i] = key
@@ -1186,8 +1185,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							i-=1
 							optimizer = True
 							optimize_error = df.levenshtein(key, prompt)
-							foundFit = True
-				if not foundFit:
+							found_fit = True
+				if not found_fit:
 					parsing_error = True
 					error_message += " " + parsed_message[i] + ","
 			
@@ -1197,9 +1196,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		healer_message = "Heals per second - **skill active**/skill down/*averaged* \n" + healer_message		
 		if contains_data > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
 		await message.channel.send(healer_message)
-		
-with open("token.txt") as file:
-	token = file.readline()
-client.run(token)
 
-
+if __name__ == "__main__":
+	with open("token.txt", encoding="utf-8") as testfile:
+		token = testfile.readline()
+	client.run(token)

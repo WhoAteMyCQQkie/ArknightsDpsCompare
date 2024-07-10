@@ -648,5 +648,3 @@ if __name__ == "__main__":
 	
 	#Test individual operators:
 	#print(Eyjaberry().skill_hps())
-
-
