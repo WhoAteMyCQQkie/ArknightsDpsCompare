@@ -109,7 +109,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	op_name = operator.get_name() + op_name
 	if op_name in alreadyDrawnOps: return False
 	alreadyDrawnOps.append(op_name)
-	if len(op_name) > 70: #formatting issue for too long names
+	if len(op_name) > 65: #formatting issue for too long names
 		op_name = op_name[:int(len(op_name)/2)] + "\n" + op_name[int(len(op_name)/2):]
 	
 	defences = np.clip(np.linspace(-shreds[1],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
@@ -897,8 +897,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		
 		pl.grid(visible=True)
 		if show:
-			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns)
-			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns)
+			if not bottomleft: pl.legend(loc="upper right",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
+			else: pl.legend(loc="lower left",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
 		
 		if graph_type != 5:
 			pl.xlabel("Defense\nRes")
