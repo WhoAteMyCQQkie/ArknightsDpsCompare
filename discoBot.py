@@ -655,7 +655,36 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 						else:
 							break
 					i+=1
-				i-=1						
+				i-=1
+			elif parsed_message[i] in ["stack","stacks"]:
+				i+=1
+				while i < entries:
+					try:
+						input_kwargs["stacks"] = int(parsed_message[i])
+					except ValueError:
+						break
+					i+=1
+				i-=1
+			elif parsed_message[i] in ["plus","ultra","plusultra","peak","bonus","max"]:
+				input_kwargs["stacks"] = int(parsed_message[i])		
+			elif parsed_message[i] in ["ptilo","boost","spboost","spbuff","sp"]:
+				i+=1
+				while i < entries:
+					if parsed_message[i][-1] == "%":
+						try:
+							input_kwargs["boost"] = float(parsed_message[i][:-1])/100
+							shreds[0] = max(0,(1-float(parsed_message[i][:-1])/100))
+						except ValueError:
+							break
+					else:
+						try:
+							val = float(parsed_message[i])
+							if val > 0 and val < 1:
+								input_kwargs["boost"] = val
+						except ValueError:
+							break
+					i+=1
+				i-=1		
 			elif parsed_message[i] in ["l","low"]:
 				TrTaTaSkMo = [False,False,False,False,False]
 			elif parsed_message[i] in ["h","high"]:
