@@ -18,7 +18,7 @@ class Healer:
 		return self.name
 
 class Example(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0,0]):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=90
 		lvl1atk = 1000  #######including trust
 		maxatk = 2000
@@ -87,7 +87,7 @@ class Example(Healer):
 		return self.name
 
 class Eyjaberry(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=90
 		lvl1atk = 384  #######including trust
 		maxatk = 469
@@ -151,7 +151,7 @@ class Eyjaberry(Healer):
 
 
 class Lumen(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=90
 		lvl1atk = 477  #######including trust
 		maxatk = 585
@@ -229,7 +229,7 @@ class Lumen(Healer):
 		return self.name
 
 class Myrtle(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=70
 		lvl1atk = 436  #######including trust
 		maxatk = 520
@@ -275,7 +275,7 @@ class Myrtle(Healer):
 		return self.name
 
 class Ptilopsis(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=80
 		lvl1atk = 323  #######including trust
 		maxatk = 390
@@ -342,7 +342,7 @@ class Ptilopsis(Healer):
 		return self.name
 
 class Purestream(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=70
 		lvl1atk = 398  #######including trust
 		maxatk = 489
@@ -420,7 +420,7 @@ class Purestream(Healer):
 		return self.name
 
 class Quercus(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=80
 		lvl1atk = 384  #######including trust
 		maxatk = 463
@@ -479,7 +479,7 @@ class Quercus(Healer):
 		return self.name
 
 class Silence(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, buffs=[0,0,0,0], boost = 0):
+	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
 		maxlvl=80
 		lvl1atk = 460  #######including trust
 		maxatk = 557

@@ -666,8 +666,8 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					i+=1
 				i-=1
 			elif parsed_message[i] in ["plus","ultra","plusultra","peak","bonus","max"]:
-				input_kwargs["stacks"] = int(parsed_message[i])		
-			elif parsed_message[i] in ["ptilo","boost","spboost","spbuff","sp"]:
+				input_kwargs["bonus"] = True
+			elif parsed_message[i] in ["ptilo","boost","spboost","spbuff","sp","buffsp"]:
 				i+=1
 				while i < entries:
 					if parsed_message[i][-1] == "%":
@@ -984,6 +984,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		res = [-1]
 		defen = [-1]
 		lvl = -10
+		targets = 1
 		mastery = 3
 		modlvl = 3
 		contains_data = 0
@@ -996,46 +997,83 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		
 		while i < entries:
 			if parsed_message[i] in healer_dict and i+1==entries:
-				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,buffs,boost)).skill_hps() + "\n"
+				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,targets,buffs,boost)).skill_hps() + "\n"
 				contains_data += 1
+				if contains_data > 19: break
 			elif parsed_message[i] in healer_dict and not (parsed_message[i+1] in modifiers):
 				contains_data += 1
-				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,buffs,boost)).skill_hps() + "\n"
+				healer_message += (healer_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3,targets,buffs,boost)).skill_hps() + "\n"
+				if contains_data > 19: break
 			elif parsed_message[i] in healer_dict and parsed_message[i+1] in modifiers:
 				tmp = i
 				i+=1
-				skill=-1
-				mastery = 3
-				modlvl = 3
-				pot=-1
-				mod=-1
+				skills = {-1}
+				masteries = {-1}
+				modlvls = {-1}
+				pots = {-1}
+				mods = {-1}
 				while i < entries and parsed_message[i] in modifiers:
-					if parsed_message[i] in ["s1","s2","s3"]: skill = int(parsed_message[i][1])
-					elif parsed_message[i] in ["p1","p2","p3","p4","p5","p6"]: pot = int(parsed_message[i][1])
-					elif parsed_message[i] in ["1","2","3"]: modlvl = int(parsed_message[i])
-					elif parsed_message[i] in ["modlvl1","modlvl2","modlvl3"]: modlvl = int(parsed_message[i][-1])
-					elif parsed_message[i] in ["m0","m1","m2","m3"]: mastery = int(parsed_message[i][1]) 
-					elif parsed_message[i] in ["mod0","mod1","mod2","mod3"]: mod = int(parsed_message[i][3])
-					elif parsed_message[i] in ["modx","x"]: mod = 1
+					if parsed_message[i] in ["s1","s2","s3"]: 
+						skills.add(int(parsed_message[i][1]))
+						skills.discard(-1)
+					elif parsed_message[i] in ["p1","p2","p3","p4","p5","p6"]: 
+						pots.add(int(parsed_message[i][1]))
+						pots.discard(-1)
+					elif parsed_message[i] in ["1","2","3"]: 
+						modlvls.add(int(parsed_message[i]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3",]: 
+						modlvls.add(int(parsed_message[i][-1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["m0","m1","m2","m3"]: 
+						masteries.add(int(parsed_message[i][1]))
+						masteries.discard(-1)
+					elif parsed_message[i] in ["sl7","s7","slv7","l7","lv7"]:
+						masteries.add(0)
+						masteries.discard(-1)
+					elif parsed_message[i] in ["mod0","mod1","mod2","mod3"]:
+						mods.add(int(parsed_message[i][3]))
+						mods.discard(-1)
+					elif parsed_message[i] in ["modx","x"]:
+						mods.add(1)
+						mods.discard(-1)
 					elif parsed_message[i] in ["x1","x2","x3"]: 
-						mod = 1
-						modlvl = int(parsed_message[i][1])
+						mods.add(1)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
 					elif parsed_message[i] in ["y1","y2","y3"]: 
-						mod = 2
-						modlvl = int(parsed_message[i][1])
-					elif parsed_message[i] in ["mody","y"]: mod = 2
-					elif parsed_message[i] in ["modd","d"]: mod = 3
+						mods.add(2)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["mody","y"]:
+						mods.add(2)
+						mods.discard(-1)
+					elif parsed_message[i] in ["modd","d"]:
+						mods.add(3)
+						mods.discard(-1)
 					elif parsed_message[i] in ["d1","d2","d3"]: 
-						mod = 3
-						modlvl = int(parsed_message[i][1])
-					elif parsed_message[i] in ["no","mod","module","nomod"]: mod = 0
+						mods.add(3)
+						mods.discard(-1)
+						modlvls.add(int(parsed_message[i][1]))
+						modlvls.discard(-1)
+					elif parsed_message[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
+						mods.add(0)
+						mods.discard(-1)
 					elif parsed_message[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
-						skill = int(parsed_message[i][1])
-						mastery = int(parsed_message[i][3])
+						skills.add(int(parsed_message[i][1]))
+						skills.discard(-1)
+						masteries.add(int(parsed_message[i][3]))
+						masteries.discard(-1)
 					i+=1
-				healer_message += (healer_dict[parsed_message[tmp]](lvl,pot, skill, mastery,mod,modlvl,buffs,boost)).skill_hps() + "\n"
-				contains_data += 1
-				i-=1
+				if not -1 in modlvls and 0 in mods and len(mods) == 1:
+					mods.add(-1)
+				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
+					healer_message += (healer_dict[parsed_message[tmp]](lvl,pot, skill, mastery,mod,modlvl,targets,buffs,boost)).skill_hps() + "\n"
+					contains_data += 1
+					if contains_data > 19: break
+				if contains_data > 19: break
 			elif parsed_message[i] in ["b","buff","buffs"]:
 				i+=1
 				buffcount=0
@@ -1053,7 +1091,17 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 					if buffcount == 4: buffs[3] = max(0, buffs[3])/100
 					i+=1
 				i-=1
-				
+			elif parsed_message[i] in ["t","target","targets"]:
+				i+=1
+				targets = 1
+				while i < entries:
+					try:
+						targets = int(parsed_message[i])
+					except ValueError:
+						break
+					i+=1
+				i-=1
+			elif parsed_message[i] in ["t1","t2","t3","t4","t5","t6","t7","t8","t9"]: targets = int(parsed_message[i][1])	
 			elif parsed_message[i] in ["lvl","level","lv"]:
 				i+=1
 				lvl = -10
@@ -1067,7 +1115,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 							break
 					i+=1
 				i-=1
-			elif parsed_message[i] in ["sp","boost","recovery"]:
+			elif parsed_message[i] in ["sp","boost","recovery","spboost","spbuff","buffsp"]:
 				i+=1
 				boost = 0
 				while i < entries:
@@ -1144,7 +1192,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		if contains_data == 0: return
 		
 		healer_message = "Heals per second - **skill active**/skill down/*averaged* \n" + healer_message		
-		
+		if contains_data > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
 		await message.channel.send(healer_message)
 		
 with open("token.txt") as file:
