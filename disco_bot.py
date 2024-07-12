@@ -28,7 +28,6 @@
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
-# make variable naming more consistent
 
 import io
 import itertools
@@ -41,8 +40,9 @@ import nltk
 import numpy as np
 from PIL import Image
 
-import damage_formulas as df
-import healing_formulas as hf
+import damagecalc.damage_formulas as df
+import damagecalc.healing_formulas as hf
+import damagecalc.utils as utils
 
 ##############################################
 #Bot Settings for the channels it will respond to
@@ -76,156 +76,6 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
-
-
-def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, alreadyDrawnOps = [], shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
-	accuracy = 1 + 30 * 6
-	style = '-'
-	if plotnumbers > 9: style = '--'
-	if plotnumbers > 19: style = '-.'
-	if plotnumbers > 29: style = ':'
-
-	#Setting the name of the operator
-	op_name = ""
-	if buffs[0] > 0: op_name += f" atk+{int(100*buffs[0])}%"
-	if buffs[0] < 0: op_name += f" atk{int(100*buffs[0])}%"
-	if buffs[1] > 0: op_name += f" atk+{buffs[1]}"
-	if buffs[1] < 0: op_name += f" atk{buffs[1]}"
-	if buffs[2] > 0: op_name += f" aspd+{buffs[2]}"
-	if buffs[2] < 0: op_name += f" aspd{buffs[2]}"
-	if buffs[3] > 0: op_name += f" dmg+{int(100*buffs[3])}%"
-	if buffs[3] < 0: op_name += f" dmg{int(100*buffs[3])}%"
-	if shreds[0] != 1: op_name += f" -{int(100*(1-shreds[0])+0.0001)}%def"
-	if shreds[1] != 0: op_name += f" -{int(shreds[1])}def"
-	if shreds[2] != 1: op_name += f" -{int(100*(1-shreds[2])+0.0001)}%res"
-	if shreds[3] != 0: op_name += f" -{int(shreds[3])}res"
-	if basebuffs[0] != 1: 
-		op_name += f" +{int(100*(basebuffs[0]-1))}%bAtk"
-		operator.base_atk *= basebuffs[0]
-	if basebuffs[1] != 0: 
-		op_name += f" +{int(basebuffs[1])}bAtk"
-		operator.base_atk += basebuffs[1]
-	if not normal_dps and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
-	op_name = operator.get_name() + op_name
-	if op_name in alreadyDrawnOps: return False
-	alreadyDrawnOps.append(op_name)
-	if len(op_name) > 65: #formatting issue for too long names
-		op_name = op_name[:int(len(op_name)/2)] + "\n" + op_name[int(len(op_name)/2):]
-	
-	defences = np.clip(np.linspace(-shreds[1],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
-	resistances = np.clip(np.linspace(-shreds[3],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
-	damages = np.zeros(2*accuracy) if graph_type in [1,2] else np.zeros(accuracy)
-	
-	############### Normal DPS graph ################################
-	if graph_type == 0:
-		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
-		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
-		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name,linestyle=style)
-		
-		for defen in defens:
-			if defen >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-		for res in ress:
-			if res >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	
-	############### Increments defense and THEN res ################################
-	elif graph_type == 1: 
-		fulldef = np.full(accuracy, max(0,max_def-shreds[1])*shreds[0])
-		newdefences = np.concatenate((defences,fulldef))
-		newresistances = np.concatenate((np.zeros(accuracy),resistances))
-		
-		if normal_dps: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
-		else: damages = operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
-		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
-		
-		for defen in defens:
-			if defen >= 0:
-				defen = min(max_def-1,defen)
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
-				plt.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-		for res in ress:
-			if res >= 0:
-				res = min(119,res)
-				if normal_dps: demanded = operator.skill_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	
-	############### Increments Res and THEN defense ################################
-	elif graph_type == 2:
-		fullres = np.full(accuracy, max(max_res-shreds[3],0)*shreds[2])
-		newdefences = np.concatenate((np.zeros(accuracy), defences))
-		newresistances = np.concatenate((resistances, fullres))
-		
-		if normal_dps: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
-		else: damages=operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
-		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
-		
-		for defen in defens:
-			if defen >= 0:
-				defen = min(max_def-1,defen)
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(max_def/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-		for res in ress:
-			if res >= 0:
-				res = min(max_res-1,res)
-				if normal_dps: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	
-	############### DPS graph with a fixed defense value ################################
-	elif graph_type == 3:
-		defences = np.empty(accuracy)
-		defences.fill(max(0,fixval-shreds[1])*shreds[0])
-		
-		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
-		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
-		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
-		
-		for res in ress:
-			if res >= 0:
-				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	
-	############### DPS graph with a fixed res value ################################
-	elif graph_type == 4:
-		resistances = np.empty(accuracy)
-		resistances.fill(max(fixval-shreds[3],0)*shreds[2])
-		
-		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
-		else: damages = operator.total_dmg(defences,resistances)*(1+buffs[3])
-		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
-		
-		for defen in defens:
-			if defen >= 0:
-				demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	
-	############### Graph with images of enemies -> enemy prompt ################################
-	elif graph_type == 5:
-		defences = [i[0] for i in enemies]
-		resistances = [i[1] for i in enemies]
-		xaxis = np.arange(len(enemies))
-		damages = np.zeros(len(enemies))
-
-		damages = operator.skill_dps(np.array(defences),np.array(resistances))*(1+buffs[3])
-		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
-		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
-		for i, enemy in enumerate(enemies):
-			demanded = operator.skill_dps(enemy[0],enemy[1])*(1+buffs[3])
-			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
-	return True	
 
 @client.event
 async def on_ready():
@@ -365,7 +215,7 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		#reset plot parameters
 		plt.clf()
 		plt.style.use('default')
-		alreadyDrawnOps = [] #this is a global variable edited the plot_graph function. probably not a good solution
+		already_drawn_ops = [] #this is a global variable edited the utils.plot_graph function. probably not a good solution
 		plot_size = 4 #plot height in inches
 		add_title = False
 		title = ""
@@ -409,15 +259,15 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 			if parsed_message[i] in op_dict and i+1==entries:
 				if all_conditionals:
 					for combos in itertools.product([True,False], repeat = 5):
-						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if utils.plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+					if utils.plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 			elif parsed_message[i] in op_dict and not parsed_message[i+1] in modifiers:
 				if all_conditionals:
 					for combos in itertools.product([True,False], repeat = 5):
-						if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if utils.plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 				else:
-					if plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
+					if utils.plot_graph((op_dict[parsed_message[i]](lvl,-1, -1, 3,-1,3, targets, active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1 
 				if contains_data > 40: break
 			elif parsed_message[i] in op_dict and parsed_message[i+1] in modifiers:
 				tmp = i
@@ -487,9 +337,9 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				for pot, skill, mastery, mod, modlvl in itertools.product(pots, skills, masteries, mods, modlvls):
 					if all_conditionals:
 						for combos in itertools.product([True,False], repeat = 5):
-							if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
+							if utils.plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl, targets, list(combos),buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1						
 					else:
-						if plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,alreadyDrawnOps,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
+						if utils.plot_graph((op_dict[parsed_message[tmp]](lvl,pot,skill,mastery,mod,modlvl,targets,active_operator_kit_aspects,buffs,**input_kwargs)), buffs, defen, res, graph_type, max_def, max_res, fixval,already_drawn_ops,shreds,enemies,basebuffs,normal_dps,contains_data): contains_data += 1
 					if contains_data > 40: break
 				i-=1
 			elif parsed_message[i] in ["b","buff","buffs"]:
@@ -956,8 +806,6 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 				ax.imshow(img)
 
 
-		
-		
 		if add_title:
 			plt.title(title)
 		fig = plt.gcf()
