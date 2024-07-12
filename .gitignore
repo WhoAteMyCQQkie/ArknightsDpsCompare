@@ -1,4 +1,5 @@
 __pycache__/
+.pylintrc
 token.txt
 testrun.txt
 arkbotimages/
