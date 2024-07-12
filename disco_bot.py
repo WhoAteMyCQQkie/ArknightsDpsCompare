@@ -54,7 +54,7 @@ client = discord.Client(intents=intents)
 ON_PI = True
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
 try:
-	with open("testrun.txt", encoding="utf-8") as testfile:
+	with open("testrun.txt", encoding="locale") as testfile:
 		_ = testfile.readline()
 		ON_PI = False
 except OSError:
@@ -1003,6 +1003,6 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		await message.channel.send(healer_message)
 
 if __name__ == "__main__":
-	with open("token.txt", encoding="utf-8") as testfile:
+	with open("token.txt", encoding="locale") as testfile:
 		token = testfile.readline()
 	client.run(token)
