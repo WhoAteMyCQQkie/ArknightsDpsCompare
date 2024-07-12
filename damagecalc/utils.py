@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import nltk
 import numpy as np
+import subprocess
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
@@ -149,3 +151,51 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 			demanded = operator.skill_dps(enemy[0],enemy[1])*(1+buffs[3])
 			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	return True
+
+def calc_message(sentence: str):
+	
+	#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
+	grammar = nltk.CFG.fromstring("""
+		S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
+		B -> '.' D | 
+		N -> V L B | V '0' B
+		V -> '+' | '-' | 
+		D -> D D | '0' | Z
+		L -> L D | Z
+		Z -> '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+	""")
+	parser = nltk.ChartParser(grammar)
+	output = []
+	
+	#turn the input string into a format the grammar parser can read.
+	for letter in sentence:
+		if letter == ",": output.append(".")
+		elif letter == "^": 
+			output.append("*")
+			output.append("*")
+		elif letter == "x": output.append("*")
+		elif letter == " ": continue
+		else: output.append(letter)
+	
+	
+	try:
+		is_valid = any(parser.parse(output))
+		if is_valid:
+			command = ""
+			for letter in output:
+				command += letter
+			command = "print("+command+")"
+			result = subprocess.run(['python', '-c', command], capture_output=True, text=True, timeout=1, check=False)
+			if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
+			if len(str(result.stdout)) < 200:
+				return str(result.stdout)
+			else:
+				return "Result too large."
+		else:
+			return "Invalid syntax."
+	except ValueError:
+		return "Only numbers and +-x/*^() are allowed as inputs."
+	except ZeroDivisionError:
+		return "Congrats, you just divided by zero."
+	except subprocess.TimeoutExpired:
+		return "The thread did not survive trying to process this request."

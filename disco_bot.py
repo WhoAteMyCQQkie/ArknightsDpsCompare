@@ -31,12 +31,11 @@
 
 import io
 import itertools
-import signal
-import subprocess
+import multiprocessing
+import time
 
 import discord
 import matplotlib.pyplot as plt
-import nltk
 import numpy as np
 from PIL import Image
 
@@ -150,64 +149,22 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 
 	
 	if message.content.lower().startswith('!calc'):
-		
-		#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
-		grammar = nltk.CFG.fromstring("""
-			S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
-			B -> '.' D | 
-			N -> V L B | V '0' B
-			V -> '+' | '-' | 
-			D -> D D | '0' | Z
-			L -> L D | Z
-			Z -> '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
-		""")
-		parser = nltk.ChartParser(grammar)
-		sentence = message.content.lower()[5:]
-		output = []
-		
-		#turn the input string into a format the grammar parser can read.
-		for letter in sentence:
-			if letter == ",": output.append(".")
-			elif letter == "^": 
-				output.append("*")
-				output.append("*")
-			elif letter == "x": output.append("*")
-			elif letter == " ": continue
-			else: output.append(letter)
-		
-		
-		#this stops the code after 2 seconds, but doesnt work on windows, because only unix has SIGALRM
-		#you can remove this, but an input of for example 5x5x5x5x[....]x5x5x5x5 will kill your program and possibly crash your device, because it will eat all of your memory
-		def handler(signum, frame):
-			raise TimeoutError("Operation timed out")
-		signal.signal(signal.SIGALRM, handler)
-		signal.alarm(2)
-		
+		# Note that multiprocessing may add quite a bit of overhead in spawning a worker thread, but also a lot of safety for a potentially risky computation.
+		#start = time.time()
+		pool = multiprocessing.Pool(processes=1)
+		result = pool.apply_async(utils.calc_message, (message.content.lower()[5:],))
+		output = "Exceeded reasonable computation time"
 		try:
-			is_valid = any(parser.parse(output))
-			if is_valid:
-				command = ""
-				for letter in output:
-					command += letter
-				command = "print("+command+")"
-				result = subprocess.run(['python', '-c', command], capture_output=True, text=True, timeout=1, check=False)
-				if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
-				if len(str(result.stdout)) < 200:
-					await message.channel.send(str(result.stdout))
-				else:
-					await message.channel.send("Result too large.")
-			else:
-				await message.channel.send("Invalid syntax.")
-		except ValueError:
-			await message.channel.send("Only numbers and +-x/*^() are allowed as inputs.")
-		except ZeroDivisionError:
-			await message.channel.send("Congrats, you just divided by zero.")
-		except TimeoutError:
-			await message.channel.send("Exceeded reasonable computation time.")
-		except subprocess.TimeoutExpired:
-			await message.channel.send("The thread did not survive trying to process this request.")
+			output = result.get(timeout=2) 
+		except multiprocessing.context.TimeoutError:
+			pass
 		finally:
-			signal.alarm(0)
+
+			pool.close()
+		
+		#output += "Completed in " + str(round((time.time() - start) * 1000)) + "ms"
+		await message.channel.send(output)
+		
 
 		
 	if message.content.lower().startswith('!dps'):
