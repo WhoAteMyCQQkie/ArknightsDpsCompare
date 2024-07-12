@@ -41,8 +41,8 @@ import nltk
 import numpy as np
 from PIL import Image
 
-import damageformulas as df
-import healingformulas as hf
+import damage_formulas as df
+import healing_formulas as hf
 
 ##############################################
 #Bot Settings for the channels it will respond to
