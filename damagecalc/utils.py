@@ -1,7 +1,53 @@
+import subprocess
+from typing import Dict, TypeVar, Generic
+
+from discord import DMChannel, File
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
-import subprocess
+
+T = TypeVar('T')
+V = TypeVar('V')
+
+class Registry(Generic[T, V]):
+
+	map: Dict[T, V]
+	name: str
+
+	def __init__(self, name: str) -> None: 
+		self.map = {}
+		self.name = name
+
+	def __len__(self) -> int: 
+		return len(self.map)
+	
+	def register(self, key: T, value: V) -> None:
+		if key in self.map:
+			raise RuntimeWarning(f"Attempted to register duplicate key {str(key)} in registry {self.name}")
+
+		self.map[key] = value
+
+	def get(self, key: T) -> V:
+		try:
+			return self.map[key]
+		except KeyError:
+			return None
+
+class DiscordSendable:
+	
+	content: str
+	file: File
+	
+	def __init__(self, content: str = None, file: File = None):
+		self.content=content
+		self.file=file
+	
+	async def send(self, channel: DMChannel):
+		if self.content is None and self.file is None:
+			raise RuntimeWarning("Attempted to send empty message")
+			return
+		await channel.send(content=self.content, file=self.file)
+	
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
