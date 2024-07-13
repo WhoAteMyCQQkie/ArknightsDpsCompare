@@ -11,14 +11,8 @@ from PIL import Image
 import damagecalc.utils as utils
 from damagecalc.utils import DiscordSendable
 import damagecalc.damage_formulas as df
-import damagecalc.healing_formulas as hf
-
-
-#Operator data from the other scripts
-op_dict = df.op_dict
-operators = df.operators
-healer_dict = hf.healer_dict
-healers = hf.healers
+from damagecalc.damage_formulas import op_dict
+from damagecalc.healing_formulas import healer_dict
 
 #for the enemy/chapter prompt
 enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[1200,0,"05"],[1500,0,"06"],[900,20,"07"],[1200,20,"08"],[150,40,"09"],[3000,90,"10"],[200,20,"11"],[250,60,"12"],[300,60,"13"],[300,50,"14"]],
@@ -32,20 +26,20 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
 def simple(content: str) -> DiscordSendable:
-    return lambda args: DiscordSendable(content)
+	return lambda args: DiscordSendable(content)
 
 def calc_command(args: List[str]) -> DiscordSendable:
+
 	# Note that multiprocessing may add quite a bit of overhead in spawning a worker thread, but also a lot of safety for a potentially risky computation.
 	#start = time.time()
 	pool = multiprocessing.Pool(processes=1)
-	result = pool.apply_async(utils.calc_message, (' '.join(args),))
 	output = "Exceeded reasonable computation time"
+ 
 	try:
-		output = result.get(timeout=2) 
+		output = pool.apply_async(utils.calc_message, (' '.join(args),)).get(timeout=2) 
 	except multiprocessing.context.TimeoutError:
 		pass
 	finally:
-
 		pool.close()
 	
 	#output += "Completed in " + str(round((time.time() - start) * 1000)) + "ms"

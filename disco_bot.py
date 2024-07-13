@@ -30,7 +30,6 @@
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 
 import os
-import time
 from typing import Callable, List
 
 import discord
@@ -51,7 +50,7 @@ client = discord.Client(intents=intents)
 if os.path.exists("testrun.txt"):
 	VALID_CHANNELS = ['privatebottest']
 
-commands: Registry[str, Callable[[List[str]], DiscordSendable]] = Registry("commands") #TODO: Any should technically be a DiscordSendable type or something
+commands: Registry[str, Callable[[List[str]], DiscordSendable]] = Registry("commands")
 aliases: Registry[str, str] = Registry("aliases")
 
 @client.event
@@ -63,15 +62,15 @@ async def on_ready():
 	commands.register('ops', cmds.simple(f"These are the currently available operators: \n{", ".join(cmds.operators)[:-1]} \n (Not all operators have all their skills implemented, check the legend of the graph)"))
 	commands.register('hops', cmds.simple(f"These are the currently available healers: \n{", ".join(cmds.healers)[:-1]}"))
 	commands.register('help', cmds.simple("""General use: !dps <opname1> <opname2> ... 
-Spaces are used as delimiters, so make sure to keep operator names in one word. The bot can only handle E2 ops with skill lvl 7+ and the result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would notice a < 5% difference ingame):
+Spaces are used as delimiters, so make sure to keep operator names in one word. This bot can only handle E2 ops with skill lvl 7+ and the result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would notice a < 5% difference ingame):
 example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
 !guide will show you the available modifiers to the graphs, !ops lists the available operators.
-There is also a handful healers implemented. !hps <opname> ... works similar to !dps. !hops shows the available healers.
+There are also a handful of healers implemented. !hps <opname> ... works similar to !dps. !hops shows the available healers.
 Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 """))
 	commands.register('prompt', cmds.simple("""**Suffixes placed after the operator, affecting only that operator:**
-S1,S2,S3, sl7,M0,..,M3, P1,..,P6, mod0,modx,mody,modd or just 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
+S1,S2,S3, sl7, M0..M3, P1..P6, mod0,modx,mody,modd or just 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 **Prefixes that affect all following operators (not adding a value resets to default values):**
 targets <value>, res <value>/def <value>, buff <atk%> <flatAtk> <aspd> <fragile>, level <OpLevel>, hits <receivedHitsPerSecond> (either like 0.33 or 1/3), bbuff <value> (base atk, flat:123, percentage: 25% or 0.25), resshred/defshred (same as bbuff, percent or flat)
 **Conditional damage prefixes, affecting all following operators:**
@@ -79,7 +78,7 @@ lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/hig
 *(just writing low/high sets all 5. you can also use low1,..,low5 or high1,..,high5 for trait,talent1,talent2,skill,module)*
 **Prompts for the axis scale, that need to be added before any operators:** maxdef/maxres <value>, split/split2, fix/fixdef/fixres <value> (fix chooses res <100, else def)
 **Other prompts:** hide,left,tiny (for the legend),  color (for colorblind people, at the start), text (puts everything after the prompt as title of the graph)
-*Most prefix prompts can also be shortened: buff -> b, low/high -> l/h, targets ->t, level -> lv, ...*
+*Most prefix prompts can also be shortened: buff -> b, low/high -> l/h, targets -> t, level -> lv, ...*
 """))
 	commands.register('muelsyse', cmds.simple("""There are multiple clones available. The cloned operator will be have the same level,pot and module-lvl as Mumu. Lowtrait removes Mumus bonus trait dmg, lowtalent1 removes the main clone, lowtalent2 removes the stolen atk if the cloned op is melee. lowskill will remove 2 clones from skill 3 or completely remove the extra clones for skill 1/2, otherwise it will assume the main clone is always attacking and calculate the damage with the expected average amount of clones during the skill duration.
 As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following: **1:Dorothy, 2:Ebenholz, 3:Ceobe, 4:Mudrock, 5:Rosa, 6:Skadi, 7:Schwarz**
