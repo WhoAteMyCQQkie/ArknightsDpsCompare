@@ -73,7 +73,7 @@ There are also a handful of healers implemented. !hps <opname> ... works similar
 Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 """))
-	commands.register('prompt', cmds.simple("""**Suffixes placed after the operator, affecting only that operator:**
+	commands.register('guide', cmds.simple("""**Suffixes placed after the operator, affecting only that operator:**
 S1,S2,S3, sl7, M0..M3, P1..P6, mod0,modx,mody,modd or just 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 **Prefixes that affect all following operators (not adding a value resets to default values):**
 targets <value>, res <value>/def <value>, buff <atk%> <flatAtk> <aspd> <fragile>, level <OpLevel>, hits <receivedHitsPerSecond> (either like 0.33 or 1/3), bbuff <value> (base atk, flat:123, percentage: 25% or 0.25), resshred/defshred (same as bbuff, percent or flat)
@@ -84,6 +84,8 @@ lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/hig
 **Other prompts:** hide,left,tiny (for the legend),  color (for colorblind people, at the start), text (puts everything after the prompt as title of the graph)
 *Most prefix prompts can also be shortened: buff -> b, low/high -> l/h, targets -> t, level -> lv, ...*
 """))
+	aliases.register('prompt', 'guide')
+	aliases.register('prompts', 'guide')
 	commands.register('muelsyse', cmds.simple("""There are multiple clones available. The cloned operator will be have the same level,pot and module-lvl as Mumu. Lowtrait removes Mumus bonus trait dmg, lowtalent1 removes the main clone, lowtalent2 removes the stolen atk if the cloned op is melee. lowskill will remove 2 clones from skill 3 or completely remove the extra clones for skill 1/2, otherwise it will assume the main clone is always attacking and calculate the damage with the expected average amount of clones during the skill duration.
 As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following: **1:Dorothy, 2:Ebenholz, 3:Ceobe, 4:Mudrock, 5:Rosa, 6:Skadi, 7:Schwarz**
 Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desperately want."""))
