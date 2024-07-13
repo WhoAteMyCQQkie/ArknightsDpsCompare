@@ -49,6 +49,7 @@ client = discord.Client(intents=intents)
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
 if os.path.exists("testrun.txt"):
 	VALID_CHANNELS = ['privatebottest']
+	RESPOND_TO_DM = False
 
 commands: Registry[str, Callable[[List[str]], DiscordSendable]] = Registry("commands")
 aliases: Registry[str, str] = Registry("aliases")
