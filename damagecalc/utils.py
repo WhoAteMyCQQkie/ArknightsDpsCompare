@@ -44,7 +44,6 @@ class DiscordSendable:
 	
 	async def send(self, channel: DMChannel):
 		if self.content is None and self.file is None:
-			raise RuntimeWarning("Attempted to send empty message")
 			return
 		await channel.send(content=self.content, file=self.file)
 	
