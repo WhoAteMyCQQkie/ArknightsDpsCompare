@@ -32,6 +32,7 @@
 import io
 import itertools
 import multiprocessing
+import os
 import time
 
 import discord
@@ -51,14 +52,10 @@ RESPOND_TO_DM = True
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
-ON_PI = True
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
-try:
-	with open("testrun.txt", encoding="utf-8") as testfile:
-		_ = testfile.readline()
-		ON_PI = False
-except OSError:
-	pass
+if os.path.exists("testrun.txt"):
+	VALID_CHANNELS = ['privatebottest']
+
 
 #Operator data from the other scripts
 op_dict = df.op_dict
@@ -84,14 +81,10 @@ async def on_ready():
 async def on_message(message):
 	if message.author == client.user:
 		return
-	
-	if ON_PI:
-		if isinstance(message.channel, discord.channel.DMChannel) and RESPOND_TO_DM:
-			pass
-		elif not message.channel.name in VALID_CHANNELS: return
-	else:
-		if not message.channel.name == 'privatebottest': return
 
+	if isinstance(message.channel, discord.channel.DMChannel) and RESPOND_TO_DM:
+		pass
+	elif not message.channel.name in VALID_CHANNELS: return
 	
 	if message.content.lower().startswith('!ping'): await message.channel.send('Pong!')
 	if message.content.lower().startswith('!marco'): await message.channel.send('Polo!')
@@ -1003,6 +996,6 @@ Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desp
 		await message.channel.send(healer_message)
 
 if __name__ == "__main__":
-	with open("token.txt", encoding="utf-8") as testfile:
+	with open("token.txt", encoding="locale") as testfile:
 		token = testfile.readline()
 	client.run(token)
