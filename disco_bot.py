@@ -55,6 +55,7 @@ client = discord.Client(intents=intents)
 #this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
 if os.path.exists("testrun.txt"):
 	VALID_CHANNELS = ['privatebottest']
+	RESPOND_TO_DM = False
 
 
 #Operator data from the other scripts
