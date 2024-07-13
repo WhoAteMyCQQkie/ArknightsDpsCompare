@@ -108,7 +108,7 @@ async def on_message(message):
 		return
 	
 	# Tokenize the message, removing the flag
-	content = nltk.tokenize.word_tokenize(message.content.lower()[1:])
+	content = message.content.lower()[1:].split(' ')
 
 	# Attempt to retrieve the command, and check for aliases
 	command_name = content[0]
@@ -125,7 +125,6 @@ async def on_message(message):
 
 
 if __name__ == "__main__":
-	nltk.download('punkt')
 	with open("token.txt", encoding="locale") as testfile:
 		token = testfile.readline()
 	client.run(token)
