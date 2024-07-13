@@ -63,8 +63,8 @@ async def on_ready():
 	print('Registering commands...')
 	commands.register('ping', cmds.simple('Pong!'))
 	commands.register('marco', cmds.simple('Polo!'))
-	commands.register('ops', cmds.simple(f"These are the currently available operators: \n{", ".join(operators)[:-1]} \n (Not all operators have all their skills implemented, check the legend of the graph)"))
-	commands.register('hops', cmds.simple(f"These are the currently available healers: \n{", ".join(healers)[:-1]}"))
+	commands.register('ops', cmds.simple(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)"))
+	commands.register('hops', cmds.simple(f"These are the currently available healers: \n{', '.join(healers)}"))
 	commands.register('help', cmds.simple("""General use: !dps <opname1> <opname2> ... 
 Spaces are used as delimiters, so make sure to keep operator names in one word. This bot can only handle E2 ops with skill lvl 7+ and the result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would notice a < 5% difference ingame):
 example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
