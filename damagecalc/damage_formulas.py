@@ -2525,7 +2525,8 @@ class Chongyue(Operator):
 		else: self.module = 0
 
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
+		if self.talent2: self.name += " 1KillPerSkill"
+			
 		self.buffs = buffs
 			
 	
@@ -3950,7 +3951,7 @@ class Eyjafjalla(Operator):
 			newres2 = np.fmax(0, res*(1-resshred)-resignore)
 			
 			hitdmg = np.fmax(final_atk  * (1-newres2/100), final_atk * 0.05)
-			if not self.skilldmg: hitdmg = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
+			if not self.skilldmg: hitdmg = np.fmax(final_atk  * (1-newres/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * (1-newres2/100), final_atk* atk_scale * 0.05)
 			aoeskilldmg = np.fmax(0.5 * final_atk * atk_scale * (1-newres/100), 0.5 * final_atk* atk_scale * 0.05)
 			

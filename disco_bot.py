@@ -113,7 +113,7 @@ async def on_message(message):
 	content = message.content.lower()[1:].split(' ')
 
 	# Attempt to retrieve the command, and check for aliases
-	command_name = content[0]
+	command_name = content[0].lower()
 	alias_result: str = aliases.get(command_name)
 
 	if alias_result is not None:
