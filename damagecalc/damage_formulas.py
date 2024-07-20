@@ -3357,7 +3357,7 @@ class Ebenholz(Operator):
 				if self.module_lvl == 3: self.base_atk += 124
 				elif self.module_lvl == 2: self.base_atk += 102
 				else: self.base_atk += 76
-				self.name += f" Mod$\Delta${self.module_lvl}"
+				self.name += f" Mod$\\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -3483,7 +3483,7 @@ class Ela(Operator):
 				if self.module_lvl == 3: self.base_atk += 60
 				elif self.module_lvl == 2: self.base_atk += 50
 				else: self.base_atk += 36
-				self.name += f" Mod$\Delta${self.module_lvl}"
+				self.name += f" Mod$\\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		
@@ -7457,7 +7457,7 @@ class Logos(Operator):
 				if self.module_lvl == 3: self.base_atk += 67
 				elif self.module_lvl == 2: self.base_atk += 54
 				else: self.base_atk += 36
-				self.name += f" Mod$\Delta${self.module_lvl}"
+				self.name += f" Mod$\\Delta${self.module_lvl}"
 			else: self.name += " no Mod"
 		else: self.module = 0
 		

@@ -33,7 +33,6 @@ import os
 from typing import Callable, List
 
 import discord
-import nltk
 
 import damagecalc.commands as cmds
 from damagecalc.damage_formulas import operators
@@ -113,7 +112,7 @@ async def on_message(message):
 	content = message.content.lower()[1:].split(' ')
 
 	# Attempt to retrieve the command, and check for aliases
-	command_name = content[0].lower()
+	command_name = content[0]
 	alias_result: str = aliases.get(command_name)
 
 	if alias_result is not None:
