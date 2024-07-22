@@ -109,7 +109,7 @@ async def on_message(message):
 		return
 	
 	# Tokenize the message, removing the flag
-	content = message.content.lower()[1:].split(' ')
+	content = message.content.lower()[1:].split()
 
 	# Attempt to retrieve the command, and check for aliases
 	command_name = content[0]
@@ -118,7 +118,7 @@ async def on_message(message):
 	if alias_result is not None:
 		command_name = alias_result
 
-	command: Callable[[str], DiscordSendable] = commands.get(command_name)
+	command: Callable[[List[str]], DiscordSendable] = commands.get(command_name)
 
 	if command is not None:
 		# Run the command and send the result
