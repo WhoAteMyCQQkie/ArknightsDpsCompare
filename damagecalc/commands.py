@@ -1,7 +1,7 @@
 import io
 import itertools
 import multiprocessing
-from typing import List
+from typing import Callable, List
 
 import discord
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
 
-def simple(content: str) -> DiscordSendable:
+def simple(content: str) -> Callable[[List[str]], DiscordSendable]:
 	return lambda args: DiscordSendable(content)
 
 def calc_command(args: List[str]) -> DiscordSendable:
