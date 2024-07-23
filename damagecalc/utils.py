@@ -1,5 +1,7 @@
 import subprocess
 from typing import Dict, TypeVar, Generic
+import itertools
+import numpy as np
 
 from discord import DMChannel, File
 import matplotlib.pyplot as plt
@@ -46,7 +48,411 @@ class DiscordSendable:
 		if self.content is None and self.file is None:
 			return
 		await channel.send(content=self.content, file=self.file)
-	
+
+class PlotParameters:
+	def __init__(self,pot=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
+			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shreds=[1,0,1,0],**kwargs):
+		#Operator Parameters
+		self.pot = pot
+		#self.promotion = -1
+		#self.trust = -1
+		self.level = level
+		self.skill = skill
+		self.mastery = mastery #self.skill_lvl
+		self.module = module
+		self.module_lvl = module_lvl
+		self.buffs = buffs #TODO split that into atk, aspd and fragile
+		self.targets = targets
+		self.conditionals = conditionals
+		self.input_kwargs = kwargs
+
+		#Plot Parameters
+		self.graph_type = graph_type
+		self.fix_value = fix_value
+		self.max_def = max_def
+		self.max_res = max_res
+		self.res = res
+		self.defen = defen
+		self.base_buffs = base_buffs
+		self.shreds = shreds
+
+class PlotParametersSet(PlotParameters):
+	def __init__(self):
+		super().__init__()
+		self.pots = {-1}
+		self.levels = {-1}
+		self.skills = {-1}
+		self.masteries = {-1} #self.skill_lvl
+		self.modules = {-1}
+		self.module_lvls = {-1}
+		self.all_conditionals = False
+
+	def get_plot_parameters(self) -> list[PlotParameters]:
+		output = []
+		if not self.all_conditionals:
+			for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
+				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shreds,**self.input_kwargs))
+		else:
+			for combo in itertools.product([True,False], repeat = 5):
+				for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
+					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shreds,**self.input_kwargs))
+		return output
+
+#read in the operator specific parameters	
+def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
+	i = 0
+	entries = len(args)
+	while i < entries:
+		if args[i] in ["s1","s2","s3"]: 
+			pps.skills.add(int(args[i][1]))
+			pps.skills.discard(-1)
+		elif args[i] in ["p1","p2","p3","p4","p5","p6"]: 
+			pps.pots.add(int(args[i][1]))
+			pps.pots.discard(-1)
+		elif args[i] in ["1","2","3"]: 
+			pps.module_lvls.add(int(args[i]))
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3",]: 
+			pps.module_lvls.add(int(args[i][-1]))
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["m0","m1","m2","m3"]: 
+			pps.masteries.add(int(args[i][1]))
+			pps.masteries.discard(-1)
+		elif args[i] in ["sl7","s7","slv7","l7","lv7"]:
+			pps.masteries.add(0)
+			pps.masteries.discard(-1)
+		elif args[i] in ["mod0","mod1","mod2","mod3"]:
+			pps.modules.add(int(args[i][3]))
+			pps.modules.discard(-1)
+		elif args[i] in ["modx","x"]:
+			pps.modules.add(1)
+			pps.modules.discard(-1)
+		elif args[i] in ["x1","x2","x3"]: 
+			pps.modules.add(1)
+			pps.modules.discard(-1)
+			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["y1","y2","y3"]: 
+			pps.modules.add(2)
+			pps.modules.discard(-1)
+			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["mody","y"]:
+			pps.modules.add(2)
+			pps.modules.discard(-1)
+		elif args[i] in ["modd","d"]:
+			pps.modules.add(3)
+			pps.modules.discard(-1)
+		elif args[i] in ["d1","d2","d3"]: 
+			pps.modules.add(3)
+			pps.modules.discard(-1)
+			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
+			pps.module_lvls.add(0)
+			pps.module_lvls.discard(-1)
+		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
+			pps.skills.add(int(args[i][1]))
+			pps.skills.discard(-1)
+			pps.masteries.add(int(args[i][3]))
+			pps.masteries.discard(-1)
+		if not -1 in pps.module_lvls and 0 in pps.modules and len(pps.modules) == 1:
+			pps.modules.add(-1)
+		if args[i] in ["b","buff","buffs"]:
+			i+=1
+			buffcount=0
+			pps.buffs=[0,0,0,0]
+			while i < entries and buffcount < 4:
+				try:
+					pps.buffs[buffcount] = int(args[i])
+					buffcount +=1
+				except ValueError:
+					break
+				if buffcount == 1: pps.buffs[0] = pps.buffs[0]/100
+				if buffcount == 4: pps.buffs[3] = pps.buffs[3]/100
+				i+=1
+			i-=1
+		elif args[i] in ["t","target","targets"]:
+			i+=1
+			pps.targets = 1
+			while i < entries:
+				try:
+					pps.targets = int(args[i])
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["t1","t2","t3","t4","t5","t6","t7","t8","t9"]: pps.targets = int(args[i][1])
+		elif args[i] in ["r","res","resis","resistance"]:
+			i+=1
+			pps.res = [-10]
+			while i < entries:
+				try:
+					pps.res.append(min(pps.max_res,int(args[i])))
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["d","def","defense"]:
+			i+=1
+
+			defen = [-10]
+			while i < entries:
+				try:
+					defen.append(min(pps.max_def,int(args[i])))
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["shred","shreds","debuff","ignore"]:
+			i+=1
+			shreds = [1,0,1,0]
+			while i < entries:
+				if args[i][-1] == "%":
+					try:
+						shreds[0] = max(0,(1-float(args[i][:-1])/100))
+						shreds[2] = max(0,(1-float(args[i][:-1])/100))
+					except ValueError:
+						break
+				else:
+					try:
+						val = float(args[i])
+						if val > 0 and val < 1:
+							shreds[0] = 1 - val
+							shreds[2] = 1 - val
+						if val > 2:
+							shreds[1] = val
+							shreds[3] = val
+					except ValueError:
+						break
+				i+=1
+			i-=1
+			pps.shreds = shreds
+			pps.input_kwargs["shreds"] = shreds
+		elif args[i] in ["resshred","resdebuff","shredres","debuffres","reshred","resignore"]:
+			i+=1
+			pps.shreds[2] = 1
+			pps.shreds[3] = 0
+			while i < entries:
+				if args[i][-1] == "%":
+					try:
+						pps.shreds[2] = max(0,(1-float(args[i][:-1])/100))
+					except ValueError:
+						break
+				else:
+					try:
+						val = float(args[i])
+						if val > 0 and val < 1:
+							pps.shreds[2] = 1 - val
+						if val > 2:
+							pps.shreds[3] = val
+					except ValueError:
+						break
+				i+=1
+			i-=1
+			pps.input_kwargs["shreds"] = pps.shreds
+		elif args[i] in ["defshred","defdebuff","shreddef","debuffdef","defignore"]:
+			i+=1
+			pps.shreds[0] = 1
+			pps.shreds[1] = 0
+			while i < entries:
+				if args[i][-1] == "%":
+					try:
+						pps.shreds[0] = max(0,(1-float(args[i][:-1])/100))
+					except ValueError:
+						break
+				else:
+					try:
+						val = float(args[i])
+						if val > 0 and val < 1:
+							pps.shreds[0] = 1 - val
+						if val > 2:
+							pps.shreds[1] = val
+					except ValueError:
+						break
+				i+=1
+			i-=1
+			pps.input_kwargs["shreds"] = pps.shreds
+		elif args[i] in ["basebuff","baseatk","base","bbuff","batk"]:
+			i+=1
+			pps.base_buffs[0] = 1
+			pps.base_buffs[1] = 0
+			while i < entries:
+				if args[i][-1] == "%":
+					try:
+						pps.base_buffs[0] = max(0,(1+float(args[i][:-1])/100))
+					except ValueError:
+						break
+				else:
+					try:
+						val = float(args[i])
+						if val > 0 and val < 1:
+							pps.base_buffs[0] = 1 + val
+						if val > 2:
+							pps.base_buffs[1] = val
+					except ValueError:
+						break
+				i+=1
+			i-=1
+		elif args[i] in ["lvl","level","lv"]:
+			i+=1
+			pps.level = -10
+			while i < entries:
+				try:
+					pps.level = int(args[i])
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["iaps","bonk","received","hits","hit"]:
+			i+=1
+			while i < entries:
+				try:
+					pps.input_kwargs["hits"] = float(args[i])
+				except ValueError:
+					if "/" in args[i]:
+						new_strings = args[i].split("/")
+						try:
+							pps.input_kwargs["hits"] = (float(new_strings[0]) / float(new_strings[1]))
+						except ValueError:
+							break
+					else:
+						break
+				i+=1
+			i-=1
+		elif args[i] in ["l","low"]:
+			pps.conditionals = [False,False,False,False,False]
+		elif args[i] in ["h","high"]:
+			pps.conditionals = [True,True,True,True,True]
+		elif args[i] in ["low1","l1","lowtrait","traitlow"]:
+			pps.conditionals[0] = False
+		elif args[i] in ["high1","h1","hightrait","traithigh"]:
+			pps.conditionals[0] = True
+		elif args[i] in ["low2","l2","lowtalent","talentlow","lowtalent1","talent1low"]:
+			pps.conditionals[1] = False
+		elif args[i] in ["high2","h2","hightalent","talenthigh","hightalent1","talent1high"]:
+			pps.conditionals[1] = True
+		elif args[i] in ["low3","l3","talentlow","lowtalent2","talent2low"]:
+			pps.conditionals[2] = False
+		elif args[i] in ["high3","h3","talenthigh","hightalent2","talent2high"]:
+			pps.conditionals[2] = True
+		elif args[i] in ["low4","l4","lows","slow","lowskill","skilllow"]:
+			pps.conditionals[3] = False
+		elif args[i] in ["high4","h4","highs","shigh","highskill","skillhigh"]:
+			pps.conditionals[3] = True
+		elif args[i] in ["low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow"]:
+			pps.conditionals[4] = False
+		elif args[i] in ["high5","h5","highm","mhigh","highmod","modhigh","highmodule","modulehigh"]:
+			pps.conditionals[4] = True
+		elif args[i] == "lowtalents":
+			pps.conditionals[1] = False
+			pps.conditionals[2] = False
+		elif args[i] == "hightalents":
+			pps.conditionals[1] = True
+			pps.conditionals[2] = True
+		elif args[i] in ["conditionals", "conditional","variation","variations"]:
+			pps.all_conditionals = True
+		i += 1
+
+#read the graph scalings
+def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
+	i = 0
+	entries = len(args)
+	while i < entries:
+		if args[i] in ["maxdef","limit","range","scale"]:
+			i+=1
+			pps.max_def = 3000
+			while i < entries:
+				try:
+					pps.max_def = min(69420,max(100, int(args[i])))
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["maxres","reslimit","limitres","scaleres","resscale"]:
+			i+=1
+			pps.max_res = 120
+			while i < entries:
+				try:
+					pps.max_res = min(420,max(5, int(args[i])))
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] == "split":
+				pps.graph_type = 1
+		elif args[i] == "split2":
+				pps.graph_type = 2
+		elif args[i] in ["fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense"]:
+			try:
+				pps.graph_type = 3
+				pps.fix_value = int(args[i+1])
+				pps.fix_value = max(0,min(50000,pps.fix_value))
+				i+=1
+			except ValueError:
+				pass	
+		elif args[i] in ["fixres","fixedres","fixresistance","fixedresistance","setres","resresistance"]: 
+			try:
+				pps.graph_type = 4
+				pps.fix_value = int(args[i+1])
+				pps.fix_value = max(0,min(400,pps.fix_value))
+				i+=1
+			except ValueError:
+				pass
+		elif args[i] in ["set","fix","fixed"]:
+			try:
+				pps.fix_value = int(args[i+1])
+				pps.graph_type = 3 if pps.fix_value >= 100 else 4
+				pps.fix_value = max(0,min(50000,pps.fix_value))
+				i+=1
+			except ValueError:
+				pass
+		i += 1
+
+def levenshtein(word1, word2):
+	m = len(word1)
+	n = len(word2)
+	D = np.zeros((m, n))
+	for i in range(m):
+		D[i][0] = i
+	for j in range(n):
+		D[0][j] = j
+	if word1[0] != word2[0]: D[0][0] = 1
+	for j in range(1,n): #rows
+		if word1[0] != word2[0]: D[0][j] = D[0][j]+1
+		for i in range(1,m): #columns
+			a = D[i-1][j-1] if word1[i]==word2[j] else 2000
+			b = D[i-1][j] + 1
+			c = D[i][j-1] + 1
+			d = D[i-1][j-1] + 1
+			D[i][j] = min(a,b,c,d)
+	return (int(D[m-1][n-1]))
+
+def fix_typos(word, args):
+	output = ""
+	errorlimit = 0
+	input_length = len(word) 
+	optimizer = False #True when a solution was found, but we still search for a better solution.
+	optimize_error = -10
+	if input_length > 3: errorlimit = 1
+	if input_length > 5: errorlimit = 2
+	if input_length > 8: errorlimit = 3
+	if input_length < 15:
+		for key in args:
+			if optimizer:
+				if levenshtein(key, word) < optimize_error: #dont just stop at the first fit, but rather at the best fit.
+					output = key
+					optimize_error = levenshtein(key, word)
+			elif levenshtein(key, word) <= errorlimit:
+				output = key
+				optimizer = True
+				optimize_error = levenshtein(key, word)
+	return output
+
+def apply_plot(operator_input, plot_parameters, already_drawn=[], normal_dps=True, plot_numbers=0):
+	pp = plot_parameters
+	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs)
+	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shreds,[],pp.base_buffs,normal_dps, plot_numbers)
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6

@@ -2,6 +2,7 @@ import io
 import itertools
 import multiprocessing
 from typing import Callable, List
+import copy
 
 import discord
 import matplotlib.pyplot as plt
@@ -44,6 +45,151 @@ def calc_command(args: List[str]) -> DiscordSendable:
 	
 	#output += "Completed in " + str(round((time.time() - start) * 1000)) + "ms"
 	return DiscordSendable(output)
+
+def dps_command2(args: List[str])-> DiscordSendable:
+	global_parameters = utils.PlotParametersSet()
+	already_drawn_ops = []
+	plt.clf()
+	plt.style.use('default')
+	already_drawn_ops = [] #this is a global variable edited the utils.plot_graph function. probably not a good solution
+	plot_size = 4 #plot height in inches
+	show = True
+	bottomleft = False
+	textsize = 10
+
+	i = 0
+	for word in args:
+		if word in ["hide", "legend"]:
+			show = False
+		elif word in ["big", "beeg", "large"]:
+			plot_size = 8
+		elif word in ["repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos"]:
+			bottomleft = True
+		elif word in ["small","font","tiny"]:
+			textsize = 6
+		elif word in ["color","colour","colorblind","colourblind","blind"]:
+			plt.style.use('tableau-colorblind10')
+
+	#fix typos in operator names
+	for i in range(len(args)):
+		if utils.fix_typos(args[i], op_dict.keys()) != "":
+			args[i] = utils.fix_typos(args[i], op_dict.keys())
+	
+	#TODO: try to fix other input errors (wrong order, missing spaces, typos in prompts)
+	
+	#Find scopes where which parameter set is active
+	global_scopes = [0]
+	local_scopes = []
+	for i, arg in enumerate(args):
+		if arg in op_dict.keys():
+			local_scopes.append(i)
+		elif arg in ["g:","global","global:"]:
+			global_scopes.append(i)
+	scopes = list(set(global_scopes + local_scopes))
+	scopes.sort()
+	scopes.append(len(args))
+
+	#TODO get plot formatting
+
+	plot_numbers = 0
+	#getting setting the plot parameters and plotting the units
+	utils.parse_plot_essentials(global_parameters, args)
+	for i in range(len(scopes)-1):
+		if i in local_scopes:
+			local_parameters = copy.deepcopy(global_parameters)
+			utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
+			for parameters in local_parameters.get_plot_parameters():
+				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,True,plot_numbers):
+					plot_numbers += 1
+					if plot_numbers > 40:
+						plt.close()
+						l = len(bot_mad_message)
+						return DiscordSendable(bot_mad_message[np.random.randint(0,l)])
+		elif i in global_scopes:
+			global_parameters = utils.PlotParametersSet()
+			utils.parse_plot_essentials(global_parameters, args)
+			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
+
+	#prevent the legend from messing up the graphs format
+	legend_columns = 1
+	if plot_numbers < 2: plot_size = 4
+	if plot_numbers > 15 and plot_size == 4:
+		textsize = 6
+	if plot_numbers > 26 and plot_size == 4:
+		legend_columns = 2
+	if plot_numbers > 52 and plot_size == 4:
+		legend_columns = 1
+	if plot_numbers > 30 and plot_size == 8 and textsize == 10:
+		legend_columns = 2
+	
+	plt.grid(visible=True)
+	if show:
+		if not bottomleft: plt.legend(loc="upper right",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
+		else: plt.legend(loc="lower left",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
+	
+	if global_parameters.graph_type != 5:
+		plt.xlabel("Defense\nRes")
+		plt.ylabel("DPS" , rotation=0)
+	if global_parameters.graph_type == 3: 
+		plt.xlabel("Res")
+		plt.ylabel(f"DPS (vs {global_parameters.fix_value}def)" , rotation=0)
+	if global_parameters.graph_type == 4: 
+		plt.xlabel("Defense")
+		plt.ylabel(f"DPS (vs {global_parameters.fix_value}res)" , rotation=0)
+	
+	max_def = global_parameters.max_def
+	max_res = global_parameters.max_res
+	fixval = global_parameters.fix_value
+	graph_type = global_parameters.graph_type
+
+	ax = plt.gca()
+	ax.set_ylim(ymin = 0)
+	ax.set_xlim(xmin = 0)
+	if graph_type != 5:
+		ax.set_xlim(xmin = 0, xmax = max_def)
+	ax.xaxis.set_label_coords(0.08/plot_size*4, -0.025/plot_size*4)
+	ax.yaxis.set_label_coords(-0.04/plot_size*4, 1+0.01/plot_size*4)
+	if graph_type == 3: #properly align the DPS comment
+		ax.yaxis.set_label_coords(0.02, 1.02)
+		if fixval > 999: ax.yaxis.set_label_coords(0.03, 1.02)
+		if fixval < 100: ax.yaxis.set_label_coords(0.01, 1.02)
+		if fixval < 10: ax.yaxis.set_label_coords(0.0, 1.02)
+	if graph_type == 4: 
+		ax.yaxis.set_label_coords(0.01, 1.02)
+		if fixval < 10: ax.yaxis.set_label_coords(0.0, 1.02)
+		
+	
+	#Setting the x-axis labels	
+	if graph_type == 0:
+		tick_labels=["0\n0",f"{int(max_def/6)}\n{int(max_res/6)}",f"{int(max_def/3)}\n{int(max_res/3)}",f"{int(max_def/2)}\n{int(max_res/2)}",f"{int(max_def*4/6)}\n{int(max_res*4/6)}",f"{int(max_def*5/6)}\n{int(max_res*5/6)}",f"{int(max_def)}\n{int(max_res)}"]
+	if graph_type == 1:
+		tick_labels=["0\n0",f"{int(max_def/3)}\n0",f"{int(max_def*4/6)}\n0",f"{int(max_def)}\n0",f"{int(max_def)}\n{int(max_res*2/6)}",f"{int(max_def)}\n{int(max_res*4/6)}",f"{int(max_def)}\n{int(max_res)}"]
+	if graph_type == 2:
+		tick_labels=["0\n0",f"0\n{int(max_res*2/6)}",f"0\n{int(max_res*4/6)}",f"0\n{int(max_res)}",f"{int(max_def*2/6)}\n{int(max_res)}",f"{int(max_def*4/6)}\n{int(max_res)}",f"{int(max_def)}\n{int(max_res)}"]
+	if graph_type == 3:
+		tick_labels=["0",f"{int(max_res/6)}",f"{int(max_res/3)}",f"{int(max_res/2)}",f"{int(max_res*4/6)}",f"{int(max_res*5/6)}",f"{int(max_res)}"]
+	if graph_type == 4:
+		tick_labels=["0",f"{int(max_def/6)}",f"{int(max_def/3)}",f"{int(max_def/2)}",f"{int(max_def*4/6)}",f"{int(max_def*5/6)}",f"{int(max_def)}"]
+	if graph_type != 5:
+		tick_locations = np.linspace(0,max_def,7)
+		plt.xticks(tick_locations, tick_labels)
+
+	fig = plt.gcf()
+	fig.set_size_inches(2 * plot_size, plot_size)
+	plt.tight_layout()
+	
+	#Generate image and send it to the channel
+	buf = io.BytesIO()
+	plt.savefig(buf,format='png')
+	buf.seek(0)
+	file = discord.File(buf, filename='plot.png')
+	plt.close()
+	return DiscordSendable(file=file)
+
+
+
+
+
 
 def dps_command(args: List[str])-> DiscordSendable:
 	#reset plot parameters
