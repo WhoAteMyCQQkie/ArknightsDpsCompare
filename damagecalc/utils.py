@@ -196,10 +196,10 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["d","def","defense"]:
 			i+=1
 
-			defen = [-10]
+			pps.defen = [-10]
 			while i < entries:
 				try:
-					defen.append(min(pps.max_def,int(args[i])))
+					pps.defen.append(min(pps.max_def,int(args[i])))
 				except ValueError:
 					break
 				i+=1
