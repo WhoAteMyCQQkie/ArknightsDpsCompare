@@ -65,6 +65,7 @@ class PlotParameters:
 		self.targets = targets
 		self.conditionals = conditionals
 		self.input_kwargs = kwargs
+		#self.sp_boost = 0
 
 		#Plot Parameters
 		self.graph_type = graph_type

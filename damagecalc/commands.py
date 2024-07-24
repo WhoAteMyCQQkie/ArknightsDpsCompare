@@ -21,7 +21,11 @@ enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[12
 		"is": [[250,40,"01"],[200,10,"02"],[180,10,"03"],[200,10,"04"],[250,40,"05"],[900,10,"06"],[120,10,"07"],[1100,10,"08"],[800,45,"09"],[500,25,"10"],[500,25,"11"],[1000,15,"12"],[1300,15,"13"],[800,45,"14"],[1000,60,"15"]]}
 
 modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x0","y0","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7"]
-
+prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny",
+		   "color","colour","colorblind","colourblind","blind","g:","global","global:","t","target","targets","t1","t2","t3","t4","t5","t6","t7","t8","t9","r","res","resis","resistance",
+			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
+			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","l","h","l1","l2","l3","l4","l5","h1","h2","h3","h4","h5","maxdef","limit","range","scale",
+			  "maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed" ]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -49,13 +53,20 @@ def calc_command(args: List[str]) -> DiscordSendable:
 def dps_command2(args: List[str])-> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()
 	already_drawn_ops = []
+	parsing_errors = "" 
 	plt.clf()
 	plt.style.use('default')
-	already_drawn_ops = [] #this is a global variable edited the utils.plot_graph function. probably not a good solution
 	plot_size = 4 #plot height in inches
 	show = True
 	bottomleft = False
 	textsize = 10
+
+	#fix typos in operator names
+	for i in range(len(args)):
+		if utils.fix_typos(args[i], op_dict.keys()) != "":
+			args[i] = utils.fix_typos(args[i], op_dict.keys())
+	
+	#TODO: try to fix other input errors (wrong order, missing spaces, typos in prompts)
 
 	#Get plot settings
 	for word in args:
@@ -70,12 +81,8 @@ def dps_command2(args: List[str])-> DiscordSendable:
 		elif word in ["color","colour","colorblind","colourblind","blind"]:
 			plt.style.use('tableau-colorblind10')
 
-	#fix typos in operator names
-	for i in range(len(args)):
-		if utils.fix_typos(args[i], op_dict.keys()) != "":
-			args[i] = utils.fix_typos(args[i], op_dict.keys())
-	
-	#TODO: try to fix other input errors (wrong order, missing spaces, typos in prompts)
+	#TODO: add parsing error output for prompts that could not be used
+	#TODO: enemy prompt
 	
 	#Find scopes where which parameter set is active (global vs local)
 	global_scopes = [0]
@@ -108,6 +115,34 @@ def dps_command2(args: List[str])-> DiscordSendable:
 			global_parameters = utils.PlotParametersSet()
 			utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
+	if plot_numbers == 0: return #maybe return a "use !guide" hint instead?
+
+	def is_float(word: str) -> bool:
+		try:
+			float(word)
+			return True
+		except ValueError:
+			return False
+
+	#find unused prompts
+	#TODO: modifiers behind a parsing error will still be used for the earlier scope. maybe add error scope. 
+	for i in range(len(args)):
+		if not args[i] in op_dict.keys():
+			if not (args[i] in prompts or args[i] in modifiers):
+				if not args[i].startswith("high") or not args[i].startswith("low"):
+					if not is_float(args[i]):
+						parsing_errors += (args[i]+" ,")
+						j = 1
+						while is_float(args[i+j]):
+							parsing_errors += (args[i+j]+" ,")
+							j += 1
+	
+	parsing_error = False
+	if parsing_errors != "":
+		parsing_error = True
+		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-1]
+
+
 
 	#prevent the legend from messing up the graphs format
 	legend_columns = 1
@@ -183,8 +218,11 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	buf.seek(0)
 	file = discord.File(buf, filename='plot.png')
 	plt.close()
-	return DiscordSendable(file=file)
-
+	#return DiscordSendable(file=file)
+	if parsing_error:
+		return DiscordSendable(content=parsing_errors, file=file)
+	else:
+		return DiscordSendable(file=file)
 
 
 
