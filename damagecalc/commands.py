@@ -90,15 +90,13 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	scopes.append(len(args))
 
 	plot_numbers = 0
-	#TODO: reset set values of global parameters, when adding local changes
 	#getting setting the plot parameters and plotting the units
 	utils.parse_plot_essentials(global_parameters, args)
 	for i in range(len(scopes)-1):
 		if scopes[i] in local_scopes:
 			local_parameters = copy.deepcopy(global_parameters)
 			if (scopes[i]+1) not in scopes:
-				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
-			print(local_parameters.res)	
+				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]], True)
 			for parameters in local_parameters.get_plot_parameters():
 				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,True,plot_numbers):
 					plot_numbers += 1
