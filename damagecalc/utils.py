@@ -2,6 +2,7 @@ import subprocess
 from typing import Dict, TypeVar, Generic
 import itertools
 import numpy as np
+import copy
 
 from discord import DMChannel, File
 import matplotlib.pyplot as plt
@@ -51,7 +52,7 @@ class DiscordSendable:
 
 class PlotParameters:
 	def __init__(self,pot=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
-			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shreds=[1,0,1,0],**kwargs):
+			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],**kwargs):
 		#Operator Parameters
 		self.pot = pot
 		#self.promotion = -1
@@ -74,8 +75,8 @@ class PlotParameters:
 		self.max_res = max_res
 		self.res = res
 		self.defen = defen
-		self.base_buffs = base_buffs
-		self.shreds = shreds
+		self.base_buffs = copy.deepcopy(base_buffs)
+		self.shred = copy.deepcopy(shred)
 
 class PlotParametersSet(PlotParameters):
 	def __init__(self):
@@ -92,11 +93,11 @@ class PlotParametersSet(PlotParameters):
 		output = []
 		if not self.all_conditionals:
 			for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shreds,**self.input_kwargs))
+				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,**self.input_kwargs))
 		else:
 			for combo in itertools.product([True,False], repeat = 5):
 				for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shreds,**self.input_kwargs))
+					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -225,73 +226,72 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 			i-=1
 		elif args[i] in ["shred","shreds","debuff","ignore"]:
 			i+=1
-			shreds = [1,0,1,0]
+			pps.shred = [1,0,1,0]
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						shreds[0] = max(0,(1-float(args[i][:-1])/100))
-						shreds[2] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[0] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[2] = max(0,(1-float(args[i][:-1])/100))
 					except ValueError:
 						break
 				else:
 					try:
 						val = float(args[i])
 						if val > 0 and val < 1:
-							shreds[0] = 1 - val
-							shreds[2] = 1 - val
+							pps.shred[0] = 1 - val
+							pps.shred[2] = 1 - val
 						if val > 2:
-							shreds[1] = val
-							shreds[3] = val
+							pps.shred[1] = val
+							pps.shred[3] = val
 					except ValueError:
 						break
 				i+=1
 			i-=1
-			pps.shreds = shreds
-			pps.input_kwargs["shreds"] = shreds
+			pps.input_kwargs["shreds"] = pps.shred
 		elif args[i] in ["resshred","resdebuff","shredres","debuffres","reshred","resignore"]:
 			i+=1
-			pps.shreds[2] = 1
-			pps.shreds[3] = 0
+			pps.shred[2] = 1
+			pps.shred[3] = 0
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.shreds[2] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[2] = max(0,(1-float(args[i][:-1])/100))
 					except ValueError:
 						break
 				else:
 					try:
 						val = float(args[i])
 						if val > 0 and val < 1:
-							pps.shreds[2] = 1 - val
+							pps.shred[2] = 1 - val
 						if val > 2:
-							pps.shreds[3] = val
+							pps.shred[3] = val
 					except ValueError:
 						break
 				i+=1
 			i-=1
-			pps.input_kwargs["shreds"] = pps.shreds
+			pps.input_kwargs["shreds"] = pps.shred
 		elif args[i] in ["defshred","defdebuff","shreddef","debuffdef","defignore"]:
 			i+=1
-			pps.shreds[0] = 1
-			pps.shreds[1] = 0
+			pps.shred[0] = 1
+			pps.shred[1] = 0
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.shreds[0] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[0] = max(0,(1-float(args[i][:-1])/100))
 					except ValueError:
 						break
 				else:
 					try:
 						val = float(args[i])
 						if val > 0 and val < 1:
-							pps.shreds[0] = 1 - val
+							pps.shred[0] = 1 - val
 						if val > 2:
-							pps.shreds[1] = val
+							pps.shred[1] = val
 					except ValueError:
 						break
 				i+=1
 			i-=1
-			pps.input_kwargs["shreds"] = pps.shreds
+			pps.input_kwargs["shreds"] = pps.shred
 		elif args[i] in ["basebuff","baseatk","base","bbuff","batk"]:
 			i+=1
 			pps.base_buffs[0] = 1
@@ -471,7 +471,7 @@ def fix_typos(word, args):
 def apply_plot(operator_input, plot_parameters, already_drawn=[], normal_dps=True, plot_numbers=0):
 	pp = plot_parameters
 	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs)
-	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shreds,[],pp.base_buffs,normal_dps, plot_numbers)
+	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,[],pp.base_buffs,normal_dps, plot_numbers)
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6
@@ -516,7 +516,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name,linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
@@ -538,7 +538,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
@@ -562,7 +562,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
@@ -585,7 +585,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for res in ress:
 			if res >= 0:
@@ -600,7 +600,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
