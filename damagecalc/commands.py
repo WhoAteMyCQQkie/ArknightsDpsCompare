@@ -87,7 +87,7 @@ def dps_command2(args: List[str])-> DiscordSendable:
 			global_scopes.append(i)
 	scopes = list(set(global_scopes + local_scopes))
 	scopes.sort()
-	scopes.append(len(args))
+	scopes.append(len(args)-1)
 
 	#TODO get plot formatting
 
@@ -95,9 +95,10 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	#getting setting the plot parameters and plotting the units
 	utils.parse_plot_essentials(global_parameters, args)
 	for i in range(len(scopes)-1):
-		if i in local_scopes:
+		if scopes[i] in local_scopes:
 			local_parameters = copy.deepcopy(global_parameters)
-			utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
+			if (scopes[i]+1) not in scopes:
+				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])		
 			for parameters in local_parameters.get_plot_parameters():
 				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,True,plot_numbers):
 					plot_numbers += 1
@@ -105,7 +106,7 @@ def dps_command2(args: List[str])-> DiscordSendable:
 						plt.close()
 						l = len(bot_mad_message)
 						return DiscordSendable(bot_mad_message[np.random.randint(0,l)])
-		elif i in global_scopes:
+		elif scopes[i] in global_scopes:
 			global_parameters = utils.PlotParametersSet()
 			utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
