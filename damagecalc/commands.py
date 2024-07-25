@@ -26,7 +26,7 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
 			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","l","h","l1","l2","l3","l4","l5","h1","h2","h3","h4","h5","maxdef","limit","range","scale",
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
-			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd" ]
+			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:" ]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -96,7 +96,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	for i, arg in enumerate(args):
 		if arg in op_dict.keys():
 			local_scopes.append(i)
-		elif arg in ["g:","global","global:"]:
+		elif arg in ["g:","global","global:","reset","reset:"]:
 			global_scopes.append(i)
 	scopes = list(set(global_scopes + local_scopes))
 	scopes.sort()
@@ -118,8 +118,9 @@ def dps_command(args: List[str])-> DiscordSendable:
 						l = len(bot_mad_message)
 						return DiscordSendable(bot_mad_message[np.random.randint(0,l)])
 		elif scopes[i] in global_scopes:
-			global_parameters = utils.PlotParametersSet()
-			utils.parse_plot_essentials(global_parameters, args)
+			if args[scopes[i]] in ["reset","reset:"]:
+				global_parameters = utils.PlotParametersSet()
+				utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
 	if plot_numbers == 0: return #maybe return a "use !guide" hint instead?
 
