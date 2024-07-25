@@ -129,13 +129,15 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	for i in range(len(args)):
 		if not args[i] in op_dict.keys():
 			if not (args[i] in prompts or args[i] in modifiers):
-				if not args[i].startswith("high") or not args[i].startswith("low"):
-					if not is_float(args[i]):
-						parsing_errors += (args[i]+" ,")
-						j = 1
-						while is_float(args[i+j]):
-							parsing_errors += (args[i+j]+" ,")
-							j += 1
+				if not args[i].startswith("high"):
+					if not args[i].startswith("low"):
+						if not is_float(args[i]):
+							parsing_errors += (args[i]+" ,")
+							j = 1
+							while is_float(args[i+j]):
+								if (i+j) in scopes: break
+								parsing_errors += (args[i+j]+" ,")
+								j += 1
 	
 	parsing_error = False
 	if parsing_errors != "":

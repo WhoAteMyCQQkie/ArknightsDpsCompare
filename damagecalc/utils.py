@@ -64,7 +64,7 @@ class PlotParameters:
 		self.module_lvl = module_lvl
 		self.buffs = buffs #TODO split that into atk, aspd and fragile
 		self.targets = targets
-		self.conditionals = conditionals
+		self.conditionals = copy.deepcopy(conditionals)
 		self.input_kwargs = kwargs
 		#self.sp_boost = 0
 
@@ -169,8 +169,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 			pps.module_lvls.add(int(args[i][1]))
 			pps.module_lvls.discard(-1)
 		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
-			pps.module_lvls.add(0)
-			pps.module_lvls.discard(-1)
+			pps.modules.add(0)
+			pps.modules.discard(-1)
 		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
 			pps.skills.add(int(args[i][1]))
 			pps.skills.discard(-1)
