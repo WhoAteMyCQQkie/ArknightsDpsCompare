@@ -62,7 +62,7 @@ class PlotParameters:
 		self.mastery = mastery #self.skill_lvl
 		self.module = module
 		self.module_lvl = module_lvl
-		self.buffs = buffs #TODO split that into atk, aspd and fragile
+		self.buffs = copy.deepcopy(buffs) #TODO split that into atk, aspd and fragile. for prompts thats done
 		self.targets = targets
 		self.conditionals = copy.deepcopy(conditionals)
 		self.input_kwargs = kwargs
@@ -192,6 +192,50 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 				if buffcount == 4: pps.buffs[3] = pps.buffs[3]/100
 				i+=1
 			i-=1
+		
+		elif args[i] in ["atk","attack"]:
+			i+=1
+			pps.buffs[0] = 0
+			pps.buffs[1] = 0
+			while i < entries:
+				if args[i][-1] == "%":
+					try:
+						pps.buffs[0] = float(args[i][:-1])/100
+					except ValueError:
+						break
+				else:
+					try:
+						val = float(args[i])
+						if val > 0 and val < 1:
+							pps.buffs[0] = 1 - val
+						if val > 2:
+							pps.buffs[1] = val
+					except ValueError:
+						break
+				i+=1
+			i-=1
+			
+		elif args[i] in ["aspd","speed","atkspeed","attackspeed","atkspd"]:
+			i+=1
+			pps.buffs[2] = 0
+			while i < entries:
+				try:
+					pps.buffs[2] = int(args[i])
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["fragile","frag","dmg"]:
+			i+=1
+			pps.buffs[3] = 0
+			while i < entries:
+				try:
+					pps.buffs[3] = int(args[i])
+				except ValueError:
+					break
+				i+=1
+			i-=1
+			pps.buffs[3] = pps.buffs[3]/100
 		elif args[i] in ["t","target","targets"]:
 			i+=1
 			pps.targets = 1
