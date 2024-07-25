@@ -50,7 +50,7 @@ def calc_command(args: List[str]) -> DiscordSendable:
 	#output += "Completed in " + str(round((time.time() - start) * 1000)) + "ms"
 	return DiscordSendable(output)
 
-def dps_command2(args: List[str])-> DiscordSendable:
+def dps_command(args: List[str])-> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()
 	already_drawn_ops = []
 	parsing_errors = "" 
@@ -232,7 +232,7 @@ def dps_command2(args: List[str])-> DiscordSendable:
 
 
 
-def dps_command(args: List[str])-> DiscordSendable:
+def dps_command_old(args: List[str])-> DiscordSendable:
 	#reset plot parameters
 	plt.clf()
 	plt.style.use('default')

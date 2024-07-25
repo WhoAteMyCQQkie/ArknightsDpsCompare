@@ -72,15 +72,15 @@ There are also a handful of healers implemented. !hps <opname> ... works similar
 Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 """))
-	commands.register('guide', cmds.simple("""**Suffixes placed after the operator, affecting only that operator:**
+	commands.register('guide', cmds.simple("""**Any prompt written before the first operator will affect all operators, prompts written after an operator will overwrite the original settings for that operator alone. by adding global as a prompt you reset all settings**
 S1,S2,S3, sl7, M0..M3, P1..P6, mod0,modx,mody,modd or just 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
-**Prefixes that affect all following operators (not adding a value resets to default values):**
+**Buffs:**
 targets <value>, res <value>/def <value>, buff <atk%> <flatAtk> <aspd> <fragile>, level <OpLevel>, hits <receivedHitsPerSecond> (either like 0.33 or 1/3), bbuff <value> (base atk, flat:123, percentage: 25% or 0.25), resshred/defshred (same as bbuff, percent or flat)
-**Conditional damage prefixes, affecting all following operators:**
+**Conditional damage prefixes, allowing you to turn off the effects of talents etc.:**
 lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule
 *(just writing low/high sets all 5. you can also use low1,..,low5 or high1,..,high5 for trait,talent1,talent2,skill,module)*
-**Prompts for the axis scale, that need to be added before any operators:** maxdef/maxres <value>, split/split2, fix/fixdef/fixres <value> (fix chooses res <100, else def)
-**Other prompts:** hide,left,tiny (for the legend),  color (for colorblind people, at the start), text (puts everything after the prompt as title of the graph)
+**Prompts for the axis scale:** maxdef/maxres <value>, split/split2, fix/fixdef/fixres <value> (fix chooses res <100, else def)
+**Other prompts:** hide,left,tiny (for the legend),  color (for colorblind people, at the start), text (puts everything after the prompt as title of the graph, ignoring further inputs)
 *Most prefix prompts can also be shortened: buff -> b, low/high -> l/h, targets -> t, level -> lv, ...*
 """))
 	aliases.register('prompt', 'guide')
