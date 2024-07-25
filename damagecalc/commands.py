@@ -61,6 +61,12 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	bottomleft = False
 	textsize = 10
 
+	#Adding the text prompt
+	for i, word in enumerate(args):
+		if word in ["text", "title"]:
+			plt.title(f"{' '.join(args[i+1:])}")
+			args = args[:i]
+
 	#fix typos in operator names
 	for i in range(len(args)):
 		if utils.fix_typos(args[i], op_dict.keys()) != "":
