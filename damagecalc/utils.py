@@ -214,7 +214,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 						break
 				i+=1
 			i-=1
-			
+
 		elif args[i] in ["aspd","speed","atkspeed","attackspeed","atkspd"]:
 			i+=1
 			pps.buffs[2] = 0
@@ -425,23 +425,19 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 		if args[i] in ["maxdef","limit","range","scale"]:
 			i+=1
 			pps.max_def = 3000
-			while i < entries:
-				try:
-					pps.max_def = min(69420,max(100, int(args[i])))
-				except ValueError:
-					break
-				i+=1
-			i-=1
+			try:
+				pps.max_def = min(69420,max(100, int(args[i])))
+			except ValueError:
+				break
+
 		elif args[i] in ["maxres","reslimit","limitres","scaleres","resscale"]:
 			i+=1
 			pps.max_res = 120
-			while i < entries:
-				try:
-					pps.max_res = min(420,max(5, int(args[i])))
-				except ValueError:
-					break
-				i+=1
-			i-=1
+			try:
+				pps.max_res = min(420,max(5, int(args[i])))
+			except ValueError:
+				break
+
 		elif args[i] == "split":
 				pps.graph_type = 1
 		elif args[i] == "split2":
