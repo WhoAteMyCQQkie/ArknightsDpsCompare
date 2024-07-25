@@ -102,7 +102,7 @@ class PlotParametersSet(PlotParameters):
 
 #read in the operator specific parameters	
 def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite = False):
-	if local_rewrite:
+	if local_rewrite: #make sure to reset the parameters of the global parameter set
 		for arg in args:
 			if arg in ["s1","s2","s3"]:
 				pps.skills = {-1}
@@ -182,6 +182,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 			i+=1
 			buffcount=0
 			pps.buffs=[0,0,0,0]
+			if args[i][-1] == "%": args[i] = args[i][:-1]
 			while i < entries and buffcount < 4:
 				try:
 					pps.buffs[buffcount] = int(args[i])
@@ -228,6 +229,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 		elif args[i] in ["fragile","frag","dmg"]:
 			i+=1
 			pps.buffs[3] = 0
+			if args[i][-1] == "%": args[i] = args[i][:-1]
 			while i < entries:
 				try:
 					pps.buffs[3] = int(args[i])
