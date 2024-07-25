@@ -87,7 +87,6 @@ def dps_command2(args: List[str])-> DiscordSendable:
 		elif word in ["color","colour","colorblind","colourblind","blind"]:
 			plt.style.use('tableau-colorblind10')
 
-	#TODO: add parsing error output for prompts that could not be used
 	#TODO: enemy prompt
 	
 	#Find scopes where which parameter set is active (global vs local)
@@ -133,17 +132,14 @@ def dps_command2(args: List[str])-> DiscordSendable:
 	#find unused prompts
 	#TODO: modifiers behind a parsing error will still be used for the earlier scope. maybe add error scope. 
 	for i in range(len(args)):
-		if not args[i] in op_dict.keys():
-			if not (args[i] in prompts or args[i] in modifiers):
-				if not args[i].startswith("high"):
-					if not args[i].startswith("low"):
-						if not is_float(args[i]):
-							parsing_errors += (args[i]+" ,")
-							j = 1
-							while is_float(args[i+j]):
-								if (i+j) in scopes: break
-								parsing_errors += (args[i+j]+" ,")
-								j += 1
+		if not args[i] in op_dict.keys() and not (args[i] in prompts or args[i] in modifiers):
+			if not args[i].startswith("high") and not args[i].startswith("low") and not is_float(args[i]) and not is_float(args[i][:-1]):
+				parsing_errors += (args[i]+" ,")
+				j = 1
+				while is_float(args[i+j]):
+					if (i+j) in scopes: break
+					parsing_errors += (args[i+j]+" ,")
+					j += 1
 	
 	parsing_error = False
 	if parsing_errors != "":
