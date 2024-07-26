@@ -69,11 +69,50 @@ def dps_command(args: List[str])-> DiscordSendable:
 			args = args[:i]
 
 	#fix typos in operator names
+	
 	for i in range(len(args)):
 		if utils.fix_typos(args[i], op_dict.keys()) != "":
 			args[i] = utils.fix_typos(args[i], op_dict.keys())
+		
 	
-	#TODO: try to fix other input errors (wrong order, missing spaces, typos in prompts)
+	#fixing missing spaces
+	entries = len(args)
+	j = 0
+	while j < entries:
+		if args[j] in prompts or args[j] in op_dict.keys():
+			j += 1
+		elif args[j][0] in "123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
+			numberpos = 1
+			while args[j][numberpos] in "0123456789.%":
+				numberpos += 1
+			temp = args[j]
+			args[j] = args[j][numberpos:]
+			args.insert(j,temp[:numberpos])
+			entries += 1
+			j += 1
+		elif not args[j][0] in "123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
+			numberpos = 2
+			wordlen = len(args[j])
+			while args[j][-numberpos] in "0123456789.%":
+				numberpos += 1
+			temp = args[j]
+			args[j] = args[j][(wordlen-numberpos+1):]
+			args.insert(j,temp[:(wordlen-numberpos+1)])
+			entries += 1
+			j += 1
+		j += 1
+	#TODO: fix wrong order of prompts (such as 100 aspd or 6 targets)
+	
+	#fix typos in prompts
+	for i in range(len(args)):
+		if args[i] not in op_dict.keys() and args[i] not in prompts and len(args[i]) > 3:
+			for prompt in prompts:
+				if utils.levenshtein(args[i],prompt) == 1:
+					args[i] = prompt
+					break
+
+			
+
 
 	#Get plot settings
 	for word in args:
