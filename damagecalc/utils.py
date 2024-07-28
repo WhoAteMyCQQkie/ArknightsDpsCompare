@@ -55,11 +55,11 @@ class DiscordSendable:
 		await channel.send(content=self.content, file=self.file)
 
 class PlotParameters:
-	def __init__(self,pot=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
+	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
 			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = True,enemies=[],**kwargs):
 		#Operator Parameters
 		self.pot = pot
-		#self.promotion = -1
+		self.promotion = promotion
 		#self.trust = -1
 		self.level = level
 		self.skill = skill
@@ -88,6 +88,7 @@ class PlotParametersSet(PlotParameters):
 	def __init__(self):
 		super().__init__()
 		self.pots = {-1}
+		self.promotions = {-1}
 		self.levels = {-1}
 		self.skills = {-1}
 		self.masteries = {-1} #self.skill_lvl
@@ -101,12 +102,12 @@ class PlotParametersSet(PlotParameters):
 	def get_plot_parameters(self) -> list[PlotParameters]:
 		output = []
 		if not self.all_conditionals:
-			for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
+			for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
+				output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		else:
 			for combo in itertools.product([True,False], repeat = 5):
-				for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
+				for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
+					output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -115,6 +116,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 	for arg in args:
 		if arg in ["s1","s2","s3"]:
 			pps.skills = {-1}
+		elif arg in ["e0","e1","e2"]:
+			pps.promotions = {-1}
 		elif arg in ["p1","p2","p3","p4","p5","p6"]:
 			pps.pots = {-1}
 		elif arg in ["1","2","3","modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
@@ -136,6 +139,9 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		if args[i] in ["s1","s2","s3"]: 
 			pps.skills.add(int(args[i][1]))
 			pps.skills.discard(-1)
+		elif args[i] in ["e0","e1","e2"]: 
+			pps.promotions.add(int(args[i][1]))
+			pps.promotions.discard(-1)
 		elif args[i] in ["p1","p2","p3","p4","p5","p6"]: 
 			pps.pots.add(int(args[i][1]))
 			pps.pots.discard(-1)
@@ -550,7 +556,7 @@ def fix_typos(word, args):
 
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0):
 	pp = plot_parameters
-	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs)
+	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
 	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers)
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
