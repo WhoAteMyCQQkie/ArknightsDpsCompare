@@ -145,7 +145,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 		if scopes[i] in local_scopes:
 			local_parameters = copy.deepcopy(global_parameters)
 			if (scopes[i]+1) not in scopes:
-				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]], True)
+				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
 			for parameters in local_parameters.get_plot_parameters():
 				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,plot_numbers):
 					plot_numbers += 1

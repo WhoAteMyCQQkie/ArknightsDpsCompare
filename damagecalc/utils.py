@@ -75,7 +75,7 @@ class PlotParameters:
 		self.max_res = max_res
 		self.res = res
 		self.defen = defen
-		self.base_buffs = copy.deepcopy(base_buffs)
+		self.base_buffs = base_buffs
 		self.shred = copy.deepcopy(shred)
 		self.normal_dps = normal_dps
 
@@ -102,25 +102,25 @@ class PlotParametersSet(PlotParameters):
 		return output
 
 #read in the operator specific parameters	
-def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite = False):
-	if local_rewrite: #make sure to reset the parameters of the global parameter set
-		for arg in args:
-			if arg in ["s1","s2","s3"]:
-				pps.skills = {-1}
-			elif arg in ["p1","p2","p3","p4","p5","p6"]:
-				pps.pots = {-1}
-			elif arg in ["1","2","3","modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
-				pps.module_lvls = {-1}
-			elif arg in ["mod0","mod1","mod2","mod3","modx","x","mody","y","modd","d","no","mod","nomod"]:
-				pps.modules = {-1}
-			elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3"]:
-				pps.modules = {-1}
-				pps.module_lvls = {-1}
-			elif arg in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
-				pps.skills = {-1}
-				pps.masteries = {-1}
-			elif arg in ["sl7","s7","slv7","l7","lv7","m0","m1","m2","m3"]:
-				pps.masteries = {-1}
+def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
+	 #make sure to reset the parameters of the global parameter set
+	for arg in args:
+		if arg in ["s1","s2","s3"]:
+			pps.skills = {-1}
+		elif arg in ["p1","p2","p3","p4","p5","p6"]:
+			pps.pots = {-1}
+		elif arg in ["1","2","3","modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
+			pps.module_lvls = {-1}
+		elif arg in ["mod0","mod1","mod2","mod3","modx","x","mody","y","modd","d","no","mod","nomod"]:
+			pps.modules = {-1}
+		elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3"]:
+			pps.modules = {-1}
+			pps.module_lvls = {-1}
+		elif arg in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
+			pps.skills = {-1}
+			pps.masteries = {-1}
+		elif arg in ["sl7","s7","slv7","l7","lv7","m0","m1","m2","m3"]:
+			pps.masteries = {-1}
 	i = 0
 	entries = len(args)
 	while i < entries:
@@ -341,8 +341,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str], local_rewrite
 			pps.input_kwargs["shreds"] = pps.shred
 		elif args[i] in ["basebuff","baseatk","base","bbuff","batk"]:
 			i+=1
-			pps.base_buffs[0] = 1
-			pps.base_buffs[1] = 0
+			pps.base_buffs = [1,0]
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
