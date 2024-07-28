@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 
+enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[1200,0,"05"],[1500,0,"06"],[900,20,"07"],[1200,20,"08"],[150,40,"09"],[3000,90,"10"],[200,20,"11"],[250,60,"12"],[300,60,"13"],[300,50,"14"]],
+		"zt": [[250,50,"01"],[200,15,"02"],[250,50,"03"],[200,15,"04"],[700,60,"05"],[300,50,"06"],[150,10,"07"],[250,15,"08"],[300,50,"09"],[250,15,"10"],[600,80,"11"],[300,50,"12"],[1000,60,"13"],[600,60,"14"],[350,50,"15"],[900,60,"16"],[550,60,"17"]],
+		"is": [[250,40,"01"],[200,10,"02"],[180,10,"03"],[200,10,"04"],[250,40,"05"],[900,10,"06"],[120,10,"07"],[1100,10,"08"],[800,45,"09"],[500,25,"10"],[500,25,"11"],[1000,15,"12"],[1300,15,"13"],[800,45,"14"],[1000,60,"15"]]}
+
 T = TypeVar('T')
 V = TypeVar('V')
 
@@ -52,7 +56,7 @@ class DiscordSendable:
 
 class PlotParameters:
 	def __init__(self,pot=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
-			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = True,**kwargs):
+			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = True,enemies=[],**kwargs):
 		#Operator Parameters
 		self.pot = pot
 		#self.promotion = -1
@@ -78,6 +82,7 @@ class PlotParameters:
 		self.base_buffs = base_buffs
 		self.shred = copy.deepcopy(shred)
 		self.normal_dps = normal_dps
+		self.enemies = enemies
 
 class PlotParametersSet(PlotParameters):
 	def __init__(self):
@@ -88,17 +93,20 @@ class PlotParametersSet(PlotParameters):
 		self.masteries = {-1} #self.skill_lvl
 		self.modules = {-1}
 		self.module_lvls = {-1}
+
+		#stuff that only the global parameters need
 		self.all_conditionals = False
+		self.enemy_key = ""
 
 	def get_plot_parameters(self) -> list[PlotParameters]:
 		output = []
 		if not self.all_conditionals:
 			for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,**self.input_kwargs))
+				output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		else:
 			for combo in itertools.product([True,False], repeat = 5):
 				for pot,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,**self.input_kwargs))
+					output.append(PlotParameters(pot,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -470,6 +478,20 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				i+=1
 			except ValueError:
 				pass
+		elif args[i] in ["enemy","chapter"]:
+			if args[i+1] in enemy_dict:
+				pps.enemy_key = args[i+1]
+				pps.graph_type = 5
+				pps.enemies = enemy_dict[args[i+1]]
+				pps.enemies.sort(key=lambda tup: tup[0], reverse=False)
+				i += 1
+		elif args[i] in ["enemy2","chapter2"]:
+			if args[i+1] in enemy_dict:
+				pps.enemy_key = args[i+1]
+				pps.graph_type = 5
+				pps.enemies = enemy_dict[args[i+1]]
+				pps.enemies.sort(key=lambda tup: tup[1], reverse=False)
+				i += 1
 		i += 1
 
 def levenshtein(word1, word2):
@@ -515,7 +537,7 @@ def fix_typos(word, args):
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0):
 	pp = plot_parameters
 	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs)
-	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,[],pp.base_buffs,pp.normal_dps, plot_numbers)
+	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers)
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):
 	accuracy = 1 + 30 * 6

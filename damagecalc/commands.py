@@ -16,9 +16,6 @@ from damagecalc.damage_formulas import op_dict
 from damagecalc.healing_formulas import healer_dict
 
 #for the enemy/chapter prompt
-enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[1200,0,"05"],[1500,0,"06"],[900,20,"07"],[1200,20,"08"],[150,40,"09"],[3000,90,"10"],[200,20,"11"],[250,60,"12"],[300,60,"13"],[300,50,"14"]],
-		"zt": [[250,50,"01"],[200,15,"02"],[250,50,"03"],[200,15,"04"],[700,60,"05"],[300,50,"06"],[150,10,"07"],[250,15,"08"],[300,50,"09"],[250,15,"10"],[600,80,"11"],[300,50,"12"],[1000,60,"13"],[600,60,"14"],[350,50,"15"],[900,60,"16"],[550,60,"17"]],
-		"is": [[250,40,"01"],[200,10,"02"],[180,10,"03"],[200,10,"04"],[250,40,"05"],[900,10,"06"],[120,10,"07"],[1100,10,"08"],[800,45,"09"],[500,25,"10"],[500,25,"11"],[1000,15,"12"],[1300,15,"13"],[800,45,"14"],[1000,60,"15"]]}
 
 modifiers = ["s1","s2","s3","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x0","y0","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7"]
 prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny",
@@ -26,7 +23,7 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
 			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","l","h","l1","l2","l3","l4","l5","h1","h2","h3","h4","h5","maxdef","limit","range","scale",
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
-			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg"]
+			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2"]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -77,7 +74,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	entries = len(args)
 	j = 0
 	while j < entries:
-		if args[j] in prompts or args[j] in op_dict.keys():
+		if args[j] in prompts or args[j] in op_dict.keys() or args[j] in modifiers:
 			j += 1
 		elif args[j][0] in "123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
 			numberpos = 1
@@ -172,17 +169,18 @@ def dps_command(args: List[str])-> DiscordSendable:
 	for i in range(len(args)):
 		if not args[i] in op_dict.keys() and not (args[i] in prompts or args[i] in modifiers):
 			if not args[i].startswith("high") and not args[i].startswith("low") and not is_float(args[i]) and not is_float(args[i][:-1]):
-				parsing_errors += (args[i]+" ,")
+				parsing_errors += (args[i]+", ")
 				j = 1
+				if(i+j) >= len(args): continue
 				while is_float(args[i+j]):
 					if (i+j) in scopes: break
-					parsing_errors += (args[i+j]+" ,")
+					parsing_errors += (args[i+j]+", ")
 					j += 1
 	
 	parsing_error = False
 	if parsing_errors != "":
 		parsing_error = True
-		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-1]
+		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-2]
 
 
 
@@ -217,6 +215,8 @@ def dps_command(args: List[str])-> DiscordSendable:
 	max_res = global_parameters.max_res
 	fixval = global_parameters.fix_value
 	graph_type = global_parameters.graph_type
+	enemies = global_parameters.enemies
+	enemy_key = global_parameters.enemy_key
 
 	ax = plt.gca()
 	ax.set_ylim(ymin = 0)
@@ -249,6 +249,20 @@ def dps_command(args: List[str])-> DiscordSendable:
 	if graph_type != 5:
 		tick_locations = np.linspace(0,max_def,7)
 		plt.xticks(tick_locations, tick_labels)
+	else: #The part below this handles the enemy prompt
+		ax.set_xticklabels([])
+		#pylint: disable=unused-variable
+		xl, yl, xh, yh=np.array(ax.get_position()).ravel()
+		fig = plt.gcf()
+		axes = [None] * len(enemies)
+		for i,ax in enumerate(axes):
+			ph = len(enemies)
+			img = np.asarray(Image.open('arkbotimages/' + enemy_key + '_' + enemies[i][2] + '.png'))
+			#ax = fig.add_axes([1/(len(enemies)+1)*(i+0.67), 0, 0.1, 0.1])
+			if plot_size ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
+			else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
+			ax.axison = False
+			ax.imshow(img)
 
 	fig = plt.gcf()
 	fig.set_size_inches(2 * plot_size, plot_size)
