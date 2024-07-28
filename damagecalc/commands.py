@@ -51,7 +51,6 @@ def calc_command(args: List[str]) -> DiscordSendable:
 def dps_command(args: List[str])-> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()
 	already_drawn_ops = []
-	parsing_errors = "" 
 	plt.clf()
 	plt.style.use('default')
 	plot_size = 4 #plot height in inches
@@ -118,8 +117,6 @@ def dps_command(args: List[str])-> DiscordSendable:
 		elif word in ["color","colour","colorblind","colourblind","blind"]:
 			plt.style.use('tableau-colorblind10')
 
-	#TODO: enemy prompt
-	
 	#Find scopes where which parameter set is active (global vs local)
 	global_scopes = [0]
 	local_scopes = []
@@ -133,14 +130,12 @@ def dps_command(args: List[str])-> DiscordSendable:
 	scopes.append(len(args))
 
 	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
-	print(scopes)
 	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
 		tmp = args[1]
 		args[1] = args[0]
 		args[0] = tmp
 	for i in range(len(args)-2):
 		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
-			print("OMG ITS HAPPEING", args[i+1], args[i+2])
 			tmp = args[i+1]
 			args[i+1] = args[i+2]
 			args[i+2] = tmp
@@ -168,18 +163,13 @@ def dps_command(args: List[str])-> DiscordSendable:
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
 	if plot_numbers == 0: return #maybe return a "no operator found, use !guide" hint instead?
 
-	#find unused prompts
-	#TODO: modifiers behind a parsing error will still be used for the earlier scope. maybe add error scope. 
-	for i in range(len(args)):
-		if not args[i] in op_dict.keys() and not (args[i] in prompts or args[i] in modifiers):
-			if not args[i].startswith("high") and not args[i].startswith("low") and not utils.is_float(args[i]) and not utils.is_float(args[i][:-1]):
-				parsing_errors += (args[i]+", ")
-				j = 1
-				if(i+j) >= len(args): continue
-				while utils.is_float(args[i+j]):
-					if (i+j) in scopes: break
-					parsing_errors += (args[i+j]+", ")
-					j += 1
+	#find unused parts
+	parsing_errors = "" 
+	test_parameters = utils.PlotParametersSet()
+	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
+	for pos in unparsed_inputs:
+		if not args[pos] in op_dict.keys() and not pos in scopes[:-1] and not args[pos] in ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
+			parsing_errors += (args[pos]+", ")
 	
 	parsing_error = False
 	if parsing_errors != "":

@@ -131,6 +131,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.masteries = {-1}
 	i = 0
 	entries = len(args)
+	unused_inputs = set()
 	while i < entries:
 		if args[i] in ["s1","s2","s3"]: 
 			pps.skills.add(int(args[i][1]))
@@ -185,9 +186,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.skills.discard(-1)
 			pps.masteries.add(int(args[i][3]))
 			pps.masteries.discard(-1)
-		if not -1 in pps.module_lvls and 0 in pps.modules and len(pps.modules) == 1:
-			pps.modules.add(-1)
-		if args[i] in ["b","buff","buffs"]:
+		elif args[i] in ["b","buff","buffs"]:
 			i+=1
 			buffcount=0
 			pps.buffs=[0,0,0,0]
@@ -202,7 +201,6 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				if buffcount == 4: pps.buffs[3] = pps.buffs[3]/100
 				i+=1
 			i-=1
-		
 		elif args[i] in ["atk","attack"]:
 			i+=1
 			pps.buffs[0] = 0
@@ -427,12 +425,18 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.conditionals[2] = True
 		elif args[i] in ["conditionals", "conditional","variation","variations"]:
 			pps.all_conditionals = True
+		else:
+			unused_inputs.add(i)
+		if not -1 in pps.module_lvls and 0 in pps.modules and len(pps.modules) == 1:
+			pps.modules.add(-1)
 		i += 1
+	return unused_inputs
 
 #read the graph scalings
 def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 	i = 0
 	entries = len(args)
+	unused_inputs = set()
 	while i < entries:
 		if args[i] in ["maxdef","limit","range","scale"]:
 			i+=1
@@ -492,7 +496,10 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				pps.enemies = enemy_dict[args[i+1]]
 				pps.enemies.sort(key=lambda tup: tup[1], reverse=False)
 				i += 1
+		else:
+			unused_inputs.add(i)
 		i += 1
+	return unused_inputs
 
 def is_float(word: str) -> bool:
 		try:
