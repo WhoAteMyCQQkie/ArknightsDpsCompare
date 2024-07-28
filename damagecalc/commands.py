@@ -132,8 +132,18 @@ def dps_command(args: List[str])-> DiscordSendable:
 	scopes.sort()
 	scopes.append(len(args))
 
-	#TODO: Fixing the order of input prompts (such as !dps horn 5 targets)
-	
+	#Fixing the order of input prompts (such as !dps horn 5 targets)
+	print(scopes)
+	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
+		tmp = args[1]
+		args[1] = args[0]
+		args[0] = tmp
+	for i in range(len(args)-2):
+		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
+			print("OMG ITS HAPPEING", args[i+1], args[i+2])
+			tmp = args[i+1]
+			args[i+1] = args[i+2]
+			args[i+2] = tmp
 
 	plot_numbers = 0
 	#getting setting the plot parameters and plotting the units
@@ -155,24 +165,17 @@ def dps_command(args: List[str])-> DiscordSendable:
 				global_parameters = utils.PlotParametersSet()
 				utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
-	if plot_numbers == 0: return #maybe return a "use !guide" hint instead?
-
-	def is_float(word: str) -> bool:
-		try:
-			float(word)
-			return True
-		except ValueError:
-			return False
+	if plot_numbers == 0: return #maybe return a "no operator found, use !guide" hint instead?
 
 	#find unused prompts
 	#TODO: modifiers behind a parsing error will still be used for the earlier scope. maybe add error scope. 
 	for i in range(len(args)):
 		if not args[i] in op_dict.keys() and not (args[i] in prompts or args[i] in modifiers):
-			if not args[i].startswith("high") and not args[i].startswith("low") and not is_float(args[i]) and not is_float(args[i][:-1]):
+			if not args[i].startswith("high") and not args[i].startswith("low") and not utils.is_float(args[i]) and not utils.is_float(args[i][:-1]):
 				parsing_errors += (args[i]+", ")
 				j = 1
 				if(i+j) >= len(args): continue
-				while is_float(args[i+j]):
+				while utils.is_float(args[i+j]):
 					if (i+j) in scopes: break
 					parsing_errors += (args[i+j]+", ")
 					j += 1

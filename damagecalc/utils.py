@@ -494,6 +494,13 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				i += 1
 		i += 1
 
+def is_float(word: str) -> bool:
+		try:
+			float(word)
+			return True
+		except ValueError:
+			return False
+
 def levenshtein(word1, word2):
 	m = len(word1)
 	n = len(word2)
