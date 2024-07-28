@@ -23,7 +23,7 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
 			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","l","h","l1","l2","l3","l4","l5","h1","h2","h3","h4","h5","maxdef","limit","range","scale",
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
-			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2"]
+			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2","trust"]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]

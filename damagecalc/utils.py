@@ -55,12 +55,11 @@ class DiscordSendable:
 		await channel.send(content=self.content, file=self.file)
 
 class PlotParameters:
-	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,conditionals=[True,True,True,True,True],
+	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],targets=-1,trust=100,conditionals=[True,True,True,True,True],
 			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = True,enemies=[],**kwargs):
 		#Operator Parameters
 		self.pot = pot
 		self.promotion = promotion
-		#self.trust = -1
 		self.level = level
 		self.skill = skill
 		self.mastery = mastery #self.skill_lvl
@@ -68,6 +67,7 @@ class PlotParameters:
 		self.module_lvl = module_lvl
 		self.buffs = copy.deepcopy(buffs) #TODO split that into atk, aspd and fragile. for prompts thats done
 		self.targets = targets
+		self.trust = trust
 		self.conditionals = copy.deepcopy(conditionals)
 		self.input_kwargs = kwargs
 		#self.sp_boost = 0
@@ -103,11 +103,11 @@ class PlotParametersSet(PlotParameters):
 		output = []
 		if not self.all_conditionals:
 			for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-				output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
+				output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.trust,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		else:
 			for combo in itertools.product([True,False], repeat = 5):
 				for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-					output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
+					output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.targets,self.trust,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -261,6 +261,13 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
+		elif args[i] in ["trust"]:
+			pps.trust = 100
+			try:
+				pps.trust = int(args[i+1])
+				i+=1
+			except ValueError:
+				pass
 		elif args[i] in ["t1","t2","t3","t4","t5","t6","t7","t8","t9"]: pps.targets = int(args[i][1])
 		elif args[i] in ["r","res","resis","resistance"]:
 			i+=1
