@@ -30,6 +30,7 @@ class OperatorData:
 		self.skill_cost = 50
 		self.skill_duration = 30
 		self.talent_data = [] #all the available talent scalings, affected by promotion and module.
+		self.talent_data2 = []
 		self.attack_speed = 100
 		
 		#These files are like 7MB each, maybe not a good idea to load them each time. 
@@ -161,12 +162,26 @@ class OperatorData:
 		for entry in skill_data[skill_key]["levels"][skill_lvl-1]["blackboard"]:
 			self.skill_data.append(entry["value"])
 		
-		#TODO: get talent data, very complicated, since you also need to check for changes with the module
+		
+		#get talent data without module.
+		for talent in character_data[current_key]["talents"]:
+			for candidate in talent["candidates"]:
+				if int(candidate["unlockCondition"]["phase"][-1]) <= promotion and int(candidate["requiredPotentialRank"]) <= pot:
+					if candidate["prefabKey"] == "1":
+						self.talent_data = []
+						for data in candidate["blackboard"]:
+							self.talent_data.append(data["value"])
+					else:
+						self.talent_data2 = []
+						for data in candidate["blackboard"]:
+							self.talent_data2.append(data["value"])
+		#TODO: get talent changes from module
 
 
-operator_stats = OperatorData("degenbrecher",promotion=2, level=90, module=2, module_lvl=3, skill=3, skill_lvl=9, pot=6, trust=100)
 
-print(operator_stats.skill_data)
+operator_stats = OperatorData("exusiai",promotion=2, level=90, module=2, module_lvl=3, skill=3, skill_lvl=9, pot=6, trust=100)
+
+print(operator_stats.talent_data2)
 
 
 
