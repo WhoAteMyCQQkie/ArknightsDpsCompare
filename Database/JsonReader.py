@@ -85,6 +85,7 @@ class OperatorData:
 		
 		#4.Get the module atk
 		#f this. typically the resKey entry is weird_name + "_equip_2_1_p1" . 2 is the module(y), 1 is the module lvl and p1 is for different talent changes. (example: ashlock atk+ is p1. and atk++ when no ranged tiles around is p2)
+		main_key = ""
 		if promotion == 2 and level >= max_level - 30 and module > 0:
 			main_key = "uniequip_002_" + weird_name #002 is the first module (chronically, not necessarily X), 003 is the second and only ebenholz has 004, which i will not cover here.
 			correct_resKey = True
@@ -118,6 +119,7 @@ class OperatorData:
 							elif stat["key"] == "attack_speed":
 								self.attack_speed += stat["value"]
 			else:
+
 				has_second_module = True
 				try:
 					main_key = "uniequip_003_" + weird_name
@@ -176,10 +178,28 @@ class OperatorData:
 						for data in candidate["blackboard"]:
 							self.talent_data2.append(data["value"])
 		#TODO: get talent changes from module
+		if promotion == 2 and level >= max_level - 30 and module > 0 and module_lvl > 1:
+			for change_data in module_data[main_key]["phases"][module_lvl-1]["parts"]:
+				if change_data["target"] == "TRAIT":
+					pass
+				else:
+					for change_candidate in change_data["addOrOverrideTalentDataBundle"]["candidates"]:
+						if int(change_candidate["requiredPotentialRank"]) <= pot:
+							if change_candidate["prefabKey"] == "1":
+								self.talent_data = []
+								for change_data in change_candidate["blackboard"]:
+									self.talent_data.append(change_data["value"])
+							else:
+								self.talent_data2 = []
+								for change_data in change_candidate["blackboard"]:
+									self.talent_data2.append(change_data["value"])
 
 
 
-operator_stats = OperatorData("exusiai",promotion=2, level=90, module=2, module_lvl=3, skill=3, skill_lvl=9, pot=6, trust=100)
+
+
+
+operator_stats = OperatorData("degenbrecher",promotion=2, level=90, module=2, module_lvl=2, skill=3, skill_lvl=9, pot=6, trust=100)
 
 print(operator_stats.talent_data2)
 
