@@ -8475,7 +8475,7 @@ class Mountain(Operator):
 		if self.module == 1:
 			if self.module_lvl == 2: 
 				crate += 0.03
-				cmg += 0.05
+				cdmg += 0.05
 			if self.module_lvl == 3: 
 				crate += 0.05
 				cdmg += 0.1
