@@ -391,10 +391,12 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			i-=1
 		elif args[i] in ["lvl","level","lv"]:
 			i+=1
-			pps.level = -10
+
+			pps.levels = {-1}
 			while i < entries:
 				try:
-					pps.level = int(args[i])
+					pps.levels.add(max(1,int(args[i])))
+					pps.levels.discard(-1)
 				except ValueError:
 					break
 				i+=1
