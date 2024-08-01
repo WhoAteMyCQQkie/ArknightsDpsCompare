@@ -375,15 +375,15 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.base_buffs[0] = max(0,(1+float(args[i][:-1])/100))
+						pps.base_buffs[0] = (1+float(args[i][:-1])/100)
 					except ValueError:
 						break
 				else:
 					try:
 						val = float(args[i])
-						if val > 0 and val < 1:
+						if val > -1 and val < 1:
 							pps.base_buffs[0] = 1 + val
-						if val > 2:
+						else:
 							pps.base_buffs[1] = val
 					except ValueError:
 						break

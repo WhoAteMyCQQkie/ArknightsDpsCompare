@@ -75,19 +75,19 @@ def dps_command(args: List[str])-> DiscordSendable:
 	while j < entries:
 		if args[j] in prompts or args[j] in op_dict.keys() or args[j] in modifiers:
 			j += 1
-		elif args[j][0] in "123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
+		elif args[j][0] in "-123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
 			numberpos = 1
-			while args[j][numberpos] in "0123456789.%":
+			while args[j][numberpos] in "-0123456789.%":
 				numberpos += 1
 			temp = args[j]
 			args[j] = args[j][numberpos:]
 			args.insert(j,temp[:numberpos])
 			entries += 1
 			j += 1
-		elif not args[j][0] in "123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
+		elif not args[j][0] in "-123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
 			numberpos = 2
 			wordlen = len(args[j])
-			while args[j][-numberpos] in "0123456789.%":
+			while args[j][-numberpos] in "-0123456789.%":
 				numberpos += 1
 			temp = args[j]
 			args[j] = args[j][(wordlen-numberpos+1):]
@@ -134,7 +134,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 		tmp = args[1]
 		args[1] = args[0]
 		args[0] = tmp
-	for i in range(len(args)-2):
+	for i in range(1,len(args)-2):
 		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
 			tmp = args[i+1]
 			args[i+1] = args[i+2]
