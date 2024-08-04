@@ -73,7 +73,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	entries = len(args)
 	j = 0
 	while j < entries:
-		if args[j] in prompts or args[j] in op_dict.keys() or args[j] in modifiers:
+		if args[j] in prompts or args[j] in op_dict.keys() or args[j] in modifiers or utils.is_float(args[j]):
 			j += 1
 		elif args[j][0] in "-123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
 			numberpos = 1
