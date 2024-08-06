@@ -121,7 +121,6 @@ class OperatorData:
 		self.atk_module = [[0,0,0],[0,0,0],[0,0,0]] #x y delta/alpha
 		self.atk_trust = 0 #max value only
 
-		self.aspd = 100
 		self.aspd_potential = [0,0]
 		self.aspd_trust = 0
 		self.aspd_module = [[0,0,0],[0,0,0],[0,0,0]]
@@ -175,28 +174,57 @@ class OperatorData:
 		
 		#get atk interval
 		self.rarity = int(character_data[current_key]["rarity"][-1])
-		self.atk_interval = lvl_1_atk = character_data[current_key]["phases"][promotion]["attributesKeyFrames"][0]["data"]["baseAttackTime"]	
+		self.atk_interval = character_data[current_key]["phases"][0]["attributesKeyFrames"][0]["data"]["baseAttackTime"]
+
+		#read atk values:
+		self.atk_e0[0] = character_data[current_key]["phases"][0]["attributesKeyFrames"][0]["data"]["atk"]
+		self.atk_e0[1] = character_data[current_key]["phases"][0]["attributesKeyFrames"][1]["data"]["atk"]
+		if self.rarity > 2:
+			self.atk_e1[0] = character_data[current_key]["phases"][1]["attributesKeyFrames"][0]["data"]["atk"]
+			self.atk_e1[1] = character_data[current_key]["phases"][1]["attributesKeyFrames"][1]["data"]["atk"]
+		if self.rarity > 3:
+			self.atk_e2[0] = character_data[current_key]["phases"][2]["attributesKeyFrames"][0]["data"]["atk"]
+			self.atk_e2[1] = character_data[current_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 		
-		#Get the base atk for the input
-		#1.level base atk
-		max_level = character_data[current_key]["phases"][promotion]["maxLevel"]
-		level = max(1,min(max_level,level))
-		lvl_1_atk = character_data[current_key]["phases"][promotion]["attributesKeyFrames"][0]["data"]["atk"]
-		lvl_max_atk = character_data[current_key]["phases"][promotion]["attributesKeyFrames"][1]["data"]["atk"]
-		self.atk = lvl_1_atk + (lvl_max_atk-lvl_1_atk) * (level-1) / (max_level-1)
-		
-		#2.Get the trust atk
-		trust = max(1,min(100,trust))
-		self.atk += character_data[current_key]["favorKeyFrames"][1]["data"]["atk"] * trust / 100
-		
-		#3.Get the potential atk
-		for potential in character_data[current_key]["potentialRanks"]:
+		self.atk_trust = character_data[current_key]["favorKeyFrames"][1]["data"]["atk"]
+
+		for i, potential in enumerate(character_data[current_key]["potentialRanks"]):
 			if potential["type"] != "BUFF": continue
 			if potential["buff"]["attributes"]["attributeModifiers"][0]["attributeType"] == "ATK":
-				self.atk += potential["buff"]["attributes"]["attributeModifiers"][0]["value"]
+				self.atk_potential = [i+2, potential["buff"]["attributes"]["attributeModifiers"][0]["value"]]
+			
+			#read aspd values
+			if potential["buff"]["attributes"]["attributeModifiers"][0]["attributeType"] == "ATTACK_SPEED":
+				self.aspd_potential = [i+2, potential["buff"]["attributes"]["attributeModifiers"][0]["value"]]
 		
+		self.aspd_trust = character_data[current_key]["favorKeyFrames"][1]["data"]["attackSpeed"]
+
+		#read skill values
+		skill_ids = [skill_entry["skillId"] for skill_entry in character_data[current_key]["skills"]]
+		
+		for skill_id in skill_ids:
+			current_skill_params = []
+			current_skill_durations = []
+			current_skill_costs = []
+			for skill_level in skill_data[skill_id]["levels"]:
+				current_skill_durations.append(skill_level["duration"])
+				current_skill_costs.append(skill_level["spData"]["spCost"])
+				current_input = []
+				for entry in skill_level["blackboard"]:
+					current_input.append(entry["value"])
+				current_skill_params.append(current_input)
+			self.skill_parameters.append(current_skill_params)
+			self.skill_durations.append(current_skill_durations)
+			self.skill_costs.append(current_skill_costs)
+		
+		#TODO: read talents
+		#TODO: read module atk and aspd
+		#TODO: worst of all: read talent changes from module
+
+
 		#4.Get the module atk
 		#f this. typically the resKey entry is weird_name + "_equip_2_1_p1" . 2 is the module(y), 1 is the module lvl and p1 is for different talent changes. (example: ashlock atk+ is p1. and atk++ when no ranged tiles around is p2)
+		max_level = 90
 		main_key = ""
 		if promotion == 2 and level >= max_level - 30 and module > 0:
 			main_key = "uniequip_002_" + weird_name #002 is the first module (chronically, not necessarily X), 003 is the second and only ebenholz has 004, which i will not cover here.
@@ -264,18 +292,6 @@ class OperatorData:
 							elif stat["key"] == "attack_speed":
 								self.attack_speed += stat["value"]
 				
-		#get skill data- duration, cost and scalings
-		skill_amount = 1
-		rarity = int(character_data[current_key]["rarity"][-1])
-		if rarity > 3: skill_amount = 2
-		if rarity == 6: skill_amount = 3
-		skill = max(1,min(skill_amount, skill))
-		skill_key = character_data[current_key]["skills"][skill - 1]["skillId"]
-		self.skill_duration = skill_data[skill_key]["levels"][skill_lvl-1]["duration"]
-		self.skill_cost = skill_data[skill_key]["levels"][skill_lvl-1]["spData"]["spCost"]
-		for entry in skill_data[skill_key]["levels"][skill_lvl-1]["blackboard"]:
-			self.skill_data.append(entry["value"])
-		
 		
 		#get talent data without module.
 		for talent in character_data[current_key]["talents"]:
@@ -310,10 +326,10 @@ class OperatorData:
 
 
 
-operator_stats = OperatorData("pallas",promotion=2, level=90, module=1, module_lvl=3, skill=3, skill_lvl=9, pot=6, trust=100)
+operator_stats = OperatorData("char_208_melan",promotion=2, level=90, module=0, module_lvl=3, skill=1, skill_lvl=1, pot=6, trust=100)
 
-print(operator_stats.atk)
-print(operator_stats.talent_data)
+print(operator_stats.skill_costs, operator_stats.skill_durations)
+print(operator_stats.skill_parameters)
 
 
 
