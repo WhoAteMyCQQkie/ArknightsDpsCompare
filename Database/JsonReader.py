@@ -100,15 +100,49 @@ def fileHelper():
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
 
 class OperatorData:
-	def __init__(self, name, promotion=2, level=90, module=1, module_lvl=3, skill=3, skill_lvl=10, pot=6, trust=100):
+	def __init__(self, current_key, promotion=2, level=90, module=1, module_lvl=3, skill=3, skill_lvl=10, pot=6, trust=100):
 		self.atk = 0
-		self.atk_interval = 1.6
 		self.skill_data = [] #all the available skill scalings
 		self.skill_cost = 50
 		self.skill_duration = 30
 		self.talent_data = [] #all the available talent scalings, affected by promotion and module.
 		self.talent_data2 = []
 		self.attack_speed = 100
+
+		#rework
+		self.rarity = 6
+		self.atk_interval = 1.6
+		self.available_modules = [] #1 for x, 2 for y, 3 for alpha/delta
+
+		self.atk_e0 = [0,0] #min/max, this format is somewhat needed for 1 and 3 stars
+		self.atk_e1 = [0,0]
+		self.atk_e2 = [0,0]
+		self.atk_potential = [0,0] #required potential/value
+		self.atk_module = [[0,0,0],[0,0,0],[0,0,0]] #x y delta/alpha
+		self.atk_trust = 0 #max value only
+
+		self.aspd = 100
+		self.aspd_potential = [0,0]
+		self.aspd_trust = 0
+		self.aspd_module = [[0,0,0],[0,0,0],[0,0,0]]
+
+		self.skill_parameters = []
+		self.skill_durations = []
+		self.skill_costs = []
+
+		#talents...
+		self.talent1_parameters = []
+		self.talent2_parameters = []
+		#idea 1: add conditions (promotion stage, level(e.g. orchid), potential stage, module stage)
+		#problem 1: if the values are used in the dps calculations, then empty values cause crashes. so we need default values, those can however be 1 or 0,
+		#   and we need to figure that one out as well. probably:
+		# default value 0 keywords: atk, prob, duration, attack_speed, attack@prob, magic_resistance, sp_recovery_per_sec, base_attack_time
+		# default value 1 keywords: atk_scale, atk_scale_2, damage_scale, heal_scale
+		# note: aciddrop has atk scale below 1, where the default value should be 0.05 ...
+		# note2: all this bs has to be included in the low/high-talent stuff too...
+
+
+
 		
 		#These files are like 7MB each, maybe not a good idea to load them each time. 
 		with open('character_table.json',encoding="utf8") as json_file:
@@ -118,7 +152,7 @@ class OperatorData:
 		with open('battle_equip_table.json',encoding="utf8") as json_file:
 			module_data = json.load(json_file)
 		
-		
+		"""
 		#Get the weird name for the operator
 		current_key = None
 		for key in character_data.keys():
@@ -135,12 +169,13 @@ class OperatorData:
 				if levenshtein(character_data[key]["name"].lower(),name) < 3:
 					current_key = key
 					break
-		if current_key == None: raise KeyError
+		if current_key == None: raise KeyError #"""
 		weird_name =  current_key.split('_')[2]
 		
 		
 		#get atk interval
-		self.atk_interval = lvl_1_atk = character_data[current_key]["phases"][promotion]["attributesKeyFrames"][0]["data"]["baseAttackTime"]		
+		self.rarity = int(character_data[current_key]["rarity"][-1])
+		self.atk_interval = lvl_1_atk = character_data[current_key]["phases"][promotion]["attributesKeyFrames"][0]["data"]["baseAttackTime"]	
 		
 		#Get the base atk for the input
 		#1.level base atk
