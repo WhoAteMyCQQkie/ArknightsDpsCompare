@@ -286,6 +286,23 @@ class OperatorData:
 		except KeyError:
 			has_module = False
 		
+		modules = []
+		if has_module: modules = [2]
+		if has_second_module: modules = [2,3]
+		for mod in modules:
+			module_key = f"uniequip_00{mod}_" + weird_name
+			atk_data = []
+			aspd_data = []
+			for mod_lvl in module_data[module_key]["phases"]:
+				for data in mod_lvl["attributeBlackboard"]:
+					if data["key"] == "atk":
+						atk_data.append(data["value"])
+					if data["key"] == "attack_speed":
+						aspd_data.append(data["value"])
+				if len(atk_data) == 0: atk_data = [0,0,0]
+				if len(aspd_data) == 0: aspd_data = [0,0,0]
+				self.atk_module.append(atk_data)
+				self.aspd_module.append(aspd_data)
 
 
 		#4.Get the module atk
