@@ -112,26 +112,29 @@ class OperatorData:
 		#rework
 		self.rarity = 6
 		self.atk_interval = 1.6
-		self.available_modules = [] #1 for x, 2 for y, 3 for alpha/delta
+		self.available_modules = [] #1 for x, 2 for y, 3 for alpha/delta, the order matters to tell which is which. #TODO can be overwritten later
 
 		self.atk_e0 = [0,0] #min/max, this format is somewhat needed for 1 and 3 stars
 		self.atk_e1 = [0,0]
 		self.atk_e2 = [0,0]
 		self.atk_potential = [0,0] #required potential/value
-		self.atk_module = [[0,0,0],[0,0,0],[0,0,0]] #x y delta/alpha
+		self.atk_module = [] #list( ? modules) of list( 3 module lvls) of values
 		self.atk_trust = 0 #max value only
 
 		self.aspd_potential = [0,0]
 		self.aspd_trust = 0
-		self.aspd_module = [[0,0,0],[0,0,0],[0,0,0]]
+		self.aspd_module = []
 
 		self.skill_parameters = []
 		self.skill_durations = []
 		self.skill_costs = []
 
 		#talents...
+		self.has_second_talent = True
 		self.talent1_parameters = []
 		self.talent2_parameters = []
+		self.talent1_defaults = []
+		self.talent2_dafaults = []
 		#idea 1: add conditions (promotion stage, level(e.g. orchid), potential stage, module stage)
 		#problem 1: if the values are used in the dps calculations, then empty values cause crashes. so we need default values, those can however be 1 or 0,
 		#   and we need to figure that one out as well. probably:
@@ -220,6 +223,69 @@ class OperatorData:
 		#TODO: read talents
 		#TODO: read module atk and aspd
 		#TODO: worst of all: read talent changes from module
+
+		#read talents
+		self.has_second_talent = len(character_data[current_key]["talents"]) > 1
+		
+		for candidate in character_data[current_key]["talents"][0]["candidates"]:
+			req_promo = int(candidate["unlockCondition"]["phase"][-1])
+			req_level = candidate["unlockCondition"]["level"]
+			req_pot = candidate["requiredPotentialRank"]
+			req_module = 0
+			talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
+			self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,talent_data])
+		if self.has_second_talent:
+			for candidate in character_data[current_key]["talents"][1]["candidates"]:
+				req_promo = int(candidate["unlockCondition"]["phase"][-1])
+				req_level = candidate["unlockCondition"]["level"]
+				req_pot = candidate["requiredPotentialRank"]
+				req_module = 0
+				talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
+				self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,talent_data])
+		
+		#set_defaults (this maybe needs to be changed for some characters, but it should be helpful most of the time)
+		for data in character_data[current_key]["talents"][0]["candidates"][-1]["blackboard"]:
+			if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
+				self.talent1_defaults.append(0)
+			else:
+				self.talent1_defaults.append(1)
+		if self.has_second_talent:
+			for data in character_data[current_key]["talents"][1]["candidates"][-1]["blackboard"]:
+				if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
+					self.talent2_dafaults.append(0)
+				else:
+					self.talent2_dafaults.append(1)
+
+		#figure out the module situation.
+		has_module = self.rarity > 3
+		has_second_module = self.rarity > 5
+		try:
+			module_key = "uniequip_002_" + weird_name
+			self.available_modules.append(int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]))
+			try:
+				module_key = "uniequip_003_" + weird_name
+				self.available_modules.append(int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]))
+			except TypeError:
+				if 1 in self.available_modules: self.available_modules.append(2)
+				else: self.available_modules.append(1)
+			except KeyError:
+				has_second_module = False
+		except TypeError:
+			try:
+				module_key = "uniequip_003_" + weird_name
+				if int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]) == 1:
+					self.available_modules = [2,1]
+				else:
+					self.available_modules = [1,2]
+			except TypeError:
+				self.available_modules = [1,2]
+				print(f"operator {current_key} has 2 unlabeled modules, you should double check that")
+			except KeyError:
+				has_second_module = False
+				self.available_modules.append(1)
+		except KeyError:
+			has_module = False
+		
 
 
 		#4.Get the module atk
@@ -326,10 +392,10 @@ class OperatorData:
 
 
 
-operator_stats = OperatorData("char_208_melan",promotion=2, level=90, module=0, module_lvl=3, skill=1, skill_lvl=1, pot=6, trust=100)
+operator_stats = OperatorData("char_1034_jesca2",promotion=2, level=90, module=0, module_lvl=3, skill=1, skill_lvl=1, pot=6, trust=100)
 
 print(operator_stats.skill_costs, operator_stats.skill_durations)
-print(operator_stats.skill_parameters)
+print(operator_stats.talent1_parameters,operator_stats.talent2_parameters)
 
 
 
