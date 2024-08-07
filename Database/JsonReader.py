@@ -1,15 +1,12 @@
-#to function this script needs three jsons (see lines 35ff) from https://github.com/Kengxxiao/ArknightsGameData_YoStar/tree/main/en_US/gamedata/excel
-
+#to function, this script needs three jsons (see lines 112ff) from https://github.com/Kengxxiao/ArknightsGameData_YoStar/tree/main/en_US/gamedata/excel
 import json
-import numpy as np
 
 id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'char_376_therex','JusticeKnight': 'char_4000_jnight','TerraResearchCommission': 'char_4077_palico',
            'UOfficial': 'char_4091_ulika','Friston3': 'char_4093_frston','Yato': 'char_502_nblade','NoirCorne': 'char_500_noirc','Rangers': 'char_503_rang',
-           'Durin': 'char_501_durin','12F': 'char_009_12fce','Fang': 'char_123_fang','Vanilla': 'char_240_wyvern','ReserveOperatorMelee': 'char_504_rguard',
+           'Durin': 'char_501_durin','12F': 'char_009_12fce','Fang': 'char_123_fang','Vanilla': 'char_240_wyvern',
            'Plume': 'char_192_falco','Melantha': 'char_208_melan','Popukar': 'char_281_popka','Cardigan': 'char_209_ardign','Beagle': 'char_122_beagle',
-           'ReserveOperatorDefender': 'char_514_rdfend','Spot': 'char_284_spot','Kroos': 'char_124_kroos','Adnachiel': 'char_211_adnach','ReserveOperatorSniper': 'char_507_rsnipe',
-           'Lava': 'char_121_lava','Hibiscus': 'char_120_hibisc','Ansel': 'char_212_ansel','ReserveOperatorMedic': 'char_506_rmedic','Steward': 'char_210_stward',
-           'ReserveOperatorCaster': 'char_505_rcast','Orchid': 'char_278_orchid','Haze': 'char_141_nights','Gitano': 'char_109_fmout','Greyy': 'char_253_greyy',
+           'Spot': 'char_284_spot','Kroos': 'char_124_kroos','Adnachiel': 'char_211_adnach',
+           'Lava': 'char_121_lava','Hibiscus': 'char_120_hibisc','Ansel': 'char_212_ansel','Steward': 'char_210_stward','Orchid': 'char_278_orchid','Haze': 'char_141_nights','Gitano': 'char_109_fmout','Greyy': 'char_253_greyy',
            'Click': 'char_328_cammou','Indigo': 'char_469_indigo','Pudding': 'char_4004_pudd','Jessica': 'char_235_jesica','Meteor': 'char_126_shotst',
            'Vermeil': 'char_190_clour','May': 'char_133_mm','Shirayuki': 'char_118_yuki','Pinecone': 'char_440_pinecn','Ambriel': 'char_302_glaze','Aciddrop': 'char_366_acdrop',
            'Totter': 'char_4062_totter','Caper': 'char_4100_caper','Courier': 'char_198_blackd','Scavenger': 'char_149_scave','Vigna': 'char_290_vigna','Myrtle': 'char_151_myrtle',
@@ -67,25 +64,6 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
            'ExecutorAlter': 'char_1032_excu2','Savage': 'char_230_savage','Catapult': 'char_282_catap','Midnight': 'char_283_midn','Beehunter': 'char_137_brownb',
 		   'Jackie': 'char_347_jaksel','Nightmare': 'char_164_nightm','Grani': 'char_220_grani','Skadi': 'char_263_skadi'}
 
-
-def levenshtein(word1, word2):
-	m = len(word1)
-	n = len(word2)
-	D = np.zeros((m, n))
-	for i in range(m):
-		D[i][0] = i
-	for j in range(n):
-		D[0][j] = j
-	if word1[0] != word2[0]: D[0][0] = 1
-	for j in range(1,n): #rows
-		if word1[0] != word2[0]: D[0][j] = D[0][j]+1
-		for i in range(1,m): #columns
-			a = D[i-1][j-1] if word1[i]==word2[j] else 2000
-			b = D[i-1][j] + 1
-			c = D[i][j-1] + 1
-			d = D[i-1][j-1] + 1
-			D[i][j] = min(a,b,c,d)
-	return (int(D[m-1][n-1]))
 
 def fileHelper():
 	content = ""
@@ -245,6 +223,7 @@ class OperatorData:
 				self.available_modules.append(1)
 		except KeyError:
 			has_module = False
+			has_second_module = False
 		
 		modules = []
 		if has_module: modules = [2]
@@ -261,8 +240,8 @@ class OperatorData:
 						aspd_data.append(data["value"])
 				if len(atk_data) == 0: atk_data = [0,0,0]
 				if len(aspd_data) == 0: aspd_data = [0,0,0]
-				self.atk_module.append(atk_data)
-				self.aspd_module.append(aspd_data)
+			self.atk_module.append(atk_data)
+			self.aspd_module.append(aspd_data)
 
 		if has_module:
 			module_key = "uniequip_002_" + name_id
@@ -318,10 +297,16 @@ class OperatorData:
 
 
 
-operator_stats = OperatorData("char_291_aglina")
+operator_stats = OperatorData("char_1013_chen2")
 
 #print(operator_stats.skill_costs, operator_stats.skill_durations)
 print(operator_stats.available_modules)
-print(operator_stats.talent1_parameters)
-print(operator_stats.talent2_parameters)
+print(operator_stats.aspd_module)
+print(operator_stats.atk_module)
 
+#"""
+op_dict = {}
+for key in id_dict.keys():
+	print(key)
+	op_dict[key] = OperatorData(id_dict[key])
+#"""
