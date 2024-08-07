@@ -100,16 +100,7 @@ def fileHelper():
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
 
 class OperatorData:
-	def __init__(self, current_key, promotion=2, level=90, module=1, module_lvl=3, skill=3, skill_lvl=10, pot=6, trust=100):
-		self.atk = 0
-		self.skill_data = [] #all the available skill scalings
-		self.skill_cost = 50
-		self.skill_duration = 30
-		self.talent_data = [] #all the available talent scalings, affected by promotion and module.
-		self.talent_data2 = []
-		self.attack_speed = 100
-
-		#rework
+	def __init__(self, key):
 		self.rarity = 6
 		self.atk_interval = 1.6
 		self.available_modules = [] #1 for x, 2 for y, 3 for alpha/delta, the order matters to tell which is which. #TODO can be overwritten later
@@ -135,16 +126,6 @@ class OperatorData:
 		self.talent2_parameters = []
 		self.talent1_defaults = []
 		self.talent2_dafaults = []
-		#idea 1: add conditions (promotion stage, level(e.g. orchid), potential stage, module stage)
-		#problem 1: if the values are used in the dps calculations, then empty values cause crashes. so we need default values, those can however be 1 or 0,
-		#   and we need to figure that one out as well. probably:
-		# default value 0 keywords: atk, prob, duration, attack_speed, attack@prob, magic_resistance, sp_recovery_per_sec, base_attack_time
-		# default value 1 keywords: atk_scale, atk_scale_2, damage_scale, heal_scale
-		# note: aciddrop has atk scale below 1, where the default value should be 0.05 ...
-		# note2: all this bs has to be included in the low/high-talent stuff too...
-
-
-
 		
 		#These files are like 7MB each, maybe not a good idea to load them each time. 
 		with open('character_table.json',encoding="utf8") as json_file:
@@ -154,44 +135,25 @@ class OperatorData:
 		with open('battle_equip_table.json',encoding="utf8") as json_file:
 			module_data = json.load(json_file)
 		
-		"""
-		#Get the weird name for the operator
-		current_key = None
-		for key in character_data.keys():
-			if character_data[key]["name"].lower() == name:
-				current_key = key
-				break
-		if current_key == None:
-			for key in character_data.keys():
-				if levenshtein(character_data[key]["name"].lower(),name) < 2:
-					current_key = key
-					break
-		if current_key == None:
-			for key in character_data.keys():
-				if levenshtein(character_data[key]["name"].lower(),name) < 3:
-					current_key = key
-					break
-		if current_key == None: raise KeyError #"""
-		weird_name =  current_key.split('_')[2]
-		
+		name_id =  key.split('_')[2]
 		
 		#get atk interval
-		self.rarity = int(character_data[current_key]["rarity"][-1])
-		self.atk_interval = character_data[current_key]["phases"][0]["attributesKeyFrames"][0]["data"]["baseAttackTime"]
+		self.rarity = int(character_data[key]["rarity"][-1])
+		self.atk_interval = character_data[key]["phases"][0]["attributesKeyFrames"][0]["data"]["baseAttackTime"]
 
 		#read atk values:
-		self.atk_e0[0] = character_data[current_key]["phases"][0]["attributesKeyFrames"][0]["data"]["atk"]
-		self.atk_e0[1] = character_data[current_key]["phases"][0]["attributesKeyFrames"][1]["data"]["atk"]
+		self.atk_e0[0] = character_data[key]["phases"][0]["attributesKeyFrames"][0]["data"]["atk"]
+		self.atk_e0[1] = character_data[key]["phases"][0]["attributesKeyFrames"][1]["data"]["atk"]
 		if self.rarity > 2:
-			self.atk_e1[0] = character_data[current_key]["phases"][1]["attributesKeyFrames"][0]["data"]["atk"]
-			self.atk_e1[1] = character_data[current_key]["phases"][1]["attributesKeyFrames"][1]["data"]["atk"]
+			self.atk_e1[0] = character_data[key]["phases"][1]["attributesKeyFrames"][0]["data"]["atk"]
+			self.atk_e1[1] = character_data[key]["phases"][1]["attributesKeyFrames"][1]["data"]["atk"]
 		if self.rarity > 3:
-			self.atk_e2[0] = character_data[current_key]["phases"][2]["attributesKeyFrames"][0]["data"]["atk"]
-			self.atk_e2[1] = character_data[current_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
+			self.atk_e2[0] = character_data[key]["phases"][2]["attributesKeyFrames"][0]["data"]["atk"]
+			self.atk_e2[1] = character_data[key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 		
-		self.atk_trust = character_data[current_key]["favorKeyFrames"][1]["data"]["atk"]
+		self.atk_trust = character_data[key]["favorKeyFrames"][1]["data"]["atk"]
 
-		for i, potential in enumerate(character_data[current_key]["potentialRanks"]):
+		for i, potential in enumerate(character_data[key]["potentialRanks"]):
 			if potential["type"] != "BUFF": continue
 			if potential["buff"]["attributes"]["attributeModifiers"][0]["attributeType"] == "ATK":
 				self.atk_potential = [i+2, potential["buff"]["attributes"]["attributeModifiers"][0]["value"]]
@@ -200,10 +162,10 @@ class OperatorData:
 			if potential["buff"]["attributes"]["attributeModifiers"][0]["attributeType"] == "ATTACK_SPEED":
 				self.aspd_potential = [i+2, potential["buff"]["attributes"]["attributeModifiers"][0]["value"]]
 		
-		self.aspd_trust = character_data[current_key]["favorKeyFrames"][1]["data"]["attackSpeed"]
+		self.aspd_trust = character_data[key]["favorKeyFrames"][1]["data"]["attackSpeed"]
 
 		#read skill values
-		skill_ids = [skill_entry["skillId"] for skill_entry in character_data[current_key]["skills"]]
+		skill_ids = [skill_entry["skillId"] for skill_entry in character_data[key]["skills"]]
 		
 		for skill_id in skill_ids:
 			current_skill_params = []
@@ -219,38 +181,36 @@ class OperatorData:
 			self.skill_parameters.append(current_skill_params)
 			self.skill_durations.append(current_skill_durations)
 			self.skill_costs.append(current_skill_costs)
-		
-		#TODO: read talents
-		#TODO: read module atk and aspd
-		#TODO: worst of all: read talent changes from module
 
 		#read talents
-		self.has_second_talent = len(character_data[current_key]["talents"]) > 1
+		self.has_second_talent = len(character_data[key]["talents"]) > 1
 		
-		for candidate in character_data[current_key]["talents"][0]["candidates"]:
+		for candidate in character_data[key]["talents"][0]["candidates"]:
 			req_promo = int(candidate["unlockCondition"]["phase"][-1])
 			req_level = candidate["unlockCondition"]["level"]
 			req_pot = candidate["requiredPotentialRank"]
 			req_module = 0
+			req_mod_lvl = 0
 			talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-			self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,talent_data])
+			self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
 		if self.has_second_talent:
-			for candidate in character_data[current_key]["talents"][1]["candidates"]:
+			for candidate in character_data[key]["talents"][1]["candidates"]:
 				req_promo = int(candidate["unlockCondition"]["phase"][-1])
 				req_level = candidate["unlockCondition"]["level"]
 				req_pot = candidate["requiredPotentialRank"]
 				req_module = 0
+				req_mod_lvl = 0
 				talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-				self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,talent_data])
+				self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
 		
 		#set_defaults (this maybe needs to be changed for some characters, but it should be helpful most of the time)
-		for data in character_data[current_key]["talents"][0]["candidates"][-1]["blackboard"]:
+		for data in character_data[key]["talents"][0]["candidates"][-1]["blackboard"]:
 			if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
 				self.talent1_defaults.append(0)
 			else:
 				self.talent1_defaults.append(1)
 		if self.has_second_talent:
-			for data in character_data[current_key]["talents"][1]["candidates"][-1]["blackboard"]:
+			for data in character_data[key]["talents"][1]["candidates"][-1]["blackboard"]:
 				if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
 					self.talent2_dafaults.append(0)
 				else:
@@ -260,10 +220,10 @@ class OperatorData:
 		has_module = self.rarity > 3
 		has_second_module = self.rarity > 5
 		try:
-			module_key = "uniequip_002_" + weird_name
+			module_key = "uniequip_002_" + name_id
 			self.available_modules.append(int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]))
 			try:
-				module_key = "uniequip_003_" + weird_name
+				module_key = "uniequip_003_" + name_id
 				self.available_modules.append(int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]))
 			except TypeError:
 				if 1 in self.available_modules: self.available_modules.append(2)
@@ -272,14 +232,14 @@ class OperatorData:
 				has_second_module = False
 		except TypeError:
 			try:
-				module_key = "uniequip_003_" + weird_name
+				module_key = "uniequip_003_" + name_id
 				if int(module_data[module_key]["phases"][1]["parts"][1]["resKey"][-6]) == 1:
 					self.available_modules = [2,1]
 				else:
 					self.available_modules = [1,2]
 			except TypeError:
 				self.available_modules = [1,2]
-				print(f"operator {current_key} has 2 unlabeled modules, you should double check that")
+				print(f"operator {key} has 2 unlabeled modules, you should double check that")
 			except KeyError:
 				has_second_module = False
 				self.available_modules.append(1)
@@ -290,7 +250,7 @@ class OperatorData:
 		if has_module: modules = [2]
 		if has_second_module: modules = [2,3]
 		for mod in modules:
-			module_key = f"uniequip_00{mod}_" + weird_name
+			module_key = f"uniequip_00{mod}_" + name_id
 			atk_data = []
 			aspd_data = []
 			for mod_lvl in module_data[module_key]["phases"]:
@@ -304,173 +264,64 @@ class OperatorData:
 				self.atk_module.append(atk_data)
 				self.aspd_module.append(aspd_data)
 
-
-		#4.Get the module atk
-		#f this. typically the resKey entry is weird_name + "_equip_2_1_p1" . 2 is the module(y), 1 is the module lvl and p1 is for different talent changes. (example: ashlock atk+ is p1. and atk++ when no ranged tiles around is p2)
-		max_level = 90
-		main_key = ""
-		if promotion == 2 and level >= max_level - 30 and module > 0:
-			main_key = "uniequip_002_" + weird_name #002 is the first module (chronically, not necessarily X), 003 is the second and only ebenholz has 004, which i will not cover here.
-			correct_resKey = True
-			try:
-				"equip" in module_data[main_key]["phases"][1]["parts"][1]["resKey"]
-			except TypeError:
-				correct_resKey = False
-			
-			if correct_resKey:
-				#Case 1: resKey exists and is correct
-				if int(module_data[main_key]["phases"][1]["parts"][1]["resKey"][-6]) == module: 
-					for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-						if stat["key"] == "atk":
-							self.atk += stat["value"]
-						elif stat["key"] == "attack_speed":
-							self.attack_speed += stat["value"]
-				#Case 2: resKey exists and is false
-				else:
-					try: #Add the stats from the second module								
-						main_key = "uniequip_003_" + weird_name
-						for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-							if stat["key"] == "atk":
-								self.atk += stat["value"]
-							elif stat["key"] == "attack_speed":
-								self.attack_speed += stat["value"]
-					except KeyError: #TODO: there is no second module, do we return the wrong module or none at all? (right now we return the other module)
-						main_key = "uniequip_002_" + weird_name
-						for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-							if stat["key"] == "atk":
-								self.atk += stat["value"]
-							elif stat["key"] == "attack_speed":
-								self.attack_speed += stat["value"]
-			else:
-
-				has_second_module = True
-				try:
-					main_key = "uniequip_003_" + weird_name
-					_ = int(module_data[main_key]["phases"][1]["parts"][1]["resKey"][-6]) == module
-				except KeyError:
-					has_second_module = False
-					main_key = "uniequip_002_" + weird_name
-				
-				#Case 3: resKey doesnt exist, but there is only 1 module anyway, so pick that
-				if not has_second_module:
-					for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-						if stat["key"] == "atk":
-							self.atk += stat["value"]
-						elif stat["key"] == "attack_speed":
-							self.attack_speed += stat["value"]
-
-				#Case 4: resKey doesnt exist, and there is a second module. if that also doesnt have a resKey we can throw an Error, because here we genuinely dont know what to do
-				else:
-					if int(module_data[main_key]["phases"][1]["parts"][1]["resKey"][-6]) == module: #it is the correct module
-						for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-							if stat["key"] == "atk":
-								self.atk += stat["value"]
-							elif stat["key"] == "attack_speed":
-								self.attack_speed += stat["value"]
-					else: #it's not the correct module, so the first module has to be the correct one
-						main_key = "uniequip_002_" + weird_name
-						for stat in module_data[main_key]["phases"][module_lvl-1]["attributeBlackboard"]:
-							if stat["key"] == "atk":
-								self.atk += stat["value"]
-							elif stat["key"] == "attack_speed":
-								self.attack_speed += stat["value"]
-				
-		
-		#get talent data without module.
-		for talent in character_data[current_key]["talents"]:
-			for candidate in talent["candidates"]:
-				if int(candidate["unlockCondition"]["phase"][-1]) <= promotion and int(candidate["requiredPotentialRank"]) <= pot:
-					if candidate["prefabKey"] == "1":
-						self.talent_data = []
-						for data in candidate["blackboard"]:
-							self.talent_data.append(data["value"])
-					else:
-						self.talent_data2 = []
-						for data in candidate["blackboard"]:
-							self.talent_data2.append(data["value"])
-		#TODO: get talent changes from module
-		print(main_key)
-		if promotion == 2 and level >= max_level - 30 and module > 0 and module_lvl > 1:
-			for change_data in module_data[main_key]["phases"][module_lvl-1]["parts"]:
-				if change_data["target"] == "TALENT" or change_data["target"] == "TALENT_DATA_ONLY":
-					for change_candidate in change_data["addOrOverrideTalentDataBundle"]["candidates"]:
-						if int(change_candidate["requiredPotentialRank"]) <= pot:
-							if change_candidate["prefabKey"] == "1":
-								self.talent_data = []
-								for change_data in change_candidate["blackboard"]:
-									self.talent_data.append(change_data["value"])
+		if has_module:
+			module_key = "uniequip_002_" + name_id
+			for module_lvl in module_data[module_key]["phases"][1:]:
+				equip_lvl = module_lvl["equipLevel"]
+				for part in module_lvl["parts"]:
+					if part["target"] == "TALENT" or part["target"] == "TALENT_DATA_ONLY":
+						for candidate in part["addOrOverrideTalentDataBundle"]["candidates"]:
+							req_promo = 2
+							req_level = candidate["unlockCondition"]["level"]
+							req_pot = candidate["requiredPotentialRank"]
+							req_module = self.available_modules[0]
+							req_mod_lvl = equip_lvl
+							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
+							if candidate["prefabKey"] == "1":
+								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
 							else:
-								self.talent_data2 = []
-								for change_data in change_candidate["blackboard"]:
-									self.talent_data2.append(change_data["value"])
+								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+		if has_second_module:
+			module_key = "uniequip_003_" + name_id
+			for module_lvl in module_data[module_key]["phases"][1:]:
+				equip_lvl = module_lvl["equipLevel"]
+				for part in module_lvl["parts"]:
+					if part["target"] == "TALENT" or part["target"] == "TALENT_DATA_ONLY":
+						for candidate in part["addOrOverrideTalentDataBundle"]["candidates"]:
+							req_promo = 2
+							req_level = candidate["unlockCondition"]["level"]
+							req_pot = candidate["requiredPotentialRank"]
+							req_module = self.available_modules[1]
+							req_mod_lvl = equip_lvl
+							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
+							if candidate["prefabKey"] == "1":
+								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+							elif candidate["prefabKey"] == "2":
+								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+							#TODO maybe put those extra additions into their own category, such as self.talent1_module_addition
+							"""elif candidate["prefabKey"] in ["10","11"]: #basically, add something else to the existing ones
+								if req_pot == 0: #make sure to copy the correct pot requirement #TODO this only works for module lvl 2, not for lvl 3
+									talent_data = self.talent1_parameters[-1][-1] + talent_data if self.talent1_parameters[-1][-4] == req_pot else self.talent1_parameters[-2][-1] + talent_data
+								else: #if there is a pot requirement, then the previous call should have added itself already and this should be correct
+									talent_data = self.talent1_parameters[-2][-1] + talent_data
+
+								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+							elif candidate["prefabKey"] in ["20","21"]:
+								talent_data = self.talent2_parameters[-1][-1] + talent_data if self.talent2_parameters[-1][-4] == req_pot else self.talent2_parameters[-2][-1] + talent_data
+								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])"""
+
+		#TODO: drone stats
 
 
 
 
 
 
-operator_stats = OperatorData("char_1034_jesca2",promotion=2, level=90, module=0, module_lvl=3, skill=1, skill_lvl=1, pot=6, trust=100)
 
-print(operator_stats.skill_costs, operator_stats.skill_durations)
-print(operator_stats.talent1_parameters,operator_stats.talent2_parameters)
+operator_stats = OperatorData("char_291_aglina")
 
-
-
-
-
-
-#relevant data, Operator json:
-"""
-First level: 
-	"char_ABCD_something":nextlevel #char id is not helpful, whislash for example is called sophia
-
-		"name": "Op_name" #name is upper case
-		"rarity": "TIER_5"
-		"phases": [nextnevel] #E1 E2 E3
-		
-			"maxLevel": 50
-			"attributesKeyFrames": [nextlevel] #minLvl data and maxlvl data
-			
-				"data": nextlevel
-					"atk": 390
-					"baseAttackTime": 1.6
-		
-		"skills": [nextnevel] #skill1, skill2, skill3
-			"skillId": "skchr_warmy_1"
-		
-		
-		"potentialRanks": [nextlevel] #pot2 - pot6
-			"type": "CUSTOM"/"BUFF"
-			"description": "ATK +25"
-			"buff": nextlevl
-				"attributes": nextlevel
-					"attributeModifiers": [nextlevel] # seems to be only one element though
-						"attributeType": "COST"/"ATK"
-						"value": 25.0
-			
-		"favorKeyFrames": [nextlevel] #0 trust vs max trust
-			"data": nextlevel
-				"atk": 65
-				"attackSpeed": 0.0
-
-
-#relevant data, skill json:
-first level:
-	"skchr_vigna_1": nextlevel
-		
-		"levels":[nextlevel] #10 entries, skill level 1 - mastery 3 
-			"duration": 20.0
-			"spData": nextlevel
-				"maxChargeTime": 2 #is this sp lockout?
-				"spCost": 30
-			"blackboard": [nextlevel] #list of ALL modifiers of the skill, be it atk scale, aspd, atk, dmg etc
-				"key": "atk",
-				"value": 0.2,
-				"valueStr": null
-
-#"""
-
-
-
-
+#print(operator_stats.skill_costs, operator_stats.skill_durations)
+print(operator_stats.available_modules)
+print(operator_stats.talent1_parameters)
+print(operator_stats.talent2_parameters)
 
