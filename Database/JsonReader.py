@@ -305,8 +305,8 @@ print(operator_stats.aspd_module)
 print(operator_stats.atk_module)
 
 #"""
-op_dict = {}
+op_data_dict = {}
 for key in id_dict.keys():
 	print(key)
-	op_dict[key] = OperatorData(id_dict[key])
+	op_data_dict[key] = OperatorData(id_dict[key])
 #"""

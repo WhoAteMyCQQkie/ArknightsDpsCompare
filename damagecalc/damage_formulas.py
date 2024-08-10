@@ -2,9 +2,89 @@ import math  # fu Kjera
 
 import numpy as np
 import pylab as pl
-
+from Database.JsonReader import op_data_dict, OperatorData
+from damagecalc.utils import PlotParameters
 
 class Operator:
+
+	def __init__(self, name, params: PlotParameters, available_skills, module_overwrite = [], default_skill = 3, default_pot = 1, default_mod = 1):
+		#needed data:
+		max_levels = [[30,30,40,45,50,50],[0,0,55,60,70,80],[0,0,0,70,80,90]] #E0,E1,E2 -> rarity
+		max_promotions = [0,0,1,2,2,2] #rarity
+		max_skill_lvls = [4,7,10] #promotion level
+		
+		#reading the data from the json
+		#TODO: use dictionary name -> op_data_dict key
+		op_data: OperatorData = op_data_dict[name]
+		rarity = op_data.rarity
+		
+		#Fixing illegal inputs and writing the name
+		self.name = name
+		
+		elite = max(0,min(max_promotions[rarity-1],params.promotion))
+		if elite < max_promotions[rarity-1]:
+			self.name += f" E{elite}"
+		
+		level = params.level if params.level > 0 and params.level < max_levels[elite][rarity-1] else max_levels[elite][rarity-1]
+		if level < max_levels[elite][rarity-1]:
+			self.name += f" Lv{level}"
+		
+		pot =  params.pot
+		if not params.pot in range(1,7):
+			if default_pot in range(1,7): pot = default_pot
+			else: pot = 1
+
+		#TODO skills
+		if rarity > 2:
+			skill = params.skill
+			if not skill in available_skills:
+				if default_skill in available_skills:
+					skill = default_skill
+				else:
+					skill = available_skills[-1]
+		self.name += f" S{skill}"
+
+		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
+		if skill_lvl < max_skill_lvls[elite]:
+			if skill_lvl == 9: self.name += "M2"
+			elif skill_lvl == 8: self.name += "M1"
+			else: self.name += f"Lv{skill_lvl}"
+		
+		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
+		if trust != 100:
+			self.name += f" {trust}Trust"
+
+		available_modules = op_data.available_modules
+		if module_overwrite != []: available_modules = module_overwrite
+		module = default_mod
+		if available_modules != []:
+			if params.module == 0:
+				module = 0
+				self.name += " no mod"
+			else:
+				if params.module in available_modules:
+					module = params.module
+				module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
+				mod_name = ["X","Y","D"]
+				self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
+
+
+		########### TODO: read all the parameters from the json
+		#TODO self.atk
+		#TODO self.skillparams
+		#TODO self.talentparams
+		
+		#TODO buffs
+		
+		
+
+		
+		
+		
+
+		#TODO: default skill/pot/module, available skills
+		#TODO: module overwrite
+
 	
 	def avg_dps(self,defense,res):
 		print("The operator has not implemented the avg_dps method")
