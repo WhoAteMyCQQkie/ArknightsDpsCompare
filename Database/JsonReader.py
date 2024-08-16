@@ -170,7 +170,7 @@ class OperatorData:
 			req_module = 0
 			req_mod_lvl = 0
 			talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-			self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+			self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 		if self.has_second_talent:
 			for candidate in character_data[key]["talents"][1]["candidates"]:
 				req_promo = int(candidate["unlockCondition"]["phase"][-1])
@@ -179,7 +179,7 @@ class OperatorData:
 				req_module = 0
 				req_mod_lvl = 0
 				talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-				self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+				self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 		
 		#set_defaults (this maybe needs to be changed for some characters, but it should be helpful most of the time)
 		for data in character_data[key]["talents"][0]["candidates"][-1]["blackboard"]:
