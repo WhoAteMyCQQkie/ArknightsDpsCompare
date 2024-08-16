@@ -57,24 +57,44 @@ class Operator:
 		available_modules = op_data.available_modules
 		if module_overwrite != []: available_modules = module_overwrite
 		module = default_mod
+		if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
 		if available_modules != []:
 			if params.module == 0:
 				module = 0
 				self.name += " no mod"
 			else:
 				if params.module in available_modules:
-					module = params.module
+					module = params.module #else default mod
 				module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
 				mod_name = ["X","Y","D"]
 				self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 
 
 		########### TODO: read all the parameters from the json
-		#TODO self.atk
-		#TODO self.skillparams
+		#TODO self.atk and atk speed
+		self.attack_speed = 100
+		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * level / max_levels[elite][rarity-1]
+		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * level / max_levels[elite][rarity-1]
+		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * level / max_levels[elite][rarity-1]
+
+		if pot >= op_data.atk_potential[0]:
+			self.atk += op_data.atk_potential[1]
+		self.atk += op_data.atk_trust * trust / 100
+		if pot >= op_data.aspd_potential[0]:
+			self.attack_speed +=  op_data.aspd_potential[1]
+		
+		if module in available_modules:
+			if module == available_modules[0]:
+				self.atk += op_data.atk_module[0][module_lvl]
+				self.attack_speed += op_data.aspd_module[0][module_lvl]
+			else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
+				self.atk += op_data.atk_module[1][module_lvl]
+				self.attack_speed += op_data.aspd_module[1][module_lvl]
+
+		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
 		#TODO self.talentparams
 		
-		#TODO buffs
+		###############TODO buffs
 		
 		
 
@@ -13092,7 +13112,7 @@ class Walter(Operator):
 			
 			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
 			
-			hitdmg = np.fmax(final_atk - newdef, final_atk  * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk  * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
 			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			sp_cost = 2 if self.mastery == 3 else 3
