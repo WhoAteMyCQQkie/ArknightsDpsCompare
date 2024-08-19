@@ -1,5 +1,6 @@
 #to function, this script needs three jsons (see lines 112ff) from https://github.com/Kengxxiao/ArknightsGameData_YoStar/tree/main/en_US/gamedata/excel
 import json
+import dill
 
 id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'char_376_therex','JusticeKnight': 'char_4000_jnight','TerraResearchCommission': 'char_4077_palico',
            'UOfficial': 'char_4091_ulika','Friston3': 'char_4093_frston','Yato': 'char_502_nblade','NoirCorne': 'char_500_noirc','Rangers': 'char_503_rang',
@@ -105,13 +106,21 @@ class OperatorData:
 		self.talent1_defaults = []
 		self.talent2_dafaults = []
 		
-		#These files are like 7MB each, maybe not a good idea to load them each time. 
-		with open('character_table.json',encoding="utf8") as json_file:
-			character_data = json.load(json_file)
-		with open('skill_table.json',encoding="utf8") as json_file:
-			skill_data = json.load(json_file)
-		with open('battle_equip_table.json',encoding="utf8") as json_file:
-			module_data = json.load(json_file)
+		#These files are like 7MB each, maybe not a good idea to load them each time.
+		if __name__ == "__main__":
+			with open('character_table.json',encoding="utf8") as json_file:
+				character_data = json.load(json_file)
+			with open('skill_table.json',encoding="utf8") as json_file:
+				skill_data = json.load(json_file)
+			with open('battle_equip_table.json',encoding="utf8") as json_file:
+				module_data = json.load(json_file)
+		else:
+			with open('Database/character_table.json',encoding="utf8") as json_file:
+				character_data = json.load(json_file)
+			with open('Database/skill_table.json',encoding="utf8") as json_file:
+				skill_data = json.load(json_file)
+			with open('Database/battle_equip_table.json',encoding="utf8") as json_file:
+				module_data = json.load(json_file)
 		
 		name_id =  key.split('_')[2]
 		
@@ -297,16 +306,20 @@ class OperatorData:
 
 
 
-operator_stats = OperatorData("char_1013_chen2")
+#operator_stats = OperatorData("char_1013_chen2")
 
 #print(operator_stats.skill_costs, operator_stats.skill_durations)
-print(operator_stats.available_modules)
-print(operator_stats.aspd_module)
-print(operator_stats.atk_module)
+#print(operator_stats.available_modules)
+#print(operator_stats.aspd_module)
+#print(operator_stats.atk_module)
 
 #"""
-op_data_dict = {}
-for key in id_dict.keys():
-	print(key)
-	op_data_dict[key] = OperatorData(id_dict[key])
+if __name__ == "__main__":
+	op_data_dict = {}
+	for key in id_dict.keys():
+		print(key)
+		op_data_dict[key] = OperatorData(id_dict[key])
+
+	with open('json_data.pkl', 'wb') as f:
+		dill.dump(op_data_dict, f)
 #"""

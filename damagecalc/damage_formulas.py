@@ -1,9 +1,13 @@
 import math  # fu Kjera
+import dill
 
 import numpy as np
 import pylab as pl
-from Database.JsonReader import op_data_dict, OperatorData
+from Database.JsonReader import OperatorData
 from damagecalc.utils import PlotParameters
+
+with open('Database/json_data.pkl', 'rb') as f:
+	op_data_dict= dill.load(f)
 
 class Operator:
 
@@ -20,6 +24,9 @@ class Operator:
 		
 		#Fixing illegal inputs and writing the name
 		self.name = name
+
+		self.atk_interval = op_data.atk_interval
+		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
 		
 		elite = max(0,min(max_promotions[rarity-1],params.promotion))
 		if elite < max_promotions[rarity-1]:
@@ -43,6 +50,7 @@ class Operator:
 				else:
 					skill = available_skills[-1]
 		self.name += f" S{skill}"
+		self.skill = skill
 
 		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
 		if skill_lvl < max_skill_lvls[elite]:
@@ -85,11 +93,15 @@ class Operator:
 		
 		if module in available_modules:
 			if module == available_modules[0]:
-				self.atk += op_data.atk_module[0][module_lvl]
-				self.attack_speed += op_data.aspd_module[0][module_lvl]
+				self.atk += op_data.atk_module[0][module_lvl-1]
+				self.attack_speed += op_data.aspd_module[0][module_lvl-1]
 			else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
-				self.atk += op_data.atk_module[1][module_lvl]
-				self.attack_speed += op_data.aspd_module[1][module_lvl]
+				self.atk += op_data.atk_module[1][module_lvl-1]
+				self.attack_speed += op_data.aspd_module[1][module_lvl-1]
+
+		self.skill_params = op_data.skill_parameters[skill-1][skill_lvl-1]
+		self.skill_cost = op_data.skill_costs[skill-1][skill_lvl-1]
+		self.skill_duration = op_data.skill_durations[skill-1][skill_lvl-1]
 
 		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
 		#TODO self.talentparams
