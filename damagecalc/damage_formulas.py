@@ -28,9 +28,11 @@ class Operator:
 		self.atk_interval = op_data.atk_interval
 		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
 		
-		elite = max(0,min(max_promotions[rarity-1],params.promotion))
+		elite = 2 if params.promotion < 0 else params.promotion
+		elite = max(0,min(max_promotions[rarity-1],elite))
 		if elite < max_promotions[rarity-1]:
 			self.name += f" E{elite}"
+		#TODO: handle E0 if there is no skill 1 implemented
 		
 		level = params.level if params.level > 0 and params.level < max_levels[elite][rarity-1] else max_levels[elite][rarity-1]
 		if level < max_levels[elite][rarity-1]:
@@ -41,7 +43,6 @@ class Operator:
 			if default_pot in range(1,7): pot = default_pot
 			else: pot = 1
 
-		#TODO skills
 		if rarity > 2:
 			skill = params.skill
 			if not skill in available_skills:
@@ -66,6 +67,9 @@ class Operator:
 		if module_overwrite != []: available_modules = module_overwrite
 		module = default_mod
 		if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
+		if op_data.atk_module == []: #no module data in the jsons
+			available_modules = []
+			module_lvl = 0
 		if available_modules != []:
 			if params.module == 0:
 				module = 0
@@ -161,16 +165,16 @@ class Operator:
 
 		
 		
-		###############TODO buffs
-		
+		###############TODO buff -> self.name needs to be updated
+		self.atk = self.atk * params.base_buffs[0] + params.base_buffs[1]
+		self.attack_speed += params.buffs[2]
+
+		self.buff_atk = params.buffs[0]
+		self.buff_atk_flat = params.buffs[1]
+		self.buff_fragile = params.buffs[3]
 		
 
-		
-		
-		
 
-		#TODO: default skill/pot/module, available skills
-		#TODO: module overwrite
 
 	
 	def avg_dps(self,defense,res):
