@@ -93,8 +93,8 @@ class Operator:
 
 		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
 		#TODO self.talentparams
-		if op_data.talent1_parameters != []:
-			self.talent1_params = op_data.talent1_defaults
+		self.talent1_params = op_data.talent1_defaults
+		if op_data.talent1_parameters != []:	
 			current_promo = 0
 			current_req_lvl = 0
 			current_req_pot = 0
@@ -115,6 +115,33 @@ class Operator:
 								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
 									if pot >= talent_data[4] and pot >= current_req_pot:
 										self.talent1_params = talent_data[5]
+										current_promo = talent_data[0]
+										current_req_lvl = talent_data[1]
+										current_req_pot = talent_data[3]
+										current_req_module_lvl = talent_data[4]
+		
+		self.talent2_params = op_data.talent2_dafaults
+		if op_data.talent2_parameters != []:	
+			current_promo = 0
+			current_req_lvl = 0
+			current_req_pot = 0
+			current_req_module_lvl = 0
+			for talent_data in op_data.talent2_parameters:
+				if elite >= talent_data[0] and talent_data[0] >= current_promo:
+					if level >= talent_data[1] and talent_data[1] >= current_req_lvl:
+						if module == 0:
+							if talent_data[2] == 0:
+								if pot >= talent_data[4] and pot >= current_req_pot:
+									self.talent2_params = talent_data[5]
+									current_promo = talent_data[0]
+									current_req_lvl = talent_data[1]
+									current_req_pot = talent_data[3]
+									current_req_module_lvl = talent_data[4]
+						else:
+							if module == talent_data[2] or talent_data[2] == 0:
+								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
+									if pot >= talent_data[4] and pot >= current_req_pot:
+										self.talent2_params = talent_data[5]
 										current_promo = talent_data[0]
 										current_req_lvl = talent_data[1]
 										current_req_pot = talent_data[3]
