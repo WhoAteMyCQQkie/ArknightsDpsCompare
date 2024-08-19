@@ -109,7 +109,6 @@ class Operator:
 		self.skill_duration = op_data.skill_durations[skill-1][skill_lvl-1]
 
 		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
-		#TODO self.talentparams
 		self.talent1_params = op_data.talent1_defaults
 		if op_data.talent1_parameters != []:	
 			current_promo = 0
@@ -166,14 +165,29 @@ class Operator:
 
 		
 		
-		###############TODO buff -> self.name needs to be updated
+		############### Buffs
+		self.buff_name = "" #needed to put the conditionals before the buffs
 		self.atk = self.atk * params.base_buffs[0] + params.base_buffs[1]
-		self.attack_speed += params.buffs[2]
+		if params.base_buffs[0] > 1: self.buff_name += f" bAtk+{int(100*(params.base_buffs[0]-1))}%"
+		elif params.base_buffs[0] < 1: self.buff_name += f" bAtk{int(100*(params.base_buffs[0]-1))}%"
+		if params.base_buffs[1] > 1: self.buff_name += f" bAtk+{params.base_buffs[1]}"
+		elif params.base_buffs[1] < 1: self.buff_name += f" bAtk{params.base_buffs[1]}"
 
 		self.buff_atk = params.buffs[0]
-		self.buff_atk_flat = params.buffs[1]
-		self.buff_fragile = params.buffs[3]
+		if self.buff_atk > 0: self.buff_name += f" atk+{int(100*self.buff_atk)}%"
+		elif self.buff_atk < 0: self.buff_name += f" atk{int(100*self.buff_atk)}%"
 		
+		self.attack_speed += params.buffs[2]
+		if params.buffs[2] > 0: self.buff_name += f" aspd+{params.buffs[2]}"
+		elif params.buffs[2] < 0: self.buff_name += f" aspd{params.buffs[2]}"
+
+		self.buff_atk_flat = params.buffs[1]
+		if self.buff_atk_flat > 0: self.buff_name += f" atk+{int(100*self.buff_atk_flat)}"
+		elif self.buff_atk_flat < 0: self.buff_name += f" atk{int(100*self.buff_atk_flat)}"
+
+		self.buff_fragile = params.buffs[3]
+		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
+		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
 
 
