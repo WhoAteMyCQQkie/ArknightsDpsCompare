@@ -131,7 +131,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif arg in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
 			pps.skills = {-1}
 			pps.masteries = {-1}
-		elif arg in ["sl7","s7","slv7","l7","lv7","m0","m1","m2","m3"]:
+		elif arg in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7","m0","m1","m2","m3"]:
 			pps.masteries = {-1}
 	i = 0
 	entries = len(args)
@@ -153,10 +153,10 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.module_lvls.add(int(args[i][-1]))
 			pps.module_lvls.discard(-1)
 		elif args[i] in ["m0","m1","m2","m3"]: 
-			pps.masteries.add(int(args[i][1]))
+			pps.masteries.add(int(args[i][1])+7)
 			pps.masteries.discard(-1)
-		elif args[i] in ["sl7","s7","slv7","l7","lv7"]:
-			pps.masteries.add(0)
+		elif args[i] in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7"]:
+			pps.masteries.add(int(args[i][-1]))
 			pps.masteries.discard(-1)
 		elif args[i] in ["mod0","mod1","mod2","mod3"]:
 			pps.modules.add(int(args[i][3]))
@@ -188,10 +188,10 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
 			pps.modules.add(0)
 			pps.modules.discard(-1)
-		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
+		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
 			pps.skills.add(int(args[i][1]))
 			pps.skills.discard(-1)
-			pps.masteries.add(int(args[i][3]))
+			pps.masteries.add(int(args[i][3])+7)
 			pps.masteries.discard(-1)
 		elif args[i] in ["b","buff","buffs"]:
 			i+=1
@@ -391,7 +391,6 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			i-=1
 		elif args[i] in ["lvl","level","lv"]:
 			i+=1
-
 			pps.levels = {-1}
 			while i < entries:
 				try:
@@ -576,7 +575,7 @@ def fix_typos(word, args):
 
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0):
 	pp = plot_parameters
-	operator = operator_input(pp.level,pp.pot,pp.skill,pp.mastery,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
+	operator = operator_input(pp,pp.level,pp.pot,pp.skill,pp.mastery-7,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
 	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers)
 
 def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0):

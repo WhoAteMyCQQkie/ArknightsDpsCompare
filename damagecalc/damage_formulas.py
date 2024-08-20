@@ -1,10 +1,204 @@
 import math  # fu Kjera
+import dill
 
 import numpy as np
 import pylab as pl
+from Database.JsonReader import OperatorData
+from damagecalc.utils import PlotParameters
 
+with open('Database/json_data.pkl', 'rb') as f:
+	op_data_dict= dill.load(f)
 
 class Operator:
+
+	def __init__(self, name, params: PlotParameters, available_skills, module_overwrite = [], default_skill = 3, default_pot = 1, default_mod = 1):
+		#needed data:
+		max_levels = [[30,30,40,45,50,50],[0,0,55,60,70,80],[0,0,0,70,80,90]] #E0,E1,E2 -> rarity
+		max_promotions = [0,0,1,2,2,2] #rarity
+		max_skill_lvls = [4,7,10] #promotion level
+		
+		#reading the data from the json
+		#TODO: use dictionary name -> op_data_dict key
+		op_data: OperatorData = op_data_dict[name]
+		rarity = op_data.rarity
+		
+		#Fixing illegal inputs and writing the name
+		self.name = name
+
+		self.atk_interval = op_data.atk_interval
+		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
+		
+		elite = 2 if params.promotion < 0 else params.promotion
+		elite = max(0,min(max_promotions[rarity-1],elite))
+		if elite < max_promotions[rarity-1]:
+			self.name += f" E{elite}"
+		#TODO: handle E0 if there is no skill 1 implemented
+		
+		level = params.level if params.level > 0 and params.level < max_levels[elite][rarity-1] else max_levels[elite][rarity-1]
+		if level < max_levels[elite][rarity-1]:
+			self.name += f" Lv{level}"
+		
+		pot =  params.pot
+		if not params.pot in range(1,7):
+			if default_pot in range(1,7): pot = default_pot
+			else: pot = 1
+		self.name += f" P{pot}"
+
+		if rarity > 2:
+			skill = params.skill
+			if not skill in available_skills:
+				if default_skill in available_skills:
+					skill = default_skill
+				else:
+					skill = available_skills[-1]
+		self.name += f" S{skill}"
+		self.skill = skill
+
+		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
+		if skill_lvl < max_skill_lvls[elite]:
+			if skill_lvl == 9: self.name += "M2"
+			elif skill_lvl == 8: self.name += "M1"
+			else: self.name += f"Lv{skill_lvl}"
+		
+		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
+		if trust != 100:
+			self.name += f" {trust}Trust"
+
+		available_modules = op_data.available_modules
+		if module_overwrite != []: available_modules = module_overwrite
+		module = default_mod
+		if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
+		if op_data.atk_module == []: #no module data in the jsons
+			available_modules = []
+			module_lvl = 0
+		if available_modules != []:
+			if params.module == 0:
+				module = 0
+				self.name += " no mod"
+			else:
+				if params.module in available_modules:
+					module = params.module #else default mod
+				module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
+				mod_name = ["X","Y","D"]
+				self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
+
+
+		########### TODO: read all the parameters from the json
+		#TODO self.atk and atk speed
+		self.attack_speed = 100
+		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * level / max_levels[elite][rarity-1]
+		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * level / max_levels[elite][rarity-1]
+		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * level / max_levels[elite][rarity-1]
+
+		if pot >= op_data.atk_potential[0]:
+			self.atk += op_data.atk_potential[1]
+		self.atk += op_data.atk_trust * trust / 100
+		if pot >= op_data.aspd_potential[0]:
+			self.attack_speed +=  op_data.aspd_potential[1]
+		
+		if module in available_modules:
+			if module == available_modules[0]:
+				self.atk += op_data.atk_module[0][module_lvl-1]
+				self.attack_speed += op_data.aspd_module[0][module_lvl-1]
+			else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
+				self.atk += op_data.atk_module[1][module_lvl-1]
+				self.attack_speed += op_data.aspd_module[1][module_lvl-1]
+
+		self.skill_params = op_data.skill_parameters[skill-1][skill_lvl-1]
+		self.skill_cost = op_data.skill_costs[skill-1][skill_lvl-1]
+		self.skill_duration = op_data.skill_durations[skill-1][skill_lvl-1]
+
+		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
+		self.talent1_params = op_data.talent1_defaults
+		if op_data.talent1_parameters != []:	
+			current_promo = 0
+			current_req_lvl = 0
+			current_req_pot = 0
+			current_req_module_lvl = 0
+			for talent_data in op_data.talent1_parameters:
+				if elite >= talent_data[0] and talent_data[0] >= current_promo:
+					if level >= talent_data[1] and talent_data[1] >= current_req_lvl:
+						if module == 0:
+							if talent_data[2] == 0:
+								if pot >= talent_data[4] and pot >= current_req_pot:
+									self.talent1_params = talent_data[5]
+									current_promo = talent_data[0]
+									current_req_lvl = talent_data[1]
+									current_req_pot = talent_data[4]
+									current_req_module_lvl = talent_data[3]
+						else:
+							if talent_data[2] == 0:
+								required_module = 0
+							else:
+								required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if module == required_module or talent_data[2] == 0:
+								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
+									if pot >= talent_data[4] and pot >= current_req_pot:
+										self.talent1_params = talent_data[5]
+										current_promo = talent_data[0]
+										current_req_lvl = talent_data[1]
+										current_req_pot = talent_data[4]
+										current_req_module_lvl = talent_data[3]
+		
+		self.talent2_params = op_data.talent2_dafaults
+		if op_data.talent2_parameters != []:	
+			current_promo = 0
+			current_req_lvl = 0
+			current_req_pot = 0
+			current_req_module_lvl = 0
+			for talent_data in op_data.talent2_parameters:
+				if elite >= talent_data[0] and talent_data[0] >= current_promo:
+					if level >= talent_data[1] and talent_data[1] >= current_req_lvl:
+						if module == 0:
+							if talent_data[2] == 0:
+								if pot >= talent_data[4] and pot >= current_req_pot:
+									self.talent2_params = talent_data[5]
+									current_promo = talent_data[0]
+									current_req_lvl = talent_data[1]
+									current_req_pot = talent_data[4]
+									current_req_module_lvl = talent_data[3]
+						else:
+							if talent_data[2] == 0:
+								required_module = 0
+							else:
+								required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if module == required_module or talent_data[2] == 0:
+								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
+									if pot >= talent_data[4] and pot >= current_req_pot:
+										self.talent2_params = talent_data[5]
+										current_promo = talent_data[0]
+										current_req_lvl = talent_data[1]
+										current_req_pot = talent_data[4]
+										current_req_module_lvl = talent_data[3]
+
+		
+		
+		############### Buffs
+		self.buff_name = "" #needed to put the conditionals before the buffs
+		self.atk = self.atk * params.base_buffs[0] + params.base_buffs[1]
+		if params.base_buffs[0] > 1: self.buff_name += f" bAtk+{int(100*(params.base_buffs[0]-1))}%"
+		elif params.base_buffs[0] < 1: self.buff_name += f" bAtk{int(100*(params.base_buffs[0]-1))}%"
+		if params.base_buffs[1] > 1: self.buff_name += f" bAtk+{params.base_buffs[1]}"
+		elif params.base_buffs[1] < 1: self.buff_name += f" bAtk{params.base_buffs[1]}"
+
+		self.buff_atk = params.buffs[0]
+		if self.buff_atk > 0: self.buff_name += f" atk+{int(100*self.buff_atk)}%"
+		elif self.buff_atk < 0: self.buff_name += f" atk{int(100*self.buff_atk)}%"
+		
+		self.attack_speed += params.buffs[2]
+		if params.buffs[2] > 0: self.buff_name += f" aspd+{params.buffs[2]}"
+		elif params.buffs[2] < 0: self.buff_name += f" aspd{params.buffs[2]}"
+
+		self.buff_atk_flat = params.buffs[1]
+		if self.buff_atk_flat > 0: self.buff_name += f" atk+{int(100*self.buff_atk_flat)}"
+		elif self.buff_atk_flat < 0: self.buff_name += f" atk{int(100*self.buff_atk_flat)}"
+
+		self.buff_fragile = params.buffs[3]
+		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
+		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
+
+
+
 	
 	def avg_dps(self,defense,res):
 		print("The operator has not implemented the avg_dps method")
@@ -23,7 +217,7 @@ class Operator:
 
 
 class Blueprint(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1000  #######including trust
 		maxatk = 2000
@@ -104,7 +298,7 @@ class Blueprint(Operator):
 
 
 class Aak(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 633  #######including trust
 		maxatk = 753
@@ -166,7 +360,7 @@ class Aak(Operator):
 		return dps
 
 class Absinthe(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 601  #######including trust
 		maxatk = 703
@@ -242,7 +436,7 @@ class Absinthe(Operator):
 			return(self.skill_dps(defense,res) * (27 + self.mastery))
 
 class Aciddrop(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 645  #######including trust
 		maxatk = 815
@@ -302,7 +496,7 @@ class Aciddrop(Operator):
 		return dps
 
 class Amiya(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 584  #######including trust
 		maxatk = 682
@@ -365,7 +559,7 @@ class Amiya(Operator):
 			return(self.skill_dps(defense,res))
 	
 class AmiyaGuard(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 577  #######including trust
 		maxatk = 702
@@ -422,7 +616,7 @@ class AmiyaGuard(Operator):
 		return self.name
 
 class Andreana(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 917  #######including trust
 		maxatk = 1110
@@ -493,7 +687,7 @@ class Andreana(Operator):
 		return dps
 
 class Angelina(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 524  #######including trust
 		maxatk = 617
@@ -573,7 +767,7 @@ class Angelina(Operator):
 		return dps
 
 class April(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 507  #######including trust
 		maxatk = 603
@@ -639,7 +833,7 @@ class April(Operator):
 		return dps
 
 class Archetto(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 517  #######including trust
 		maxatk = 618
@@ -750,7 +944,7 @@ class Archetto(Operator):
 		return dps
 
 class Arene(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 573  #######including trust
 		maxatk = 695
@@ -829,7 +1023,7 @@ class Arene(Operator):
 		return dps
 
 class Asbestos(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 546  #######including trust
 		maxatk = 673
@@ -875,7 +1069,7 @@ class Asbestos(Operator):
 		return dps
 
 class Ascalon(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 763  #######including trust
 		maxatk = 954
@@ -969,7 +1163,7 @@ class Ascalon(Operator):
 		return dps
 
 class Ash(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 522  #######including trust
 		maxatk = 624
@@ -1051,7 +1245,7 @@ class Ash(Operator):
 		return dps
 
 class Ashlock(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 767  #######including trust
 		maxatk = 915
@@ -1130,7 +1324,7 @@ class Ashlock(Operator):
 		return dps
 
 class Astesia(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 564  #######including trust
 		maxatk = 690
@@ -1186,7 +1380,7 @@ class Astesia(Operator):
 		return dps
 
 class Astgenne(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 597  #######including trust
 		maxatk = 705
@@ -1273,7 +1467,7 @@ class Astgenne(Operator):
 		return dps
 
 class Aurora(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 802  #######including trust
 		maxatk = 956
@@ -1331,7 +1525,7 @@ class Aurora(Operator):
 		return dps
 		
 class Bagpipe(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 578  #######including trust
 		maxatk = 671
@@ -1441,7 +1635,7 @@ class Bagpipe(Operator):
 		return dps
 	
 class Beehunter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 475  #######including trust
 		maxatk = 573
@@ -1504,7 +1698,7 @@ class Beehunter(Operator):
 		return dps
 
 class Bibeak(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 543 
 		maxatk = 682
@@ -1592,7 +1786,7 @@ class Bibeak(Operator):
 		return dps
 	
 class Blaze(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 641  #######including trust
 		maxatk = 825
@@ -1675,7 +1869,7 @@ class Blaze(Operator):
 		return dps
 
 class Blemishine(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 492  #######including trust
 		maxatk = 581
@@ -1763,7 +1957,7 @@ class Blemishine(Operator):
 		return dps
 	
 class BluePoison(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 513  #######including trust
 		maxatk = 610
@@ -1839,7 +2033,7 @@ class BluePoison(Operator):
 		return dps
 		
 class Broca(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 659  #######including trust
 		maxatk = 842
@@ -1917,7 +2111,7 @@ class Broca(Operator):
 		return dps
 
 class Bryophyta(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 581  #######including trust
 		maxatk = 685
@@ -1981,7 +2175,7 @@ class Bryophyta(Operator):
 		return dps
 
 class Cantabile(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 489  #######including trust
 		maxatk = 590
@@ -2040,7 +2234,7 @@ class Cantabile(Operator):
 		return dps
 
 class Caper(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 557  #######including trust
 		maxatk = 665
@@ -2120,7 +2314,7 @@ class Caper(Operator):
 		return dps
 
 class Carnelian(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 807  #######including trust
 		maxatk = 926
@@ -2209,7 +2403,7 @@ class Carnelian(Operator):
 		return dps
 
 class Ceobe(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 643  #######including trust
 		maxatk = 757
@@ -2333,7 +2527,7 @@ class Ceobe(Operator):
 		return dps
 	
 class Chen(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 519  #######including trust
 		maxatk = 660
@@ -2418,7 +2612,7 @@ class Chen(Operator):
 		return dps
 
 class ChenAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 729  #######including trust
 		maxatk = 853
@@ -2489,7 +2683,7 @@ class ChenAlter(Operator):
 		return dmg	
 
 class Chongyue(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 537  #######including trust
 		maxatk = 650
@@ -2577,7 +2771,7 @@ class Chongyue(Operator):
 		return dps
 
 class Click(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 324  #######including trust
 		maxatk = 375
@@ -2645,7 +2839,7 @@ class Click(Operator):
 		return dps
 
 class Coldshot(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 909  #######including trust
 		maxatk = 1063
@@ -2732,7 +2926,7 @@ class Coldshot(Operator):
 		return dps
 
 class Conviction(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 793  #######including trust
 		maxatk = 951
@@ -2816,7 +3010,7 @@ class Conviction(Operator):
 		return dps
 
 class Dagda(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 504  #######including trust
 		maxatk = 614
@@ -2888,7 +3082,7 @@ class Dagda(Operator):
 		return dps
 
 class Degenbrecher(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 545  #######including trust
 		maxatk = 685
@@ -2957,7 +3151,7 @@ class Degenbrecher(Operator):
 		return dps
 
 class Dobermann(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 535  #######including trust
 		maxatk = 632
@@ -3019,7 +3213,7 @@ class Dobermann(Operator):
 		return dps
 
 class Doc(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 551  ##including trust
 		maxatk = 657 
@@ -3077,7 +3271,7 @@ class Doc(Operator):
 		return dps
 
 class Dorothy(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 556  #######including trust
 		maxatk = 661
@@ -3182,7 +3376,7 @@ class Dorothy(Operator):
 		return dps
 
 class Durin(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=39
 		lvl1atk = 268  #######including trust
 		maxatk = 370
@@ -3200,7 +3394,7 @@ class Durin(Operator):
 		return dps
 
 class Dusk(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 881  #######including trust
 		maxatk = 1028
@@ -3317,7 +3511,7 @@ class Dusk(Operator):
 		return dps+freedps
 
 class Ebenholz(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1284  #######including trust
 		maxatk = 1550
@@ -3456,7 +3650,7 @@ class Ebenholz(Operator):
 		return dps
 
 class Ela(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 556  #######including trust
 		maxatk = 668
@@ -3548,7 +3742,7 @@ class Ela(Operator):
 		return dps
 	
 class Estelle(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 524  #######including trust
 		maxatk = 690
@@ -3598,7 +3792,7 @@ class Estelle(Operator):
 		return dps
 
 class Eunectes(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 905  #######including trust
 		maxatk = 1077
@@ -3681,7 +3875,7 @@ class Eunectes(Operator):
 		return dps
 
 class ExecutorAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 656  #######including trust
 		maxatk = 777
@@ -3792,7 +3986,7 @@ class ExecutorAlter(Operator):
 		return dps
 	
 class Exusiai(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 427  #######including trust
 		maxatk = 630
@@ -3880,7 +4074,7 @@ class Exusiai(Operator):
 		return dps
 		
 class Eyjafjalla(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 625  #######including trust
 		maxatk = 735
@@ -3976,7 +4170,7 @@ class Eyjafjalla(Operator):
 		return dps
 
 class FangAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 548  #######including trust
 		maxatk = 640
@@ -4050,7 +4244,7 @@ class FangAlter(Operator):
 		return dps
 
 class Fartooth(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1080  #######including trust
 		maxatk = 1296
@@ -4145,7 +4339,7 @@ class Fartooth(Operator):
 		return dps
 
 class Fiammetta(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 771  #######including trust
 		maxatk = 961
@@ -4245,7 +4439,7 @@ class Fiammetta(Operator):
 		return dps
 	
 class Firewhistle(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 782  #######including trust
 		maxatk = 932
@@ -4328,7 +4522,7 @@ class Firewhistle(Operator):
 		return dps
 
 class Flamebringer(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 806  #######including trust
 		maxatk = 963
@@ -4394,7 +4588,7 @@ class Flamebringer(Operator):
 		return dps
 
 class Flametail(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 516  #######including trust
 		maxatk = 611
@@ -4475,7 +4669,7 @@ class Flametail(Operator):
 		return dps
 
 class Flint(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 516  #######including trust
 		maxatk = 620
@@ -4547,7 +4741,7 @@ class Flint(Operator):
 		return dps*dmgscale
 
 class Folinic(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 433  #######including trust
 		maxatk = 529
@@ -4604,7 +4798,7 @@ class Folinic(Operator):
 		return dps
 
 class Franka(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 851  #######including trust
 		maxatk = 1011
@@ -4679,7 +4873,7 @@ class Franka(Operator):
 		return dps
 	
 class Fuze(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 644  #######including trust
 		maxatk = 835
@@ -4733,7 +4927,7 @@ class Fuze(Operator):
 		return dps
 
 class GavialAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 632  #######including trust
 		maxatk = 816
@@ -4822,7 +5016,7 @@ class GavialAlter(Operator):
 		return dps
 
 class Gladiia(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 690  #######including trust
 		maxatk = 851
@@ -4912,7 +5106,7 @@ class Gladiia(Operator):
 		return dps
 
 class Gnosis(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 457  #######including trust
 		maxatk = 535
@@ -5006,7 +5200,7 @@ class Gnosis(Operator):
 		return self.name
 
 class Goldenglow(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 338  #######including trust
 		maxatk = 391
@@ -5090,7 +5284,7 @@ class Goldenglow(Operator):
 		return dps
 
 class Grani(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 463  #######including trust
 		maxatk = 552
@@ -5129,7 +5323,7 @@ class Grani(Operator):
 		return dps
 
 class GreyThroat(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 495  #######including trust
 		maxatk = 588
@@ -5213,7 +5407,7 @@ class GreyThroat(Operator):
 		return dps
 
 class Haze(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 543  #######including trust
 		maxatk = 643
@@ -5269,7 +5463,7 @@ class Haze(Operator):
 		return dps
 	
 class Hellagur(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 702  #######including trust
 		maxatk = 832
@@ -5353,7 +5547,7 @@ class Hellagur(Operator):
 		return dps
 
 class Hibiscus(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 468 #######including trust
 		maxatk = 571
@@ -5415,7 +5609,7 @@ class Hibiscus(Operator):
 		return dps
 
 class Highmore(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 606  #######including trust
 		maxatk = 710
@@ -5479,7 +5673,7 @@ class Highmore(Operator):
 		return dps
 
 class Hoederer(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1403  #######including trust
 		maxatk = 1656
@@ -5544,7 +5738,7 @@ class Hoederer(Operator):
 		return dps
 	
 class Hoolheyak(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 615  #######including trust
 		maxatk = 723
@@ -5647,7 +5841,7 @@ class Hoolheyak(Operator):
 		return dps
 	
 class Horn(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 846  #######including trust
 		maxatk = 1006
@@ -5749,7 +5943,7 @@ class Horn(Operator):
 		return dps
 
 class Hoshiguma(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 416  #######including trust
 		maxatk = 490
@@ -5815,7 +6009,7 @@ class Hoshiguma(Operator):
 		return dps
 
 class Humus(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 541  #######including trust
 		maxatk = 646
@@ -5878,7 +6072,7 @@ class Humus(Operator):
 		return dps
 
 class Iana(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 630  #######including trust
 		maxatk = 758
@@ -5937,7 +6131,7 @@ class Iana(Operator):
 		return dps
 
 class Ifrit(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 832  #######including trust
 		maxatk = 980
@@ -6046,7 +6240,7 @@ class Ifrit(Operator):
 		return dps
 
 class Indra(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 504  #######including trust
 		maxatk = 605
@@ -6117,7 +6311,7 @@ class Indra(Operator):
 		return dps
 
 class Ines(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 532  #######including trust
 		maxatk = 639
@@ -6192,7 +6386,7 @@ class Ines(Operator):
 		return self.name
 
 class Irene(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 564  #######including trust
 		maxatk = 701
@@ -6285,8 +6479,24 @@ class Irene(Operator):
 			dps *= self.targets
 		return dps
 
+class Jackie(Operator):
+	def __init__(self, plot_parameters, *args, **kwargs):
+		super().__init__("Jackie",plot_parameters,[1],[],1,6,1)
+		if self.talent_dmg: self.name += " afterDodge"
+	
+	def skill_dps(self, defense, res):
+		if self.talent_dmg:
+			self.attack_speed += self.talent1_params[1]
+		if self.skill == 1:
+			hitdmg = np.fmax(self.atk - defense, self.atk * 0.05)
+			skilldmg = np.fmax(self.atk * self.skill_params[0] - defense, self.atk * 0.05)
+			avgdmg = (hitdmg * self.skill_cost + skilldmg) / (self.skill_cost+1)
+
+			dps = avgdmg/(self.atk_interval/(1+self.attack_speed/100))
+		return dps
+
 class Jaye(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 599  #######including trust
 		maxatk = 714
@@ -6342,7 +6552,7 @@ class Jaye(Operator):
 		return dps
 
 class JessicaAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 493  #######including trust
 		maxatk = 582
@@ -6406,7 +6616,7 @@ class JessicaAlter(Operator):
 		return self.name
 		
 class Kafka(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 409  #######including trust
 		maxatk = 525
@@ -6483,7 +6693,7 @@ class Kafka(Operator):
 		return self.name
 
 class Kazemaru(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 647  #######including trust
 		maxatk = 772
@@ -6570,7 +6780,7 @@ class Kazemaru(Operator):
 		return self.name
 	
 class Kjera(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 306  #######including trust
 		maxatk = 354
@@ -6657,7 +6867,7 @@ class Kjera(Operator):
 		return dps
 	
 class Kroos(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=55
 		lvl1atk = 308  #######including trust
 		maxatk = 425
@@ -6694,7 +6904,7 @@ class Kroos(Operator):
 		return dps
 
 class KroosAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 486  #######including trust
 		maxatk = 577
@@ -6761,7 +6971,7 @@ class KroosAlter(Operator):
 		return dps
 
 class LaPluma(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 627  #######including trust
 		maxatk = 725
@@ -6836,7 +7046,7 @@ class LaPluma(Operator):
 		return dps
 	
 class Lappland(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 629  #######including trust
 		maxatk = 760
@@ -6909,7 +7119,7 @@ class Lappland(Operator):
 		return dps*(1+fragile)/(1+self.buffs[3])
 	
 class Lavaalt(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 760  #######including trust
 		maxatk = 888
@@ -6980,7 +7190,7 @@ class Lavaalt(Operator):
 		return dps
 
 class Lee(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 709  #######including trust
 		maxatk = 844
@@ -7079,7 +7289,7 @@ class Lee(Operator):
 		return self.name
 
 class Lessing(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 951  #######including trust
 		maxatk = 1129
@@ -7170,7 +7380,7 @@ class Lessing(Operator):
 		return dps
 	
 class Leto(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 590  #######including trust
 		maxatk = 720
@@ -7248,7 +7458,7 @@ class Leto(Operator):
 		return dps
 
 class Lin(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 800  #######including trust
 		maxatk = 919
@@ -7307,7 +7517,7 @@ class Lin(Operator):
 		return dps
 
 class Ling(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 441  #######including trust
 		maxatk = 508
@@ -7427,7 +7637,7 @@ class Ling(Operator):
 		return dps
 
 class Logos(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 600  #######including trust
 		maxatk = 761
@@ -7544,7 +7754,7 @@ class Logos(Operator):
 		return self.name
 
 class Lunacub(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 887  #######including trust
 		maxatk = 1074
@@ -7607,7 +7817,7 @@ class Lunacub(Operator):
 		return dps
 
 class Lutonada(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 616  #######including trust
 		maxatk = 790
@@ -7662,7 +7872,7 @@ class Lutonada(Operator):
 		return dps
 	
 class Magallan(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 443  #######including trust
 		maxatk = 509
@@ -7759,7 +7969,7 @@ class Magallan(Operator):
 		return dps
 
 class Manticore(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 716  #######including trust
 		maxatk = 871
@@ -7824,7 +8034,7 @@ class Manticore(Operator):
 		return dps
 
 class Matoimaru(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 760  #######including trust
 		maxatk = 916
@@ -7880,7 +8090,7 @@ class Matoimaru(Operator):
 		return dps
 
 class Melantha(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=55
 		lvl1atk = 648 #######including trust
 		maxatk = 803
@@ -7905,7 +8115,7 @@ class Melantha(Operator):
 		return dps
 
 class Meteor(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 446  #######including trust
 		maxatk = 530
@@ -7975,7 +8185,7 @@ class Meteor(Operator):
 		return dps
 
 class Meteorite(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 759  #######including trust
 		maxatk = 950
@@ -8037,7 +8247,7 @@ class Meteorite(Operator):
 		return dps
 
 class Mizuki(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 802  #######including trust
 		maxatk = 975
@@ -8145,7 +8355,7 @@ class Mizuki(Operator):
 		return dps
 
 class Mlynar(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 331  #######including trust
 		maxatk = 385
@@ -8218,7 +8428,7 @@ class Mlynar(Operator):
 		return dps
 
 class Mon3tr(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1149  #######including trust
 		maxatk = 1402
@@ -8289,7 +8499,7 @@ class Mon3tr(Operator):
 		return dps
 
 class Morgan(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 826  #######including trust
 		maxatk = 980
@@ -8353,7 +8563,7 @@ class Morgan(Operator):
 		return dps
 
 class Mostima(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 805  #######including trust
 		maxatk = 939
@@ -8424,7 +8634,7 @@ class Mostima(Operator):
 		return dps * self.targets
 
 class Mountain(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 520  #######including trust
 		maxatk = 632
@@ -8525,7 +8735,7 @@ class Mountain(Operator):
 		return dps
 
 class Mousse(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 550  #######including trust
 		maxatk = 679
@@ -8574,7 +8784,7 @@ class Mousse(Operator):
 		return dps
 
 class MrNothing(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 641  #######including trust
 		maxatk = 765
@@ -8624,7 +8834,7 @@ class MrNothing(Operator):
 		return dps
 		
 class Mudrock(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 687  #######including trust
 		maxatk = 882
@@ -8688,7 +8898,7 @@ class Mudrock(Operator):
 		return dps
 	
 class Muelsyse(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 447  #######including trust
 		maxatk = 537
@@ -8792,7 +9002,7 @@ def name_addition(S123,ranged,TrTaTaSkMo):
 	return name
 	
 class MumuDorothy(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Dorothy(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Dorothy)" + self.name[8:]
@@ -8804,7 +9014,7 @@ class MumuDorothy(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuEbenholz(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Ebenholz(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Ebenholz)" + self.name[8:]
@@ -8816,7 +9026,7 @@ class MumuEbenholz(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuCeobe(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Ceobe(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Ceobe)" + self.name[8:]
@@ -8828,7 +9038,7 @@ class MumuCeobe(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 		
 class MumuMudrock(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Mudrock(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Mudrock)" + self.name[8:]
@@ -8840,7 +9050,7 @@ class MumuMudrock(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuRosa(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Rosa(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Rosa)" + self.name[8:]
@@ -8852,7 +9062,7 @@ class MumuRosa(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuSkadi(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Skadi(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Skadi)" + self.name[8:]
@@ -8864,7 +9074,7 @@ class MumuSkadi(Muelsyse):
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuSchwarz(Muelsyse):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		operator = Schwarz(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Schwarz)" + self.name[8:]
@@ -8941,7 +9151,7 @@ class Narantuya(Operator):
 		return dps
 
 class NearlAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 968  #######including trust
 		maxatk = 1149
@@ -9026,7 +9236,7 @@ class NearlAlter(Operator):
 		return dps
 
 class Nian(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 513  #######including trust
 		maxatk = 619
@@ -9101,7 +9311,7 @@ class Nian(Operator):
 		return dps
 
 class Nymph(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 640  #######including trust
 		maxatk = 745
@@ -9197,7 +9407,7 @@ class Nymph(Operator):
 
 
 class Odda(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 1057  #######including trust
 		maxatk = 1260
@@ -9257,7 +9467,7 @@ class Odda(Operator):
 		return dps
 	
 class Pallas(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 627  #######including trust
 		maxatk = 737
@@ -9351,7 +9561,7 @@ class Pallas(Operator):
 		return dps
 
 class Passenger(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 656  #######including trust
 		maxatk = 774
@@ -9481,7 +9691,7 @@ class Passenger(Operator):
 			return(self.skill_dps(defense,res))
 
 class Penance(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 723  #######including trust
 		maxatk = 916
@@ -9675,7 +9885,7 @@ class Pepe(Operator):
 
 
 class Phantom(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 525  #######including trust
 		maxatk = 648
@@ -9755,7 +9965,7 @@ class Phantom(Operator):
 		return dps
 
 class Pinecone(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 615  #######including trust
 		maxatk = 722
@@ -9837,7 +10047,7 @@ class Pinecone(Operator):
 		return dps
 
 class Platinum(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 489  #######including trust
 		maxatk = 580
@@ -9907,7 +10117,7 @@ class Platinum(Operator):
 		return dps
 	
 class Pozemka(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 744  #######including trust
 		maxatk = 946
@@ -9994,7 +10204,7 @@ class Pozemka(Operator):
 		return dps
 
 class ProjektRed(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 488  #######including trust
 		maxatk = 605
@@ -10057,7 +10267,7 @@ class ProjektRed(Operator):
 		return dps
 
 class Provence(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 691  #######including trust
 		maxatk = 871
@@ -10132,7 +10342,7 @@ class Provence(Operator):
 		return dps
 
 class Pudding(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 519  #######including trust
 		maxatk = 612
@@ -10203,7 +10413,7 @@ class Pudding(Operator):
 		return dps
 
 class Qiubai(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 631 #######including trust
 		maxatk = 768
@@ -10283,7 +10493,7 @@ class Qiubai(Operator):
 		return dps
 	
 class Quartz(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 1201  #######including trust
 		maxatk = 1437
@@ -10330,7 +10540,7 @@ class Quartz(Operator):
 		return dps * min(self.targets,2)
 
 class Ray(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1020  #######including trust
 		maxatk = 1192
@@ -10407,7 +10617,7 @@ class Ray(Operator):
 			return(self.skill_dps(defense,res))
 	
 class ReedAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 490  #######including trust
 		maxatk = 600
@@ -10501,7 +10711,7 @@ class ReedAlter(Operator):
 		return self.name
 
 class Rockrock(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 328  #######including trust
 		maxatk = 380
@@ -10578,7 +10788,7 @@ class Rockrock(Operator):
 		return dps
 
 class Rosa(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 966  #######including trust
 		maxatk = 1142
@@ -10671,7 +10881,7 @@ class Rosa(Operator):
 		else: return(self.skill_dps(defense,res) * 30)
 
 class Rosmontis(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 644  #######including trust
 		maxatk = 748
@@ -10774,7 +10984,7 @@ class Rosmontis(Operator):
 		return dps
 	
 class Saga(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 519  #######including trust
 		maxatk = 615
@@ -10862,7 +11072,7 @@ class Saga(Operator):
 		return dps * (1+dmg)
 
 class Scene(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 371  #######including trust
 		maxatk = 432
@@ -10936,7 +11146,7 @@ class Scene(Operator):
 		return dps
 	
 class Schwarz(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 746  #######including trust
 		maxatk = 940
@@ -11053,7 +11263,7 @@ class Schwarz(Operator):
 			return(self.skill_dps(defense,res))
 
 class Shalem(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 618  #######including trust
 		maxatk = 729
@@ -11118,7 +11328,7 @@ class Shalem(Operator):
 		return dps
 
 class Siege(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 482  #######including trust
 		maxatk = 575
@@ -11207,7 +11417,7 @@ class Siege(Operator):
 		return dps
 
 class SilverAsh(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 627  #######including trust
 		maxatk = 763
@@ -11294,7 +11504,7 @@ class SilverAsh(Operator):
 		return dps
 	
 class Skadi(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 922  #######including trust
 		maxatk = 1095
@@ -11379,7 +11589,7 @@ class Skadi(Operator):
 		return dps
 
 class Skalter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 355  #######including trust
 		maxatk = 418
@@ -11433,7 +11643,7 @@ class Skalter(Operator):
 		return dps
 
 class Specter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 631  #######including trust
 		maxatk = 805
@@ -11498,7 +11708,7 @@ class Specter(Operator):
 		return dps
 
 class SpecterAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 684  #######including trust
 		maxatk = 817
@@ -11587,7 +11797,7 @@ class SpecterAlter(Operator):
 		return dps
 
 class Stainless(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 532  #######including trust
 		maxatk = 633
@@ -11670,7 +11880,7 @@ class Stainless(Operator):
 		return dps
 
 class Surtr(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 644  #######including trust
 		maxatk = 772
@@ -11740,7 +11950,7 @@ class Surtr(Operator):
 		return dps
 
 class Suzuran(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 507  #######including trust
 		maxatk = 596
@@ -11810,7 +12020,7 @@ class Suzuran(Operator):
 		return dps*(1+fragile)/(1+self.buffs[3])
 
 class SwireAlt(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 727 #######including trust
 		maxatk = 865
@@ -11915,7 +12125,7 @@ class SwireAlt(Operator):
 		return self.name
 
 class TexasAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 533  #######including trust
 		maxatk = 659
@@ -12030,7 +12240,7 @@ class TexasAlter(Operator):
 		return self.name
 	
 class Tequila(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 306  #######including trust
 		maxatk = 352
@@ -12084,7 +12294,7 @@ class Tequila(Operator):
 		return dps
 
 class Thorns(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 604  #######including trust
 		maxatk = 741
@@ -12181,7 +12391,7 @@ class Thorns(Operator):
 		return dps
 
 class Toddifons(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 877  #######including trust
 		maxatk = 1049
@@ -12258,7 +12468,7 @@ class Toddifons(Operator):
 		return dps
 
 class Tomimi(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 539  #######including trust
 		maxatk = 635
@@ -12322,7 +12532,7 @@ class Tomimi(Operator):
 		return dps
 
 class Totter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 813  #######including trust
 		maxatk = 970
@@ -12398,7 +12608,7 @@ class Totter(Operator):
 		return dps
 
 class Typhon(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 977  #######including trust
 		maxatk = 1155
@@ -12497,7 +12707,7 @@ class Typhon(Operator):
 			return(self.skill_dps(defense,res))
 
 class Ulpianus(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 1397  #######including trust
 		maxatk = 1649
@@ -12568,7 +12778,7 @@ class Ulpianus(Operator):
 		return self.name
 
 class Utage(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 605  #######including trust
 		maxatk = 723
@@ -12621,7 +12831,7 @@ class Utage(Operator):
 		return dps
 
 class Vigil(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 458  #######including trust
 		maxatk = 542
@@ -12723,7 +12933,7 @@ class Vigil(Operator):
 		return dps
 
 class Vigna(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=70
 		lvl1atk = 528  #######including trust
 		maxatk = 618
@@ -12787,7 +12997,7 @@ class Vigna(Operator):
 		return dps
 		
 class Virtuosa(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 447  #######including trust
 		maxatk = 525
@@ -12877,7 +13087,7 @@ class Virtuosa(Operator):
 		return dps
 	
 class Viviana(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 623  #######including trust
 		maxatk = 746
@@ -12945,7 +13155,7 @@ class Viviana(Operator):
 		return dps
 
 class Vulcan(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 689  #######including trust
 		maxatk = 870
@@ -12994,7 +13204,7 @@ class Vulcan(Operator):
 		return dps
 
 class W(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 811  #######including trust
 		maxatk = 1012
@@ -13100,7 +13310,7 @@ class W(Operator):
 		return dps
 
 class Walter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 673  #######including trust
 		maxatk = 777
@@ -13222,7 +13432,7 @@ class Walter(Operator):
 			return(self.skill_dps(defense,res))
 
 class Warmy(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 553  #######including trust
 		maxatk = 646
@@ -13292,7 +13502,7 @@ class Warmy(Operator):
 		return dps
 
 class Weedy(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 593  #######including trust
 		maxatk = 722
@@ -13374,7 +13584,7 @@ class Weedy(Operator):
 		return dps
 
 class Whislash(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
 		lvl1atk = 571  #######including trust
 		maxatk = 675
@@ -13436,7 +13646,7 @@ class Whislash(Operator):
 		return dps
 
 class Wildmane(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 538  #######including trust
 		maxatk = 628
@@ -13489,7 +13699,7 @@ class Wildmane(Operator):
 		return dps
 
 class YatoAlter(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 530  #######including trust
 		maxatk = 655
@@ -13568,7 +13778,7 @@ class YatoAlter(Operator):
 		return dps
 
 class ZuoLe(Operator):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
 		lvl1atk = 687  #######including trust
 		maxatk = 820
@@ -13701,7 +13911,7 @@ def levenshtein(word1, word2):
 ################################################################################################################################################################################
 
 #Add the operator with their names and nicknames here
-op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiyaalt": AmiyaGuard, "andreana": Andreana, "angelina": Angelina, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "bagpipe": Bagpipe, "beehunter": Beehunter, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine, "bp": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
+op_dict = {"jackie": Jackie, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiyaalt": AmiyaGuard, "andreana": Andreana, "angelina": Angelina, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "bagpipe": Bagpipe, "beehunter": Beehunter, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine, "bp": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "click": Click, "coldshot": Coldshot, "conviction": Conviction, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher,"dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "dusk": Dusk, "ebenholz": Ebenholz, "ela": Ela, "estelle": Estelle, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
 		"franka": Franka, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "irene": Irene, "jaye": Jaye, "jessica": JessicaAlter, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, 
