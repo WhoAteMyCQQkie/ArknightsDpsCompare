@@ -130,12 +130,12 @@ def dps_command(args: List[str])-> DiscordSendable:
 	scopes.append(len(args))
 
 	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
-	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
+	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
 		tmp = args[1]
 		args[1] = args[0]
 		args[0] = tmp
 	for i in range(1,len(args)-2):
-		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]:
+		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]  and not args[i+1] in "0123":
 			tmp = args[i+1]
 			args[i+1] = args[i+2]
 			args[i+2] = tmp
