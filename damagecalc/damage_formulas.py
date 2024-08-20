@@ -127,7 +127,8 @@ class Operator:
 									current_req_pot = talent_data[4]
 									current_req_module_lvl = talent_data[3]
 						else:
-							if module == talent_data[2] or talent_data[2] == 0:
+							required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if module == required_module or talent_data[2] == 0:
 								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
 									if pot >= talent_data[4] and pot >= current_req_pot:
 										self.talent1_params = talent_data[5]
@@ -154,7 +155,8 @@ class Operator:
 									current_req_pot = talent_data[4]
 									current_req_module_lvl = talent_data[3]
 						else:
-							if module == talent_data[2] or talent_data[2] == 0:
+							required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if module == required_module or talent_data[2] == 0:
 								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
 									if pot >= talent_data[4] and pot >= current_req_pot:
 										self.talent2_params = talent_data[5]

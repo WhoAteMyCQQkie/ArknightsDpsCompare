@@ -15,14 +15,14 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
            'Estelle': 'char_127_estell','Mousse': 'char_185_frncat','Cutter': 'char_301_cutter','Utage': 'char_337_utage','Arene': 'char_271_spikes','LuoXiaohei': 'char_4067_lolxh',
            'Quartz': 'char_4063_quartz','Humus': 'char_491_humus','Gravel': 'char_237_gravel','Jaye': 'char_272_strong','Rope': 'char_236_rope','Myrrh': 'char_117_myrrh',
            'Gavial': 'char_187_ccheal','Sussurro': 'char_298_susuro','Perfumer': 'char_181_flower','Purestream': 'char_385_finlpp','Chestnut': 'char_4041_chnut',
-           'Matterhorn': 'char_199_yak','Cuora': 'char_150_snakek','Bubble': 'char_381_bubble','Gummy': 'char_196_sunbr','Dur-nar': 'char_260_durnar',
+           'Matterhorn': 'char_199_yak','Cuora': 'char_150_snakek','Bubble': 'char_381_bubble','Gummy': 'char_196_sunbr','Durnar': 'char_260_durnar',
            'Deepcolor': 'char_110_deepcl','Earthspirit': 'char_183_skgoat','Podenco': 'char_258_podego','Roberta': 'char_484_robrta','Ethan': 'char_355_ethan',
            'Shaw': 'char_277_sqrrel','Verdant': 'char_4107_vrdant','Ptilopsis': 'char_128_plosis','Breeze': 'char_275_breeze','Zima': 'char_115_headbr',
            'Texas': 'char_102_texas','Chiave': 'char_349_chiave','Poncirus': 'char_488_buildr','Tulip': 'char_513_apionr','Reed': 'char_261_sddrag',
            'WildMane': 'char_496_wildmn','Elysium': 'char_401_elysm','Blacknight': 'char_476_blkngt','Cantabile': 'char_497_ctable','Puzzle': 'char_4017_puzzle',
            'Swire': 'char_308_swire','Whislash': 'char_265_sophia','Bryophyta': 'char_4106_bryota','Franka': 'char_106_franka','Flamebringer': 'char_131_flameb',
            'Morgan': 'char_154_morgan','Sharp': 'char_508_aguard','Indra': 'char_155_tiger','Flint': 'char_415_flint','Dagda': 'char_157_dagda','Lappland': 'char_140_whitew',
-           'Ayerscarpe': 'char_294_ayer','Leto': 'char_194_leto','Wind Chimes': 'char_4083_chimes','Bibeak': 'char_252_bibeak','Tachanka': 'char_459_tachak',
+           'Ayerscarpe': 'char_294_ayer','Leto': 'char_194_leto','WindChimes': 'char_4083_chimes','Bibeak': 'char_252_bibeak','Tachanka': 'char_459_tachak',
            'Specter': 'char_143_ghost','Broca': 'char_356_broca','Astesia': 'char_274_astesi','Sideroca': 'char_333_sidero','Akafuyu': 'char_475_akafyu',
            'NoirCorneAlter': 'char_1030_noirc2','LaPluma': 'char_421_crow','Highmore': 'char_4066_highmo','Tequila': 'char_486_takila','BluePoison': 'char_129_bluep',
            'Platinum': 'char_204_platnm','GreyThroat': 'char_367_swllow','Stormeye': 'char_511_asnipe','April': 'char_365_aprl','KroosAlter': 'char_1021_kroos2',
@@ -120,6 +120,8 @@ class OperatorData:
 		self.talent2_parameters = []
 		self.talent1_defaults = []
 		self.talent2_dafaults = []
+		self.talent1_module_extra = []
+		self.talent2_module_extra = []
 		
 		#These files are like 7MB each, maybe not a good idea to load them each time.
 		if __name__ == "__main__":
@@ -277,13 +279,17 @@ class OperatorData:
 							req_promo = 2
 							req_level = candidate["unlockCondition"]["level"]
 							req_pot = candidate["requiredPotentialRank"]
-							req_module = self.available_modules[0]
+							req_module = 1
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 							if candidate["prefabKey"] == "1":
 								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
-							else:
+							elif candidate["prefabKey"] == "2":
 								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+							elif candidate["prefabKey"] in ["10","11"]:
+								self.talent1_module_extra.append([equip_lvl, talent_data])
+							elif candidate["prefabKey"] in ["20","21"]:
+								self.talent2_module_extra.append([equip_lvl, talent_data])
 		if has_second_module:
 			module_key = "uniequip_003_" + name_id
 			for module_lvl in module_data[module_key]["phases"][1:]:
@@ -294,24 +300,17 @@ class OperatorData:
 							req_promo = 2
 							req_level = candidate["unlockCondition"]["level"]
 							req_pot = candidate["requiredPotentialRank"]
-							req_module = self.available_modules[1]
+							req_module = 2
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 							if candidate["prefabKey"] == "1":
 								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
 							elif candidate["prefabKey"] == "2":
 								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
-							#TODO maybe put those extra additions into their own category, such as self.talent1_module_addition
-							"""elif candidate["prefabKey"] in ["10","11"]: #basically, add something else to the existing ones
-								if req_pot == 0: #make sure to copy the correct pot requirement #TODO this only works for module lvl 2, not for lvl 3
-									talent_data = self.talent1_parameters[-1][-1] + talent_data if self.talent1_parameters[-1][-4] == req_pot else self.talent1_parameters[-2][-1] + talent_data
-								else: #if there is a pot requirement, then the previous call should have added itself already and this should be correct
-									talent_data = self.talent1_parameters[-2][-1] + talent_data
-
-								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+							elif candidate["prefabKey"] in ["10","11"]:
+								self.talent1_module_extra.append([equip_lvl, talent_data])
 							elif candidate["prefabKey"] in ["20","21"]:
-								talent_data = self.talent2_parameters[-1][-1] + talent_data if self.talent2_parameters[-1][-4] == req_pot else self.talent2_parameters[-2][-1] + talent_data
-								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])"""
+								self.talent2_module_extra.append([equip_lvl, talent_data])
 
 		#TODO: drone stats
 
