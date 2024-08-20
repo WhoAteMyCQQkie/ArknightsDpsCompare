@@ -6479,6 +6479,22 @@ class Irene(Operator):
 			dps *= self.targets
 		return dps
 
+class Jackie(Operator):
+	def __init__(self, plot_parameters, *args, **kwargs):
+		super().__init__("Jackie",plot_parameters,[1],[],1,6,1)
+		if self.talent_dmg: self.name += " afterDodge"
+	
+	def skill_dps(self, defense, res):
+		if self.talent_dmg:
+			self.attack_speed += self.talent1_params[1]
+		if self.skill == 1:
+			hitdmg = np.fmax(self.atk - defense, self.atk * 0.05)
+			skilldmg = np.fmax(self.atk * self.skill_params[0] - defense, self.atk * 0.05)
+			avgdmg = (hitdmg * self.skill_cost + skilldmg) / (self.skill_cost+1)
+
+			dps = avgdmg/(self.atk_interval/(1+self.attack_speed/100))
+		return dps
+
 class Jaye(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=70
