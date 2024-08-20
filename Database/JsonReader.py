@@ -67,7 +67,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Kestrel': 'char_4023_rfalcn', 'FangAlter': 'char_1036_fang2', 'Mitm': 'char_4147_mitm', 'Odda': 'char_4131_odda', 'Aroma': 'char_446_aroma',
 		   'Wisadel': 'char_1035_wisdel', 'Logos': 'char_4133_logos', 'Nymph': 'char_4146_nymph', 'Ela': 'char_4123_ela', 'Pepe': 'char_4058_pepe',
 		   'ZuoLe': 'char_4121_zuole', 'Ulpianus': 'char_4145_ulpia', "GrainBuds": 'char_4122_grabds', "Fuze": 'char_4126_fuze', "Iana": 'char_4124_iana', 
-		   'Lucilla': 'char_4079_haini', 'PhonoR-0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
+		   'Lucilla': 'char_4079_haini', 'PhonoR0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
 
@@ -283,9 +283,9 @@ class OperatorData:
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 							if candidate["prefabKey"] == "1":
-								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] == "2":
-								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] in ["10","11"]:
 								self.talent1_module_extra.append([equip_lvl, talent_data])
 							elif candidate["prefabKey"] in ["20","21"]:
@@ -304,9 +304,9 @@ class OperatorData:
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 							if candidate["prefabKey"] == "1":
-								self.talent1_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] == "2":
-								self.talent2_parameters.append([req_promo,req_level,req_pot,req_module,req_mod_lvl,talent_data])
+								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] in ["10","11"]:
 								self.talent1_module_extra.append([equip_lvl, talent_data])
 							elif candidate["prefabKey"] in ["20","21"]:

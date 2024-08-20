@@ -127,7 +127,10 @@ class Operator:
 									current_req_pot = talent_data[4]
 									current_req_module_lvl = talent_data[3]
 						else:
-							required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if talent_data[2] == 0:
+								required_module = 0
+							else:
+								required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
 							if module == required_module or talent_data[2] == 0:
 								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
 									if pot >= talent_data[4] and pot >= current_req_pot:
@@ -155,7 +158,10 @@ class Operator:
 									current_req_pot = talent_data[4]
 									current_req_module_lvl = talent_data[3]
 						else:
-							required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
+							if talent_data[2] == 0:
+								required_module = 0
+							else:
+								required_module = available_modules[0] if talent_data[2] == 1 else available_modules[1]
 							if module == required_module or talent_data[2] == 0:
 								if module_lvl >= talent_data[3] and module_lvl >= current_req_module_lvl:
 									if pot >= talent_data[4] and pot >= current_req_pot:
