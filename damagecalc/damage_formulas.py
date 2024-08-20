@@ -34,6 +34,7 @@ class Operator:
 		elite = max(0,min(max_promotions[rarity-1],elite))
 		if elite < max_promotions[rarity-1]:
 			self.name += f" E{elite}"
+		self.elite = elite
 		
 		level = params.level if params.level > 0 and params.level < max_levels[elite][rarity-1] else max_levels[elite][rarity-1]
 		if level < max_levels[elite][rarity-1]:
@@ -45,6 +46,7 @@ class Operator:
 			else: pot = 1
 		self.name += f" P{pot}"
 
+		self.skill = 0
 		if rarity > 2:
 			skill = params.skill
 			if not skill in available_skills:
@@ -52,7 +54,7 @@ class Operator:
 					skill = default_skill
 				else:
 					skill = available_skills[-1]
-		self.name += f" S{skill}"
+			self.name += f" S{skill}"
 		self.skill = skill
 
 		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
@@ -139,6 +141,7 @@ class Operator:
 										current_req_lvl = talent_data[1]
 										current_req_pot = talent_data[4]
 										current_req_module_lvl = talent_data[3]
+		self.module = module
 		
 		self.talent2_params = op_data.talent2_dafaults
 		if op_data.talent2_parameters != []:	
@@ -399,7 +402,7 @@ class Absinthe(Operator):
 		if self.talent1: self.name += " lowHpTarget"
 
 		self.buffs = buffs
-			
+
 	
 	def skill_dps(self, defense, res):
 		dps = 0
@@ -5206,86 +5209,38 @@ class Gnosis(Operator):
 
 class Goldenglow(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 338  #######including trust
-		maxatk = 391
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
+		super().__init__("Goldenglow",pp,[1,2,3],[],3,1,1)
 		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Goldenglow Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Goldenglow P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 38
-				elif self.module_lvl == 2: self.base_atk += 32
-				else: self.base_atk += 22
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-
-		else: self.module = 0
-		
-		if self.trait: self.name += " maxDroneDmg"
+		if self.trait_dmg: self.name += " maxDroneDmg"
 		else: self.name += " minDroneDmg"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
 			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		resshred = 18 if self.pot == 6 else 15
-		newres = np.fmax(res-resshred,0)
+		newres = np.fmax(res-self.talent2_params[0],0)
 		drone_dmg = 1.1
-		drone_explosion = 3
-		if self.pot > 2: drone_explosion += 0.15
-		if self.module == 1: 
-			if self.module_lvl == 3 : drone_explosion += 0.6
-			if self.module_lvl == 2 : drone_explosion += 0.4
+		drone_explosion = self.talent1_params[1] if self.elite > 0 else 0
+		explosion_prob = 0.1 if self.elite > 0 else 0
 		
 		drones = 2
-		if not self.trait:
+		if not self.trait_dmg:
 			drone_dmg = 0.35 if self.module == 1 else 0.2
 		
-		
+		atkbuff = self.skill_params[0]
 		if self.skill == 1:
-			atkbuff += 0.32 + 0.02 * self.mastery
-			if self.mastery == 3: atkbuff += 0.02
-			aspd += 38 + 4 * self.mastery
-		elif self.skill == 2:
-			atkbuff += 0.45 + 0.05 * self.mastery
-		else:
-			atkbuff += 0.5 + 0.1 * self.mastery
-			if self.mastery == 0: atkbuff += 0.05
+			self.attack_speed += self.skill_params[1]
+		if self.skill == 3:
 			drones = 3
 		
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+		final_atk = self.atk * (1+atkbuff+self.buff_atk) + self.buff_atk_flat
 		drone_atk = drone_dmg * final_atk
 		drone_explosion = final_atk * drone_explosion * self.targets
 		
-		dmgperinterval = final_atk*(3-drones) + drones * drone_atk * 0.9 + drones * drone_explosion * 0.1
+		dmgperinterval = final_atk*(3-drones) + drones * drone_atk * (1-explosion_prob) + drones * drone_explosion * explosion_prob
 		
 		hitdmgarts = np.fmax(dmgperinterval *(1-newres/100), dmgperinterval * 0.05)
-		dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
+		dps = hitdmgarts/(self.atk_interval/(self.attack_speed/100))
 		return dps
 
 class Grani(Operator):
@@ -6493,11 +6448,13 @@ class Jackie(Operator):
 		if self.talent_dmg:
 			self.attack_speed += self.talent1_params[1]
 		if self.skill == 1:
-			hitdmg = np.fmax(self.atk - defense, self.atk * 0.05)
-			skilldmg = np.fmax(self.atk * self.skill_params[0] - defense, self.atk * 0.05)
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * self.skill_params[0] - defense, final_atk * self.skill_params[0] * 0.05)
 			avgdmg = (hitdmg * self.skill_cost + skilldmg) / (self.skill_cost+1)
+			print(self.atk_interval,self.attack_speed)
 
-			dps = avgdmg/(self.atk_interval/(1+self.attack_speed/100))
+			dps = avgdmg/(self.atk_interval/(self.attack_speed/100))
 		return dps
 
 class Jaye(Operator):

@@ -209,13 +209,13 @@ class OperatorData:
 		
 		#set_defaults (this maybe needs to be changed for some characters, but it should be helpful most of the time)
 		for data in character_data[key]["talents"][0]["candidates"][-1]["blackboard"]:
-			if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
+			if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time", "magic_resist_penetrate_fixed"]:
 				self.talent1_defaults.append(0)
 			else:
 				self.talent1_defaults.append(1)
 		if self.has_second_talent:
 			for data in character_data[key]["talents"][1]["candidates"][-1]["blackboard"]:
-				if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time"]:
+				if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time", "magic_resist_penetrate_fixed"]:
 					self.talent2_dafaults.append(0)
 				else:
 					self.talent2_dafaults.append(1)
