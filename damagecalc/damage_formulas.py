@@ -27,12 +27,13 @@ class Operator:
 
 		self.atk_interval = op_data.atk_interval
 		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
+		self.targets = max(1,params.targets)
+		self.sp_boost = params.sp_boost
 		
 		elite = 2 if params.promotion < 0 else params.promotion
 		elite = max(0,min(max_promotions[rarity-1],elite))
 		if elite < max_promotions[rarity-1]:
 			self.name += f" E{elite}"
-		#TODO: handle E0 if there is no skill 1 implemented
 		
 		level = params.level if params.level > 0 and params.level < max_levels[elite][rarity-1] else max_levels[elite][rarity-1]
 		if level < max_levels[elite][rarity-1]:
@@ -83,8 +84,7 @@ class Operator:
 				self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 
 
-		########### TODO: read all the parameters from the json
-		#TODO self.atk and atk speed
+		########### Read all the parameters from the json
 		self.attack_speed = 100
 		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * level / max_levels[elite][rarity-1]
 		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * level / max_levels[elite][rarity-1]
@@ -197,7 +197,12 @@ class Operator:
 		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
 		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
-
+		#TODO self.trait and changes to trait from modules
+		#TODO drone dmg
+		#TODO: handle E0 if there is no skill 1 implemented
+		
+		#TODO:remove this when all operators are changed to the new format. this is needed for base buffs
+		self.base_atk = 0
 
 	
 	def avg_dps(self,defense,res):
