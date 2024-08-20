@@ -63,19 +63,34 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
            'Irene': 'char_4009_irene','Degenbrecher': 'char_4116_blkkgt','Blaze': 'char_017_huang','GavialAlter': 'char_1026_gvial2','Surtr': 'char_350_surtr',
            'Viviana': 'char_4098_vvana','Hellagur': 'char_188_helage','Pallas': 'char_485_pallas','NearlAlter': 'char_1014_nearl2','Lessing': 'char_4011_lessng',
            'ExecutorAlter': 'char_1032_excu2','Savage': 'char_230_savage','Catapult': 'char_282_catap','Midnight': 'char_283_midn','Beehunter': 'char_137_brownb',
-		   'Jackie': 'char_347_jaksel','Nightmare': 'char_164_nightm','Grani': 'char_220_grani','Skadi': 'char_263_skadi'}
+		   'Jackie': 'char_347_jaksel','Nightmare': 'char_164_nightm','Grani': 'char_220_grani','Skadi': 'char_263_skadi','Lutonada': 'char_4130_luton',
+		   'Kestrel': 'char_4023_rfalcn', 'FangAlter': 'char_1036_fang2', 'Mitm': 'char_4147_mitm', 'Odda': 'char_4131_odda', 'Aroma': 'char_446_aroma',
+		   'Wisadel': 'char_1035_wisdel', 'Logos': 'char_4133_logos', 'Nymph': 'char_4146_nymph', 'Ela': 'char_4123_ela', 'Pepe': 'char_4058_pepe',
+		   'ZuoLe': 'char_4121_zuole', 'Ulpianus': 'char_4145_ulpia', "GrainBuds": 'char_4122_grabds', "Fuze": 'char_4126_fuze', "Iana": 'char_4124_iana', 
+		   'Lucilla': 'char_4079_haini', 'PhonoR-0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
+		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
+		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
 
 
 def fileHelper():
-	content = ""
+	available_ops = ["504", "514", "507", "506", "505", "4025"]
+	for key in id_dict.keys():
+		number = id_dict[key][5:8]
+		if id_dict[key][8].isnumeric():
+			number += id_dict[key][8]
+		available_ops.append(number)
 	with open('character_table.json',encoding="utf8") as json_file:
 		character_data = json.load(json_file)
 	with open("dictionary.txt", 'w') as f:
 		for key in character_data.keys():
 			if str(key).startswith("char"):
+				number = key[5:8]
+				if key[8].isnumeric():
+					number += key[8]
+				if number in available_ops: continue
 				try:
 					f.writelines(str(f"'{character_data[key]['name']}': '{key}',"))
-				except:
+				except: #unwritable symbols
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
 
 class OperatorData:
