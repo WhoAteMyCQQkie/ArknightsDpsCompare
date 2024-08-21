@@ -54,7 +54,22 @@ class Operator:
 					skill = default_skill
 				else:
 					skill = available_skills[-1]
-			self.name += f" S{skill}"
+			if (elite == 1 or rarity < 6) and skill == 3:
+				if 2 in available_skills:
+					skill = 2
+				elif 1 in available_skills:
+					skill = 1
+				else:
+					skill = 0
+			if elite == 0 and skill > 1:
+				if 1 in available_skills:
+					skill = 1
+				else:
+					skill = 0
+			if skill > 0: 
+				self.name += f" S{skill}"
+			else:
+				self.name += " NA"
 		self.skill = skill
 
 		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
@@ -67,23 +82,24 @@ class Operator:
 		if trust != 100:
 			self.name += f" {trust}Trust"
 
-		available_modules = op_data.available_modules
-		if module_overwrite != []: available_modules = module_overwrite
-		module = default_mod
-		if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
-		if op_data.atk_module == []: #no module data in the jsons
-			available_modules = []
-			module_lvl = 0
-		if available_modules != []:
-			if params.module == 0:
-				module = 0
-				self.name += " no mod"
-			else:
-				if params.module in available_modules:
-					module = params.module #else default mod
-				module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
-				mod_name = ["X","Y","D"]
-				self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
+		if elite == 2 and level >= max_levels[2][rarity-1]-30:
+			available_modules = op_data.available_modules
+			if module_overwrite != []: available_modules = module_overwrite
+			module = default_mod
+			if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
+			if op_data.atk_module == []: #no module data in the jsons
+				available_modules = []
+				module_lvl = 0
+			if available_modules != []:
+				if params.module == 0:
+					module = 0
+					self.name += " no mod"
+				else:
+					if params.module in available_modules:
+						module = params.module #else default mod
+					module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
+					mod_name = ["X","Y","D"]
+					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 
 
 		########### Read all the parameters from the json
@@ -98,13 +114,17 @@ class Operator:
 		if pot >= op_data.aspd_potential[0]:
 			self.attack_speed +=  op_data.aspd_potential[1]
 		
-		if module in available_modules:
-			if module == available_modules[0]:
-				self.atk += op_data.atk_module[0][module_lvl-1]
-				self.attack_speed += op_data.aspd_module[0][module_lvl-1]
-			else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
-				self.atk += op_data.atk_module[1][module_lvl-1]
-				self.attack_speed += op_data.aspd_module[1][module_lvl-1]
+		if elite == 2 and level >= max_levels[2][rarity-1]-30:
+			if module in available_modules:
+				if module == available_modules[0]:
+					self.atk += op_data.atk_module[0][module_lvl-1]
+					self.attack_speed += op_data.aspd_module[0][module_lvl-1]
+				else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
+					self.atk += op_data.atk_module[1][module_lvl-1]
+					self.attack_speed += op_data.aspd_module[1][module_lvl-1]
+		else:
+			module = 0
+		self.module = module
 
 		self.skill_params = op_data.skill_parameters[skill-1][skill_lvl-1]
 		self.skill_cost = op_data.skill_costs[skill-1][skill_lvl-1]
@@ -141,7 +161,6 @@ class Operator:
 										current_req_lvl = talent_data[1]
 										current_req_pot = talent_data[4]
 										current_req_module_lvl = talent_data[3]
-		self.module = module
 		
 		self.talent2_params = op_data.talent2_dafaults
 		if op_data.talent2_parameters != []:	
@@ -201,12 +220,19 @@ class Operator:
 		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
 		#TODO self.trait and changes to trait from modules
-		#TODO drone dmg
-		#TODO: handle E0 if there is no skill 1 implemented
+		#TODO summon dmg
 		
 		#TODO:remove this when all operators are changed to the new format. this is needed for base buffs
 		self.base_atk = 0
 
+	def normal_attack(self,defense,res,arts = False, extra_buffs = [0,0], hits = 1, aoe = 1):
+		final_atk = self.atk * (1 + extra_buffs[0] + self.buff_atk) + extra_buffs[1] + self.buff_atk_flat
+		if arts:
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+		else:
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		dps = hits * hitdmg / self.atk_interval * self.attack_speed/100 * aoe
+		return dps
 	
 	def avg_dps(self,defense,res):
 		print("The operator has not implemented the avg_dps method")
