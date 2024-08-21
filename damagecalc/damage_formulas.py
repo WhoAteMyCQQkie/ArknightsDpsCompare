@@ -1284,10 +1284,7 @@ class Ashlock(Operator):
 		
 		if not self.talent_dmg: self.name += " LowTalent"
 		if self.module_dmg and self.module == 1: self.name += " blockedTarget"	
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe			
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1
