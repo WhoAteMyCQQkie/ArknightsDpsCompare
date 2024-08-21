@@ -188,6 +188,10 @@ class OperatorData:
 
 		#read talents
 		self.has_second_talent = len(character_data[key]["talents"]) > 1
+		talent1_name = character_data[key]["talents"][0]["candidates"][0]["name"]
+		talent2_name = "Hello, this is an easter egg."
+		if self.has_second_talent:
+			talent2_name = character_data[key]["talents"][1]["candidates"][0]["name"]
 		
 		for candidate in character_data[key]["talents"][0]["candidates"]:
 			req_promo = int(candidate["unlockCondition"]["phase"][-1])
@@ -282,14 +286,24 @@ class OperatorData:
 							req_module = 1
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-							if candidate["prefabKey"] == "1":
+							if candidate["prefabKey"] in ["1","2"]:
+								if candidate["name"] == talent1_name:
+									self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+							else:
+								if candidate["name"] == talent1_name:
+									self.talent1_module_extra.append([equip_lvl, talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_module_extra.append([equip_lvl, talent_data])
+							"""if candidate["prefabKey"] == "1":
 								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] == "2":
 								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 							elif candidate["prefabKey"] in ["10","11"]:
 								self.talent1_module_extra.append([equip_lvl, talent_data])
 							elif candidate["prefabKey"] in ["20","21"]:
-								self.talent2_module_extra.append([equip_lvl, talent_data])
+								self.talent2_module_extra.append([equip_lvl, talent_data])"""
 		if has_second_module:
 			module_key = "uniequip_003_" + name_id
 			for module_lvl in module_data[module_key]["phases"][1:]:

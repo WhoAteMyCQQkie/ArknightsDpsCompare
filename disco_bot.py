@@ -3,7 +3,7 @@
 
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators
-# implement more healers (and probably fix the kwargs situation before many more are added)
+# #TODO: UPDATE HPS COMMAND BEFORE -> implement more healers (and probably fix the kwargs situation before many more are added)
 # implement various total_dmg methods for operators
 
 #TODO: specific Minijobs that really should be done asap
@@ -15,6 +15,7 @@
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
+# mountain s3 apparently has aoe
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
