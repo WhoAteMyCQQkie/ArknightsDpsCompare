@@ -77,16 +77,12 @@ class Operator:
 			if skill_lvl == 9: self.name += "M2"
 			elif skill_lvl == 8: self.name += "M1"
 			else: self.name += f"Lv{skill_lvl}"
-		
-		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
-		if trust != 100:
-			self.name += f" {trust}Trust"
 
 		if elite == 2 and level >= max_levels[2][rarity-1]-30:
 			available_modules = op_data.available_modules
 			if module_overwrite != []: available_modules = module_overwrite
 			module = default_mod
-			if not default_mod in available_modules: raise ValueError("Default module is not part of the available modules")
+			if not default_mod in available_modules and default_mod != 0: raise ValueError("Default module is not part of the available modules")
 			if op_data.atk_module == []: #no module data in the jsons
 				available_modules = []
 				module_lvl = 0
@@ -100,6 +96,10 @@ class Operator:
 					module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
 					mod_name = ["X","Y","D"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
+		
+		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
+		if trust != 100:
+			self.name += f" {trust}Trust"
 
 
 		########### Read all the parameters from the json
@@ -9740,92 +9740,59 @@ class Penance(Operator):
 
 class Pepe(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 1153 #######including trust
-		maxatk = 1360
-		self.atk_interval = 1.8   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 35
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Pepe Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Pepe P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
+		super().__init__("Pepe",pp,[1,2,3],[],3,1,0)
 
+		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
 		
-		if self.skilldmg and not self.skill == 1: self.name += " maxStacks"
-
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
+		if self.targets > 1: self.name += f" {self.targets}targets" 			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-
-		
-		#talent/module buffs
-		atkbuff += 0.2 if self.pot > 2 else 0.16
+		atkbuff = self.talent2_params[0]
 			
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 2.3 + 0.2 * self.mastery
-			sp_cost = 6 if self.mastery == 0 else 5
+			skill_scale = self.skill_params[0]
+			sp_cost = self.skill_cost
 			
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(0.5 * final_atk - defense, 0.5 *final_atk * 0.05) * (self.targets-1)
 			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) + np.fmax(0.5 * skill_scale * final_atk - defense, 0.5 * skill_scale * final_atk * 0.05) * (self.targets-1)
 			
 			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
 			if atks_per_skillactivation > 1:
 				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation	
 				
-			dps = avghit/(self.atk_interval/(1+aspd/100))
+			dps = avghit/(self.atk_interval/(self.attack_speed/100))
 
 		if self.skill == 2:
-			atkbuff += 0.9 if self.mastery == 3 else 0.7 + 0.05 * self.mastery
-			aspd += 90 if self.mastery == 3 else 70 + 5 * self.mastery
-			if self.skilldmg:
-				aspd += 60 if self.mastery == 0 else 80
+			atkbuff += self.skill_params[0]
+			aspd = self.skill_params[1]
+			if self.skill_dmg:
+				aspd += 2 * self.skill_params[2]
 			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
 			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgaoe/(self.atk_interval/(1+aspd/100))*(self.targets - 1)
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) + hitdmgaoe/(self.atk_interval/((self.attack_speed+aspd)/100))*(self.targets - 1)
 		
 		if self.skill == 3:
 			self.atk_interval = 2
-			atkbuff += 1.8 + 0.2 * self.mastery
+			atkbuff += self.skill_params[0]
 			
-			if self.skilldmg:
-				if self.mastery == 3: atkbuff += 1
-				elif self.mastery == 0: atkbuff += 0.64
-				else: atkbuff += 0.8
+			if self.skill_dmg:
+				atkbuff += 4 * self.skill_params[2]
 			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
 			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgaoe/(self.atk_interval/(1+aspd/100))*(self.targets - 1)
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgaoe/(self.atk_interval/(self.attack_speed/100))*(self.targets - 1)
 
 		return dps
 
