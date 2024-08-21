@@ -29,6 +29,7 @@
 # add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
 # first collect the operators(aka parse through the entire input) and THEN draw the stuff.
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
+# add a shortLabel prompt, that removes all the conditional and buff stuff in the name
 
 import os
 from typing import Callable, List

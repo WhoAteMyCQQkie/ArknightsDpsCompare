@@ -5831,7 +5831,7 @@ class Horn(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		super().__init__("Horn",pp,[1,2,3],[],3,1,1)
 		
-		if self.talent2_dmg: self.name += " afterRevive"
+		if self.talent2_dmg and self.elite == 2: self.name += " afterRevive"
 		if self.skill_dmg and not self.skill == 1: self.name += " overdrive"
 		elif not self.skill == 1: self.name += " no overdrive"
 		if self.module_dmg and self.module == 1: self.name += " blockedTarget"

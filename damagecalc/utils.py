@@ -131,7 +131,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif arg in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
 			pps.skills = {-1}
 			pps.masteries = {-1}
-		elif arg in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7","m0","m1","m2","m3"]:
+		elif arg in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7","m0","m1","m2","m3","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]:
 			pps.masteries = {-1}
 	i = 0
 	entries = len(args)
@@ -396,6 +396,16 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				try:
 					pps.levels.add(max(1,int(args[i])))
 					pps.levels.discard(-1)
+				except ValueError:
+					break
+				i+=1
+			i-=1
+		elif args[i] in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]:
+			i+=1
+			while i < entries:
+				try:
+					pps.masteries.add(min(10,max(1,int(args[i]))))
+					pps.masteries.discard(-1)
 				except ValueError:
 					break
 				i+=1
