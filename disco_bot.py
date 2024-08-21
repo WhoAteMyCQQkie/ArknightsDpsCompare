@@ -16,6 +16,7 @@
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
 # mountain s3 apparently has aoe
+# Horn S1/Pepe S1 lose a lot of damage before they can hold charges, this is not yet included
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
