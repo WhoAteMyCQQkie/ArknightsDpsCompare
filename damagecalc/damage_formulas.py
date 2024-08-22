@@ -243,6 +243,10 @@ class Operator:
 		return -100
 	
 	def total_dmg(self,defense,res):
+		try:
+			x = self.skill_duration
+		except AttributeError: #aka the operator is not on the json system yet
+			return (self.skill_dps(defense,res))
 		if self.skill_duration < 1:
 			return (self.skill_dps(defense,res))
 		else:
@@ -6412,67 +6416,38 @@ class Jaye(Operator):
 
 class JessicaAlter(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 493  #######including trust
-		maxatk = 582
-		self.atk_interval = 1.2   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 28
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Jessicat Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Jessicat P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 57
-				else: self.base_atk += 50
-				self.name += f" ModX{self.module_lvl}"
-		else: self.module = 0
+		super().__init__("JessicaAlter",pp ,[1,2,3],[1],3,1,1)
 
-		self.buffs = buffs
+		if self.skill == 3:
+			skillbuff = self.skill_params[0]
+			final_atk = self.atk * (1+ self.buff_atk + skillbuff) + self.buff_atk_flat
+			nukedmg = final_atk * 2.5 * (1+self.buff_fragile)
+			self.name += f" GrenadeDmg:{int(nukedmg)}"
+
 			
 	def skill_dps(self, defense, res):
 		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
+		atkbuff = 0
 
 		if self.skill == 1:
-			atkbuff += 0.55 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[1]
+			final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100))
 		if self.skill == 2:
-			atkbuff += 0.6 + 0.05 * self.mastery
+			atkbuff += self.skill_params[0]
 			self.atk_interval = 0.3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100))
 		if self.skill == 3:
-			atkbuff += 2.7 + 0.1 * self.mastery
-			if self.mastery == 3: atkbuff += 0.1
+			atkbuff += self.skill_params[0]
 			self.atk_interval = 1.8
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100))
 		return dps
 
-	def get_name(self):
-		if self.skill == 3:
-			skillbuff = 3.1 if self.mastery == 3 else 2.7 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + skillbuff) + self.buffs[1]
-			nukedmg = final_atk * 2.5 * (1+self.buffs[3])
-			self.name += f" GrenadeDmg:{int(nukedmg)}"
-		return self.name
 		
 class Kafka(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
