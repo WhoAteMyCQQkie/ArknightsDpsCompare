@@ -243,7 +243,10 @@ class Operator:
 		return -100
 	
 	def total_dmg(self,defense,res):
-		return (self.skill_dps(defense,res))
+		if self.skill_duration < 1:
+			return (self.skill_dps(defense,res))
+		else:
+			return (self.skill_dps(defense,res) * self.skill_duration)
 	
 	def get_name(self):
 		return self.name
