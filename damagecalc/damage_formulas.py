@@ -4227,97 +4227,53 @@ class FangAlter(Operator):
 
 class Fartooth(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 1080  #######including trust
-		maxatk = 1296
-		self.atk_interval = 2.7   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 40
+		super().__init__("Fartooth",pp, [1,2,3],[1,2],3,1,1)
 		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Fartooth Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Fartooth P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 100
-				elif self.module_lvl == 2: self.base_atk += 85
-				else: self.base_atk += 70
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 120
-				elif self.module_lvl == 2: self.base_atk += 100
-				else: self.base_atk += 80
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		   ##### keep the ones that apply
-		if not self.talent1: self.name += " w/o talent"
-		if self.skilldmg and self.skill == 3: 
+		if not self.talent_dmg: self.name += " w/o talent"
+		if self.skill_dmg and self.skill == 3: 
 			self.name += " farAway"
-			self.moduledmg = True
-		if self.moduledmg and self.module == 1: self.name += " maxModuleBonus"
+			self.module_dmg = True
+		if self.module_dmg and self.module == 1: self.name += " maxModuleBonus"
 
-		
-		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
 		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
+		atkbuff = 0
+		aspd = 0
 		atk_scale = 1
 		
-		if self.module == 1:
-			aspd += 4 + self.module_lvl
-			if self.moduledmg: atk_scale = 1.15	
+		if self.module == 1 and self.module_dmg: atk_scale = 1.15	
 		#talent/module buffs
-		if self.talent1:
-			atkbuff += 0.15
-			if self.pot > 4: atkbuff += 0.03
-			if self.module == 1:
-				if self.module_lvl == 2: atkbuff+= 0.05
-				if self.module_lvl == 3: atkbuff+= 0.07
-			if self.module == 2:
-				if self.module_lvl == 2: aspd += 4
-				if self.module_lvl == 3: aspd += 7
+		atkbuff += self.talent1_params[0]
+		print(self.talent1_params)
+		try:
+			aspd += self.talent1_params[2]
+		except:
+			pass
 
 		if self.skill == 1:
-			atkbuff += 0.34 + 0.03
-			if self.mastery == 3: atkbuff += 0.02
-			aspd += 45 if self.mastery == 3 else 35
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[0]
+
+			aspd += self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100))
 			
 		if self.skill == 2:
-			aspd += 90 + 5 * self.mastery
-			if self.mastery == 3: aspd += 5
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			aspd += self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100))
 			
 		if self.skill == 3:
-			atkbuff += 1 + 0.1 * self.mastery
-			if self.mastery == 3: atkbuff += 0.1
+			atkbuff += self.skill_params[0]
 			dmgscale = 1
-			if self.skilldmg:
-				dmgscale = 1.4 if self.mastery == 3 else 1.3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			if self.skill_dmg:
+				dmgscale = self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmgscale
-			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100))
+
 		return dps
 
 class Fiammetta(Operator):
