@@ -105,9 +105,9 @@ class Operator:
 
 		########### Read all the parameters from the json
 		self.attack_speed = 100
-		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * level / max_levels[elite][rarity-1]
-		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * level / max_levels[elite][rarity-1]
-		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * level / max_levels[elite][rarity-1]
+		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 
 		if pot >= op_data.atk_potential[0]:
 			self.atk += op_data.atk_potential[1]
