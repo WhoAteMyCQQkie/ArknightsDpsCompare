@@ -57,6 +57,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	show = True
 	bottomleft = False
 	textsize = 10
+	short_names = False
 
 	#Adding the text prompt
 	for i, word in enumerate(args):
@@ -116,6 +117,8 @@ def dps_command(args: List[str])-> DiscordSendable:
 			textsize = 6
 		elif word in ["color","colour","colorblind","colourblind","blind"]:
 			plt.style.use('tableau-colorblind10')
+		elif word in ["short"]:
+			short_names = True
 
 	#Find scopes where which parameter set is active (global vs local)
 	global_scopes = [0]
@@ -150,7 +153,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 			if (scopes[i]+1) not in scopes:
 				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
 			for parameters in local_parameters.get_plot_parameters():
-				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,plot_numbers):
+				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,plot_numbers,short_names):
 					plot_numbers += 1
 					if plot_numbers > 40:
 						plt.close()
@@ -168,7 +171,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
-		if not args[pos] in op_dict.keys() and not pos in scopes[:-1] and not args[pos] in ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
+		if not args[pos] in op_dict.keys() and not pos in scopes[:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
 			parsing_errors += (args[pos]+", ")
 	
 	parsing_error = False

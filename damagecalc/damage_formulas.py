@@ -101,7 +101,7 @@ class Operator:
 		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
 		if trust != 100:
 			self.name += f" {trust}Trust"
-
+		self.base_name = self.name
 
 		########### Read all the parameters from the json
 		self.attack_speed = 100
