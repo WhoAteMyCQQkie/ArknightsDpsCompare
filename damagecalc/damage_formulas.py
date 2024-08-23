@@ -4245,7 +4245,6 @@ class Fartooth(Operator):
 		if self.module == 1 and self.module_dmg: atk_scale = 1.15	
 		#talent/module buffs
 		atkbuff += self.talent1_params[0]
-		print(self.talent1_params)
 		try:
 			aspd += self.talent1_params[2]
 		except:
@@ -11610,72 +11609,48 @@ class Stainless(Operator):
 
 class Surtr(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 644  #######including trust
-		maxatk = 772
-		self.atk_interval = 1.25   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 28
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Surtr Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Surtr P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.skilldmg = TrTaTaSkMo[3]
+		super().__init__("Surtr", pp, [1,2,3],[],3,1,0)
 		
 		if self.skill == 1:
-			if self.skilldmg: self.name += " KillingHitsOnly"
+			if self.skill_dmg: self.name += " KillingHitsOnly"
 			else: self.name += " noKills"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		
-		self.buffs = buffs
 			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		resignore = 20
-		if self.pot > 4: resignore = 22
+		atkbuff = 0
+		resignore = self.talent1_params[0]
 		newres = np.fmax(0, res - resignore)
 			
 		####the actual skills
 		if self.skill == 1:
-			atk_scale = 2.4 + 0.2 * self.mastery
-			hits = 3
-			if self.mastery == 3: 
-				atk_scale += 0.1
-				hits = 2
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atk_scale = self.skill_params[0]
+			hits = self.skill_cost
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			skilldmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			avghit = (hits * hitdmgarts + skilldmgarts)/(hits + 1)
-			if self.skilldmg:
+			if self.skill_dmg:
 				avghit = skilldmgarts	
-			dps = avghit/(self.atk_interval/(1+aspd/100))
+			dps = avghit/(self.atk_interval/(self.attack_speed/100))
+		
 		if self.skill == 2:
-			atkbuff += 0.8 + 0.1 *self.mastery
-			if self.mastery == 3: atkbuff += 0.1
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			atk_scale = 1.6 if self.mastery == 3 else 1.5
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			atk_scale = self.skill_params[3]
 			one_target_dmg = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			two_target_dmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
-			dps = one_target_dmg/(self.atk_interval/(1+aspd/100))
+			dps = one_target_dmg/(self.atk_interval/(self.attack_speed/100))
 			if self.targets > 1:
-				dps = 2 * two_target_dmg/(self.atk_interval/(1+aspd/100))
+				dps = 2 * two_target_dmg/(self.atk_interval/(self.attack_speed/100))
 		if self.skill == 3:
-			atkbuff += 2.4 + 0.3 * self.mastery
-			maxtargets = 4 if self.mastery == 3 else 3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[0]
+			maxtargets = self.skill_params[6]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets,maxtargets)
+			dps = hitdmgarts/(self.atk_interval/(self.attack_speed/100)) * min(self.targets,maxtargets)
 		return dps
 
 class Suzuran(Operator):
