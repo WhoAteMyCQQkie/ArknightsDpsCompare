@@ -338,6 +338,35 @@ class Blueprint(Operator):
 			dps = hitdmg/(self.atk_interval/(1+aspd/100))
 		return dps
 
+class NewBlueprint(Operator):
+	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+		super().__init__("NewBlueprint",pp,[1,2,3],[2,1],3,1,1) #available skills, available modules, default skill, def pot, def mod
+
+		if self.trait_dmg or self.talent_dmg or self.talent2_dmg or self.skill_dmg: self.name += " withBonus"
+		if self.module == 1 and self.module_dmg: self.name += " vsBlocked"
+		
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		dps = 0
+		atkbuff = 0
+		aspd = 0
+		atk_scale = 1
+
+		atkbuff += self.talent1_params[0]
+		aspd += self.talent2_params[0]
+		if self.module == 1 and self.module_dmg: atk_scale = 1.1
+		
+		if self.skill == 1:
+			atkbuff += self.skill_params[0]
+			skill_scale = self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * skill_scale * atk_scale * (1-res/100), final_atk * skill_scale * atk_scale * 0.05)
+
+			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100
+		return dps
 
 
 class Aak(Operator):
