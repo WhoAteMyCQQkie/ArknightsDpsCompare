@@ -339,7 +339,7 @@ class Blueprint(Operator):
 		return dps
 
 class NewBlueprint(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("NewBlueprint",pp,[1,2,3],[2,1],3,1,1) #available skills, available modules, default skill, def pot, def mod
 
 		if self.trait_dmg or self.talent_dmg or self.talent2_dmg: self.name += " withBonus"
@@ -1318,7 +1318,7 @@ class Ash(Operator):
 		return dps
 
 class Ashlock(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Ashlock",pp,[1,2],[1],2,1,1)
 		
 		if not self.talent_dmg: self.name += " LowTalent"
@@ -1984,78 +1984,35 @@ class Blemishine(Operator):
 		return dps
 	
 class BluePoison(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 513  #######including trust
-		maxatk = 610
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"BluePoison Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"BluePoison P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 30
-				elif self.module_lvl == 2: self.base_atk += 26
-				else: self.base_atk += 20
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-
-		if self.moduledmg and self.module == 2: self.name += " GroundTargets"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("BluePoison", pp, [1,2], [2], 1 ,1 ,2)
+		if self.module_dmg and self.module == 2: self.name += " GroundTargets"
+		if self.targets > 1: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
+		aspd = 8 if self.module_dmg and self.module == 2 else 0
 		
-		#talent/module buffs
-		artsdmg = 85 if self.pot > 4 else 75
-		if self.module == 2:
-			artsdmg += (self.module_lvl -1) * 10
-			aspd += 1 + self.module_lvl
-			if self.moduledmg:
-				aspd += 8
-		artsdps = np.fmax(artsdmg * (1 - res/100), artsdmg * 0.05)
+		print(self.talent1_params)
+		artsdmg = self.talent1_params[1]
+		artsdps = np.fmax(artsdmg * (1 - res/100), artsdmg * 0.05) if self.elite > 0 else 0
 			
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 1.55 + 0.15 * self.mastery		
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]		
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			sp_cost = 2 if self.mastery == 3 else 3
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			sp_cost = self.skill_cost
 			
 			avgphys = (sp_cost * hitdmg + skillhitdmg * min(2,self.targets)) / (sp_cost + 1)
-			dps = avgphys/(self.atk_interval/(1+aspd/100)) + artsdps * min(2,self.targets)
+			dps = avgphys/(self.atk_interval/((self.attack_speed + aspd)/100)) + artsdps * min(2,self.targets)
 		if self.skill == 2:
-			atkbuff += 0.2 + self.mastery * 0.1
-			if self.mastery == 0: atkbuff += 0.1
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			targets = min(4, self.targets+1) if self.mastery > 0 else min(3, self.targets)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * targets + artsdps * min(3, self.targets)
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			
+			dps = self.skill_params[1] * hitdmg/(self.atk_interval/((self.attack_speed+ aspd)/100)) + hitdmg/(self.atk_interval/((self.attack_speed+ aspd)/100)) * min(2,self.targets-1) + artsdps * min(3, self.targets)
 			
 		return dps
 		
@@ -4013,7 +3970,7 @@ class ExecutorAlter(Operator):
 		return dps
 	
 class Exusiai(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Exusiai",pp,[1,2,3],[],3,1,1)
 		
 		if self.module_dmg and self.module == 1: self.name += " aerial target"
@@ -5680,7 +5637,7 @@ class Hoolheyak(Operator):
 		return dps
 	
 class Horn(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Horn",pp,[1,2,3],[],3,1,1)
 		
 		if self.talent2_dmg and self.elite == 2: self.name += " afterRevive"
@@ -6184,7 +6141,7 @@ class Ines(Operator):
 		return self.name
 
 class Insider(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Insider",pp,[1,2],[1],2,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.module == 1 and self.module_dmg: self.name += " vsAerial"
 	
@@ -11528,23 +11485,18 @@ class Stormeye(Operator):
 		return dps * min(2, self.targets)
 
 class Surtr(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Surtr", pp, [1,2,3],[],3,1,0)
-		
 		if self.skill == 1:
 			if self.skill_dmg: self.name += " KillingHitsOnly"
 			else: self.name += " noKills"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-			
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe	
 	
 	def skill_dps(self, defense, res):
 		atkbuff = 0
 		resignore = self.talent1_params[0]
 		newres = np.fmax(0, res - resignore)
 			
-		####the actual skills
 		if self.skill == 1:
 			atk_scale = self.skill_params[0]
 			hits = self.skill_cost
@@ -11555,7 +11507,6 @@ class Surtr(Operator):
 			if self.skill_dmg:
 				avghit = skilldmgarts	
 			dps = avghit/(self.atk_interval/(self.attack_speed/100))
-		
 		if self.skill == 2:
 			atkbuff += self.skill_params[0]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -11574,9 +11525,9 @@ class Surtr(Operator):
 		return dps
 
 class Suzuran(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Suzuran", pp, [1,2],[1,2],2,1,1)
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.skill_params[0]
