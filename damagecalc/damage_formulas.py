@@ -11907,78 +11907,38 @@ class Tomimi(Operator):
 
 class Totter(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 813  #######including trust
-		maxatk = 970
-		self.atk_interval = 2.4  #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 32
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Totter Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Totter P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent1 = TrTaTaSkMo[1]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 55
-				elif self.module_lvl == 2: self.base_atk += 47
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent1: self.name += " vsInvis"
-		if self.moduledmg and self.module == 1: self.name += " vsHeavy"
-		
+		super().__init__("Totter",pp,[1,2],[1],2,6,1)
+		if self.talent_dmg: self.name += " vsInvis"
+		if self.module_dmg and self.module == 1: self.name += " vsHeavy"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
 				
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
+		atkbuff = 0
 		atk_scale = 1
-		
 		#talent/module buffs
-		if self.talent1:
-			atkbuff += 0.2 if self.pot > 4 else 0.17
-			if self.module == 1: atkbuff += 0.05 * (self.module_lvl - 1)
+		if self.talent_dmg:
+			atkbuff += self.talent1_params[0]
 
-		if self.module == 1 and self.moduledmg:
+		if self.module == 1 and self.module_dmg:
 			atk_scale = 1.1
 			
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 1.9 + 0.1 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,2)
-			sp_cost = 3
-			
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,2)
+			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			
-			dps = avgphys/(self.atk_interval/(1+aspd/100))
+			dps = avgphys/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			aspd += 35 + 5 * self.mastery
-			skill_scale = 2.1 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			aspd = self.skill_params[0]
+			skill_scale = self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			if self.targets == 1: hitdmg = np.fmax(final_atk * skill_scale *  atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
+			dps = hitdmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * min(self.targets, 3)
 		return dps
 
 class Typhon(Operator):
