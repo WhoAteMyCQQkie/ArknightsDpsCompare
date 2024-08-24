@@ -8532,51 +8532,25 @@ class Mountain(Operator):
 
 class Mousse(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 550  #######including trust
-		maxatk = 679
-		self.atk_interval = 1.25   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 26
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Mousse Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Mousse P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.buffs = buffs
-			
+		super().__init__("Mousse", pp, [1,2],[],1,6,0)
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		#talent/module buffs
-		crate = 0.23 if self.pot > 4 else 0.2
-			
+		crate = self.talent1_params[0]
+		atkbuff = self.skill_params[0]
 		####the actual skills
 		if self.skill == 1:
-			sp_cost = 4 if self.mastery == 3 else 5
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			sp_cost = self.skill_cost
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			atkbuff += 0.6 + 0.05 * self.mastery
-			final_atk2 = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk2 = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg2 = np.fmax(final_atk2 * (1-res/100), final_atk2 * 0.05)
 			avgdmg = (hitdmg * sp_cost + hitdmg2) / (sp_cost + 1)
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
+			dps = avgdmg/(self.atk_interval/(self.attack_speed/100)) * (1+crate)
 		
 		if self.skill == 2:
-			atkbuff += 0.45 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * (1+crate)
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * (1+crate)
 		return dps
 
 class MrNothing(Operator):
