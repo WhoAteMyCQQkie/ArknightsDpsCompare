@@ -19,6 +19,7 @@
 # Horn S1/Pepe S1 lose a lot of damage before they can hold charges, this is not yet included
 
 #TODO: bigger changes that may be complicated or even unrealistic
+# make this whole project usable without discord (token.txt not found -> use terminal input)
 # add average_dmg methods (which include skill down time and ramp up times etc)
 # clean up plotting, so that the parts are not scattered around in the code
 # efficiency boost: restructure everything so that the atkbuff calculations are done only when instancing the operator, instead of with every call of the skilldps method (may interfere with bbuff)
