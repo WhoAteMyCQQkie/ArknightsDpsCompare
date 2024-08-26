@@ -1696,6 +1696,7 @@ class Blemishine(Operator):
 		if self.elite > 0:
 			if self.talent2_dmg: self.name += " vsSleep"
 			else: self.name += " w/o sleep"
+		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = 0
@@ -1706,12 +1707,15 @@ class Blemishine(Operator):
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			sp_cost = sp_cost + 1.2 #sp lockout
+			sp_cost = sp_cost/(1+self.sp_boost) + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation						
+				if self.skill_params[2] > 1:
+					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)					
 			dps = avghit / self.atk_interval * self.attack_speed / 100
 			
 		if self.skill == 2:
@@ -5381,42 +5385,34 @@ class Hoolheyak(Operator):
 class Horn(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Horn",pp,[1,2,3],[],3,1,1)
-		
 		if self.talent2_dmg and self.elite == 2: self.name += " afterRevive"
 		if self.skill_dmg and not self.skill == 1: self.name += " overdrive"
 		elif not self.skill == 1: self.name += " no overdrive"
 		if self.module_dmg and self.module == 1: self.name += " blockedTarget"
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"
 			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = 0
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
-		aspd = 0
-		#talent/module buffs
-		atkbuff += self.talent1_params[0]
-		if self.talent2_dmg:
-			aspd = self.talent2_params[2]
-
-			
+		atkbuff = self.talent1_params[0]
+		aspd = self.talent2_params[2] if self.talent2_dmg else 0
 		####the actual skills
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			sp_cost = self.skill_cost
-			
-			
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			
-			sp_cost = sp_cost + 1.2 #sp lockout
+			sp_cost = sp_cost/(1+self.sp_boost) + 1.2 #sp lockout
 			atkcycle = self.atk_interval/((self.attack_speed+aspd)/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation	
+				if self.skill_params[3] > 1:
+					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)
 				
 			dps = avghit/self.atk_interval*(self.attack_speed+aspd)/100 * self.targets
 		if self.skill == 2:
@@ -9170,10 +9166,9 @@ class Penance(Operator):
 class Pepe(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		super().__init__("Pepe",pp,[1,2,3],[],3,1,0)
-
 		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" 			
+		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"		
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[0]
@@ -9186,13 +9181,15 @@ class Pepe(Operator):
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(0.5 * final_atk - defense, 0.5 *final_atk * 0.05) * (self.targets-1)
 			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) + np.fmax(0.5 * skill_scale * final_atk - defense, 0.5 * skill_scale * final_atk * 0.05) * (self.targets-1)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
+			sp_cost = sp_cost/(1+self.sp_boost) + 1.2 #sp lockout
 			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation	
+				if self.skill_params[0] > 2.4: #a bit of a redneck way, but the json data doesnt seem to include the skill charge count...
+					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)
 				
 			dps = avghit/(self.atk_interval/(self.attack_speed/100))
 
