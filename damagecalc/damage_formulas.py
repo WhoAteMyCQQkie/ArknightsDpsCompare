@@ -95,7 +95,7 @@ class Operator:
 					if params.module in available_modules:
 						module = params.module #else default mod
 					module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
-					mod_name = ["X","Y","D"]
+					mod_name = ["X","Y","$\\Delta$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
 		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
@@ -3369,93 +3369,48 @@ class Ebenholz(Operator):
 
 class Ela(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 556  #######including trust
-		maxatk = 668
-		self.atk_interval = 0.85  #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 27
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Ela Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Ela P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		
-		self.talent2 = TrTaTaSkMo[2]
-		
-		self.module = module if module in [0,3] else 3 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 3:
-				if self.module_lvl == 3: self.base_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 36
-				self.name += f" Mod$\\Delta${self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent2: self.name += " MineDebuff"
+		super().__init__("Ela",pp,[1,2,3],[3],3,1,3)
+		if self.talent2_dmg: self.name += " MineDebuff"
 		else: self.name += " w/o mines"
-
-		
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-
-		
-		#talent/module buffs
-		crate = 0.3
-		cdmg = 1.5
-		if self.pot > 4: cdmg += 0.1
-		if self.module == 3:
-			crate += 0.1 * (self.module_lvl -1)
-			cdmg += 0.1 * (self.module_lvl -1)
-		if self.talent2:
+		if self.talent2_params[0]>1:
+			cdmg = self.talent2_params[0]
+			crate = self.talent2_params[1]
+		else:
+			cdmg = self.talent2_params[1]
+			crate = self.talent2_params[0]
+		if self.talent2_dmg:
 			crate = 1.0
 			
 		####the actual skills
 		if self.skill == 1:
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100))
+			dps = avgdmg/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 2:
-			defshred = 500 + 100 * self.mastery
+			defshred = self.skill_params[3]
 			newdef = np.fmax(0, defense - defshred)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = avgdmg/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 3:
 			self.atk_interval = 0.5
-			fragile = 0.25 + 0.05 * self.mastery
-			if self.mastery > 2: fragile -= 0.05
-			if not self.talent2: fragile = 0
-			#if self.buffs[3] >= fragile: fragile = 0
-			fragile = max(fragile, self.buffs[3])
-			#print(self.buffs[3], fragile)
-			atkbuff += 0.6 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			fragile = self.skill_params[3]
+			if not self.talent2_dmg: fragile = 0
+			fragile = max(fragile, self.buff_fragile)
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[5]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * (1+fragile)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * (1+fragile)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) /(1+self.buffs[3])
+			dps = avgdmg/self.atk_interval * self.attack_speed/100 /(1+self.buff_fragile)
 			
 		return dps
 	
