@@ -578,61 +578,38 @@ class Aciddrop(Operator):
 		return dps
 
 class Amiya(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 584  #######including trust
-		maxatk = 682
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 30
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Amiya Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Amiya P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		self.buffs = buffs
-			
+	def __init__(self, pp, *args,**kwargs):
+		super().__init__("Amiya", pp, [1,2,3],[2],3,6,2)
+		if self.elite == 2 and (pp.skill == 3 or pp.skill == -1):
+			pos = 10
+			if pp.level > 0: #make sure the name changes from S2 to S3
+				pos = 14
+				if pp.level > 9:
+					pos = 15
+				if pp.level > 79:
+					pos = 10
+			self.name =  self.name[:pos] + "3" + self.name[pos+1:]
+			self.skill = 3
+			self.params = [0,1,1.1,1.2,1.3,1.4,1.5,1.6,1.8,2,2.3][pp.mastery]
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		####the actual skills
+
 		if self.skill == 1:
-			aspd += 60 + 10 * self.mastery		
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
+			dps = hitdmgarts/(self.atk_interval/((self.attack_speed +aspd)/100))
 		
 		if self.skill == 2:
-			atk_scale = 0.45 + 0.05 * self.mastery
-			hits = 7 if self.mastery == 0 else 8		
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atk_scale = self.skill_params[0]
+			hits = self.skill_params[1]		
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-			dps = hits * hitdmgarts/(self.atk_interval/(1+aspd/100))
+			dps = hits * hitdmgarts/(self.atk_interval/(self.attack_speed/100))
 		
 		if self.skill == 3:
-			atkbuff += 2.3 if self.mastery == 3 else 1.6 + 0.2 * self.mastery	
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			dps = final_atk/(self.atk_interval/(1+aspd/100)) * np.fmax(1,-defense) #this defense part has to be included			
+			final_atk = self.atk * (1 + self.buff_atk + self.params) + self.buff_atk_flat
+			dps = final_atk/(self.atk_interval/(self.attack_speed/100)) * np.fmax(1,-defense) #this defense part has to be included, because np array
 		return dps
 	
 	def total_dmg(self, defense, res):
