@@ -194,6 +194,15 @@ class Operator:
 										current_req_lvl = talent_data[1]
 										current_req_pot = talent_data[4]
 										current_req_module_lvl = talent_data[3]
+		self.drone_atk = 0
+		self.drone_atk_interval = 1
+		if op_data.drone_atk_e0 != []:
+			slot = skill - 1
+			if len(op_data.drone_atk_e0) < 2: slot = 0
+			self.drone_atk_interval = op_data.drone_atk_interval[slot]
+			self.drone_atk = op_data.drone_atk_e0[slot][0] + (op_data.drone_atk_e0[slot][1]-op_data.drone_atk_e0[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+			if elite == 1: self.drone_atk = op_data.drone_atk_e1[slot][0] + (op_data.drone_atk_e1[slot][1]-op_data.drone_atk_e1[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+			if elite == 2: self.drone_atk = op_data.drone_atk_e2[slot][0] + (op_data.drone_atk_e2[slot][1]-op_data.drone_atk_e2[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 
 		
 		

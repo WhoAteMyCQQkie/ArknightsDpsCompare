@@ -123,6 +123,11 @@ class OperatorData:
 		self.talent1_module_extra = []
 		self.talent2_module_extra = []
 		
+		self.drone_atk_e0 = []
+		self.drone_atk_e1 = []
+		self.drone_atk_e2 = []
+		self.drone_atk_interval = []
+		
 		#These files are like 7MB each, maybe not a good idea to load them each time.
 		if __name__ == "__main__":
 			with open('character_table.json',encoding="utf8") as json_file:
@@ -327,6 +332,29 @@ class OperatorData:
 								self.talent2_module_extra.append([equip_lvl, talent_data])
 
 		#TODO: drone stats
+	
+		x = character_data[key]["displayTokenDict"]
+		if x != None:
+			drone_keys = x.keys()
+			for drone_key in drone_keys:
+				self.drone_atk_interval.append(character_data[drone_key]["phases"][0]["attributesKeyFrames"][0]["data"]["baseAttackTime"])
+				drone_atk0 = [0,0]
+				drone_atk0[0] = character_data[drone_key]["phases"][0]["attributesKeyFrames"][0]["data"]["atk"]
+				drone_atk0[1] = character_data[drone_key]["phases"][0]["attributesKeyFrames"][1]["data"]["atk"]
+				self.drone_atk_e0.append(drone_atk0)
+				if self.rarity > 2:
+					drone_atk1 = [0,0]
+					drone_atk1[0] = character_data[drone_key]["phases"][1]["attributesKeyFrames"][0]["data"]["atk"]
+					drone_atk1[1] = character_data[drone_key]["phases"][1]["attributesKeyFrames"][1]["data"]["atk"]
+					self.drone_atk_e1.append(drone_atk1)
+				if self.rarity > 3:
+					drone_atk2 = [0,0]
+					drone_atk2[0] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][0]["data"]["atk"]
+					drone_atk2[1] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
+					self.drone_atk_e2.append(drone_atk2)
+
+
+		
 
 
 
@@ -334,7 +362,9 @@ class OperatorData:
 
 
 
-#operator_stats = OperatorData("char_1013_chen2")
+#operator_stats = OperatorData('char_2023_ling')
+#operator_stats2 = OperatorData('char_214_kafka')
+#print(operator_stats.drone_atk_interval)
 
 #print(operator_stats.skill_costs, operator_stats.skill_durations)
 #print(operator_stats.available_modules)
