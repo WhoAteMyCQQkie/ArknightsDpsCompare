@@ -4,7 +4,7 @@
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators
 # #TODO: UPDATE HPS COMMAND BEFORE -> implement more healers (and probably fix the kwargs situation before many more are added)
-# implement various total_dmg methods for operators
+# implement various total_dmg methods for operators, where that doesnt work automatically
 
 #TODO: specific Minijobs that really should be done asap
 # hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
@@ -15,7 +15,6 @@
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
-# mountain s3 apparently has aoe
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # make this whole project usable without discord (token.txt not found -> use terminal input)
