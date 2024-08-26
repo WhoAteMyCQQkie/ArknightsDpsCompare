@@ -7018,122 +7018,60 @@ class Lin(Operator):
 
 class Ling(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 441  #######including trust
-		maxatk = 508
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Ling Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Ling P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		#Dragonstats:
-		dragonlvl1 = 1318
-		dragonlvl90 = 1481
-		self.dragoninterval = 2.3
-		if self.skill == 3 and not self.skilldmg:
-			dragonlvl1 = 732
-			dragonlvl90 = 823
-			self.dragoninterval = 1.5
-		elif self.skill == 2:
-			dragonlvl1 = 361
-			dragonlvl90 = 406
-			self.dragoninterval = 1.6
-		elif self.skill == 1:
-			dragonlvl1 = 489
-			dragonlvl90 = 549
-			self.dragoninterval = 1.25	 
-		self.dragon_atk = dragonlvl1 + (dragonlvl90-dragonlvl1) * (level-1) / (maxlvl-1)
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
+		super().__init__("Ling",pp,[1,2,3],[2],3,1,2)
 		if self.module == 2 and self.module_lvl ==3:
-			if self.skill == 3: self.dragon_atk += 60
-			if self.skill == 2: self.dragon_atk += 35
-			if self.skill == 1: self.dragon_atk += 45
-		
-		if not self.trait: self.name += " noDragons"   ##### keep the ones that apply
-		elif not self.talent1: self.name += " 1Dragon"
+			if self.skill == 3: self.drone_atk += 60
+			if self.skill == 2: self.drone_atk += 35
+			if self.skill == 1: self.drone_atk += 45
+		if not self.trait_dmg: self.name += " noDragons"  
+		elif not self.talent_dmg: self.name += " 1Dragon"
 		else: self.name += " 2Dragons"
-		if self.skill == 3 and self.trait:
-			if self.skilldmg: self.name += "(Chonker)"
+		if self.skill == 3 and self.trait_dmg:
+			if self.skill_dmg: self.name += "(Chonker)"
 			else: self.name += "(small)"			
-		if not self.talent2: self.name += " noTalent2Stacks"
-		
-		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		
-		
-		self.buffs = buffs
+		if not self.talent2_dmg: self.name += " noTalent2Stacks"
+		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" 
 			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.talent2:
-			atkbuff += 0.15
-		
-		dragons = 2 if self.talent1 else 1
-		if not self.trait: dragons = 0
+		talentbuff = self.talent2_params[0] * self.talent2_params[2] if self.talent2_dmg else 0
+		dragons = 2 if self.talent_dmg else 1
+		if not self.trait_dmg: dragons = 0
 
 		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.38 + 0.04 * self.mastery
-			aspd += 38 + 4 * self.mastery
+			atkbuff = self.skill_params[0]
+			aspd = self.skill_params[1]
 			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.atk * (1+atkbuff + talentbuff + self.buff_atk) + self.buff_atk_flat
+			final_dragon = self.drone_atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgdrag = np.fmax(final_dragon * (1-res/100), final_dragon * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) + hitdmgdrag/(self.drone_atk_interval/((self.attack_speed + aspd)/100)) * dragons
 		if self.skill == 2:
-			skill_scale = 3.7 if self.mastery == 0 else 3.6 + 0.3 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + talentbuff + self.buff_atk) + self.buff_atk_flat
+			final_dragon = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgdrag = np.fmax(final_dragon * (1-res/100), final_dragon * 0.05)
 			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			skilldmgdrag = np.fmax(final_dragon * skill_scale * (1-res/100), final_dragon * skill_scale * 0.05)
-			sp_cost = 16 - self.mastery + 1.2 #sp lockout
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
 			dpsskill = (skilldmg + dragons * skilldmgdrag) * min(self.targets,2) / sp_cost			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons + dpsskill
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgdrag/(self.drone_atk_interval/(self.attack_speed/100)) * dragons + dpsskill
 		if self.skill == 3:
-			atkbuff += 0.7 + 0.1 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			final_dragon = self.dragon_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + talentbuff + self.buff_atk) + self.buff_atk_flat
+			chonkerbuff = 0.8 if self.skill_dmg else 0
+			final_dragon = self.drone_atk * (1+atkbuff + self.buff_atk + chonkerbuff) + self.buff_atk_flat
+			dragoninterval = self.drone_atk_interval if not self.skill_dmg else 2.3
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			block = 4 if self.skilldmg else 2
+			block = 4 if self.skill_dmg else 2
 			hitdmgdrag = np.fmax(final_dragon - defense, final_dragon * 0.05) * min(self.targets, block)
 			skilldmg = hitdmg * 0.2
 			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrag/(self.dragoninterval/(1+aspd/100)) * dragons + skilldmg * 2 * dragons * self.targets
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgdrag/(dragoninterval/(self.attack_speed/100)) * dragons + skilldmg * 2 * dragons * self.targets
 		return dps
 
 class Logos(Operator):
