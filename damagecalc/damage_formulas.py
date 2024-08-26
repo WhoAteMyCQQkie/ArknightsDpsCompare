@@ -2120,6 +2120,17 @@ class Carnelian(Operator):
 			dps = damage/totalduration * self.targets
 		return dps
 
+class Catapult(Operator):
+	def __init__(self, pp, *args ,**kwargs):
+		super().__init__("Catapult",pp,[1],[],1,6,0)
+		if self.targets > 1: self.name += f" {self.targets}targets"
+		
+	def skill_dps(self, defense, res):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		dps = hitdmg/self.atk_interval * self.attack_speed/100
+		return dps
+
 class Ceobe(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -7406,28 +7417,13 @@ class Matoimaru(Operator):
 		return dps
 
 class Melantha(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=55
-		lvl1atk = 648 #######including trust
-		maxatk = 803
-		self.atk_interval = 1.5   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 25
-
-		if level != maxlvl: self.name = f"Melantha Lv{level} P{self.pot} S1Lv7" #####set op name
-		else: self.name = f"Melantha P{self.pot} S1Lv7"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Melantha",pp,[1],[],1,6,0)
 		
-		self.buffs = buffs
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]	
-		atkbuff += 0.58
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+		final_atk = self.atk * (1 + self.buff_atk + self.talent1_params[0] + self.skill_params[0]) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-		dps = hitdmg/(self.atk_interval/(1+aspd/100))
+		dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
 class Meteor(Operator):
@@ -12670,7 +12666,7 @@ def levenshtein(word1, word2):
 
 #Add the operator with their names and nicknames here
 op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiyaalt": AmiyaGuard, "andreana": Andreana, "angelina": Angelina, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "bagpipe": Bagpipe, "beehunter": Beehunter, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine, "bp": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
-		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "click": Click, "coldshot": Coldshot, "conviction": Conviction, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher,"dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "dusk": Dusk, "ebenholz": Ebenholz, "ela": Ela, "estelle": Estelle, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
+		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "click": Click, "coldshot": Coldshot, "conviction": Conviction, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher,"dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "dusk": Dusk, "ebenholz": Ebenholz, "ela": Ela, "estelle": Estelle, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
 		"franka": Franka, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, "jackie": Jackie, "jaye": Jaye, "jessica": JessicaAlter, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, 
 		"kafka": Kafka, "kazemaru": Kazemaru, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "lapluma": LaPluma, "pluma": LaPluma,
@@ -12681,7 +12677,7 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 		"ulpianus": Ulpianus, "utage": Utage, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
-operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
+operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Catapult","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","JessicaAlt","Kazemaru","Kjera","Kroos","Kroos3star","Lapluma","Lappland","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","Lutonada","Magallan","Manticore","Matoimaru","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for more info)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Stormeye","Surtr","Suzuran","SwireAlt","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vermeil""Vigil","Vigna","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
 
