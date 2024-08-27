@@ -78,6 +78,8 @@ class Operator:
 			elif skill_lvl == 8: self.name += "M1"
 			else: self.name += f"Lv{skill_lvl}"
 
+		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
+
 		module_lvl = 0
 		if elite == 2 and level >= max_levels[2][rarity-1]-30:
 			available_modules = op_data.available_modules
@@ -95,10 +97,14 @@ class Operator:
 					if params.module in available_modules:
 						module = params.module #else default mod
 					module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
+					if trust < 50:
+						module_lvl = 1
+					if trust < 100:
+						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
-		trust = params.trust if params.trust >= 0 and params.trust < 100 else 100
+		
 		if trust != 100:
 			self.name += f" {trust}Trust"
 		self.base_name = self.name
