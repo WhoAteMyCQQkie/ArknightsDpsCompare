@@ -123,9 +123,9 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.pots = {-1}
 		elif arg in ["1","2","3","modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
 			pps.module_lvls = {-1}
-		elif arg in ["mod0","mod1","mod2","mod3","modx","x","mody","y","modd","d","no","mod","nomod"]:
+		elif arg in ["mod0","modx","x","mody","y","modd","d","no","mod","nomod"]:
 			pps.modules = {-1}
-		elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3"]:
+		elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3","modx1","modx2","modx3","mody1","mody2","mody3","modd1","modd2","modd3","mod1","mod2","mod3"]:
 			pps.modules = {-1}
 			pps.module_lvls = {-1}
 		elif arg in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","s1l7","s2l7","s3l7"]:
@@ -158,21 +158,21 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7"]:
 			pps.masteries.add(int(args[i][-1]))
 			pps.masteries.discard(-1)
-		elif args[i] in ["mod0","mod1","mod2","mod3"]:
-			pps.modules.add(int(args[i][3]))
-			pps.modules.discard(-1)
+		elif args[i] in ["mod1","mod2","mod3"]:
+			pps.module_lvls.add(int(args[i][3]))
+			pps.module_lvls.discard(-1)
 		elif args[i] in ["modx","x"]:
 			pps.modules.add(1)
 			pps.modules.discard(-1)
-		elif args[i] in ["x1","x2","x3"]: 
+		elif args[i] in ["x1","x2","x3","modx1","modx2","modx3"]: 
 			pps.modules.add(1)
 			pps.modules.discard(-1)
-			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.add(int(args[i][-1]))
 			pps.module_lvls.discard(-1)
-		elif args[i] in ["y1","y2","y3"]: 
+		elif args[i] in ["y1","y2","y3","mody1","mody2","mody3"]: 
 			pps.modules.add(2)
 			pps.modules.discard(-1)
-			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.add(int(args[i][-1]))
 			pps.module_lvls.discard(-1)
 		elif args[i] in ["mody","y"]:
 			pps.modules.add(2)
@@ -180,12 +180,12 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["modd","d"]:
 			pps.modules.add(3)
 			pps.modules.discard(-1)
-		elif args[i] in ["d1","d2","d3"]: 
+		elif args[i] in ["d1","d2","d3","modd1","modd2","modd3"]: 
 			pps.modules.add(3)
 			pps.modules.discard(-1)
-			pps.module_lvls.add(int(args[i][1]))
+			pps.module_lvls.add(int(args[i][-1]))
 			pps.module_lvls.discard(-1)
-		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0"]:
+		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0","mod0"]:
 			pps.modules.add(0)
 			pps.modules.discard(-1)
 		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
@@ -460,6 +460,13 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.conditionals[2] = True
 		elif args[i] in ["conditionals", "conditional","variation","variations"]:
 			pps.all_conditionals = True
+		elif args[i].isnumeric():
+			x = int(args[i])
+			if x > 3 and x < 90:
+				pps.levels.add(x)
+				pps.levels.discard(-1)
+			else:
+				unused_inputs.add(i)
 		else:
 			unused_inputs.add(i)
 		if not -1 in pps.module_lvls and 0 in pps.modules and len(pps.modules) == 1:
