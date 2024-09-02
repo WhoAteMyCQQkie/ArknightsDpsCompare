@@ -69,7 +69,8 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'ZuoLe': 'char_4121_zuole', 'Ulpianus': 'char_4145_ulpia', "GrainBuds": 'char_4122_grabds', "Fuze": 'char_4126_fuze', "Iana": 'char_4124_iana', 
 		   'Lucilla': 'char_4079_haini', 'PhonoR0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
-		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
+		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
+		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
 
 
 def fileHelper():

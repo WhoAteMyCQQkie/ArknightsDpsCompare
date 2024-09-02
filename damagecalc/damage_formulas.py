@@ -11306,8 +11306,8 @@ class Typhon(Operator):
 			return(self.skill_dps(defense,res))
 
 class Ulpianus(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__("Ulpianus",pp,[1,2,3],[],3,1,0)
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Ulpianus",pp,[1,2,3],[1],3,1,1)
 		if self.elite == 2 and self.talent2_dmg:
 			self.name += f" {int(self.talent2_params[0])}kills"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -11405,7 +11405,7 @@ class Utage(Operator):
 		return dps
 
 class Vermeil(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Vermeil",pp,[1,2,],[1],2,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.module == 1 and self.module_dmg: self.name += " vsAerial"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
