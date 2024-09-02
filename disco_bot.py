@@ -7,7 +7,7 @@
 # implement various total_dmg methods for operators, where that doesnt work automatically
 
 #TODO: specific Minijobs that really should be done asap
-# hoederer/qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
+# qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
 # Mudrock: include the SP gains from the module for S2 damage calculations
 # platinum: fix the dmg bonus, it counts from 0 to 2.5 seconds right now, which should be from 1 to 2.5 seconds i think
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
