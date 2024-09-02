@@ -5103,6 +5103,10 @@ class Hoederer(Operator):
 		atk_scale = 1
 		if self.elite > 0:
 			atk_scale = max(self.talent1_params) if self.talent_dmg else min(self.talent1_params)
+		dmg_bonus = 1
+		if self.module == 1:
+			if self.module_lvl == 2: dmg_bonus = 1.06
+			if self.module_lvl == 3: dmg_bonus = 1.1
 			
 		####the actual skills
 		if self.skill == 1:
@@ -5112,14 +5116,14 @@ class Hoederer(Operator):
 			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			dps = avgphys/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
+			dps = avgphys/self.atk_interval * self.attack_speed/100 * min(self.targets,2) * dmg_bonus
 		if self.skill == 2:
 			maxtargets = 3 if self.skill_dmg else 2
 			if self.skill_dmg: self.atk_interval = 3 
 			atkbuff = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,maxtargets)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,maxtargets) * dmg_bonus
 		if self.skill == 3:
 			atkbuff = self.skill_params[1]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
@@ -5132,7 +5136,7 @@ class Hoederer(Operator):
 				atk_scale = max(self.talent1_params)
 				hitdmg2 = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 				hitdmg = chance_to_attack_stunned * hitdmg2 + (1-chance_to_attack_stunned)*hitdmg
-			dps = hitdmg/self.atk_interval * self.attack_speed/100  + 200
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 * dmg_bonus  + 200
 			dps = dps * min(2, self.targets)
 		return dps
 	
