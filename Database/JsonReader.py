@@ -1,4 +1,4 @@
-#to function, this script needs three jsons (see lines 112ff) from https://github.com/Kengxxiao/ArknightsGameData_YoStar/tree/main/en_US/gamedata/excel
+#to function, this script needs four jsons (see lines 133ff). You find these on Github if you look for "Arknights Gamedata". the path is something like: gamedataRepository/CN/gamedata/excel
 import json
 import dill
 
@@ -70,7 +70,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Lucilla': 'char_4079_haini', 'PhonoR0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
-		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
+		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
 
 
 def fileHelper():
@@ -137,6 +137,9 @@ class OperatorData:
 				skill_data = json.load(json_file)
 			with open('battle_equip_table.json',encoding="utf8") as json_file:
 				module_data = json.load(json_file)
+			with open('char_patch_table.json',encoding="utf8") as json_file:
+				extra_data = json.load(json_file)
+				amiya_data = extra_data["patchChars"]
 		else:
 			with open('Database/character_table.json',encoding="utf8") as json_file:
 				character_data = json.load(json_file)
@@ -144,7 +147,11 @@ class OperatorData:
 				skill_data = json.load(json_file)
 			with open('Database/battle_equip_table.json',encoding="utf8") as json_file:
 				module_data = json.load(json_file)
-		
+			with open('Database/char_patch_table.json',encoding="utf8") as json_file:
+				extra_data = json.load(json_file)
+				amiya_data = extra_data["patchChars"]
+		character_data.update(amiya_data)
+
 		name_id =  key.split('_')[2]
 		
 		#get atk interval
