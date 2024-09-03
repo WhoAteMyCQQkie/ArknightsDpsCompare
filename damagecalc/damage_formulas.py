@@ -627,60 +627,30 @@ class Amiya(Operator):
 	
 class AmiyaGuard(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 577  #######including trust
-		maxatk = 702
-		self.atk_interval = 1.25   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 28
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Guardmiya Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Guardmiya P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.skilldmg = TrTaTaSkMo[3]
-
+		super().__init__("AmiyaGuard",pp,[1,2],[],1,6,0)
 		if self.skill == 2:
-			if self.skilldmg: self.name += " 3kills"
+			if self.skill_dmg: self.name += " 3kills"
 			else: self.name += " no kills"
-		
-		self.buffs = buffs
-			
+			skill_scale = self.skill_params[1]
+			final_atk = self.atk * (1 + self.buff_atk + 2 * self.talent1_params[0]) + self.buff_atk_flat
+			nukedmg = final_atk * 9 * skill_scale * (1+self.buff_fragile)
+			truedmg = final_atk * 2 * skill_scale * (1+self.buff_fragile)
+			self.name += f"  Nuke:{int(nukedmg)}Arts+{int(truedmg)}True"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-
-		atkbuff += 0.14
-			
-		####the actual skills
-		if self.skill == 1:
-			atkbuff += 0.5 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05)
-			dps = 2*hitdmgarts/(self.atk_interval/(1+aspd/100))
+		atkbuff = 2 * self.talent1_params[0]
 		
+		if self.skill == 1:
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05)
+			dps = 2 * hitdmgarts/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			if self.skilldmg:
-				atkbuff += 3 * (0.25 + 0.05 * self.mastery)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			dps = final_atk/(self.atk_interval/(1+aspd/100)) * np.fmax(1,-defense) #this defense part has to be included
+			if self.skill_dmg:
+				atkbuff += 3 * self.skill_params[3]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
+			dps = final_atk/self.atk_interval * self.attack_speed/100 * np.fmax(1,-defense) #this defense part has to be included
 		return dps
-	
-	def get_name(self):
-		if self.skill == 2:
-			skill_scale = 1.6 + 0.2 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + 0.14) + self.buffs[1]
-			nukedmg = final_atk * 9 * skill_scale * (1+self.buffs[3])
-			truedmg = final_atk * 2 * skill_scale * (1+self.buffs[3])
-			self.name += f"  Nuke:{int(nukedmg)}Arts+{int(truedmg)}True"
-		return self.name
 
 class Andreana(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
