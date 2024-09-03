@@ -1,8 +1,7 @@
-# First of all: Don't Judge me for this code, I know it's neither clean nor efficient, but with the limited amount of thought I put into it, this is the best architecture I could come up with.
 # In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). Also Change line 48!
 
 #TODO: Easy but tedious tasks that just take a lot of time
-# implement the missing operators
+# implement the missing operators / Update the old operators to the super().__init__ design
 # #TODO: UPDATE HPS COMMAND BEFORE -> implement more healers (and probably fix the kwargs situation before many more are added)
 # implement various total_dmg methods for operators, where that doesnt work automatically
 
@@ -20,16 +19,14 @@
 # make this whole project usable without discord (token.txt not found -> use terminal input)
 # add average_dmg methods (which include skill down time and ramp up times etc)
 # clean up plotting, so that the parts are not scattered around in the code
-# efficiency boost: restructure everything so that the atkbuff calculations are done only when instancing the operator, instead of with every call of the skilldps method (may interfere with bbuff)
 # add !disclaimer prompt talking about the limits of the bots
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
-# improve enemy prompt: still not good as it is (better formatting, showing enemy hp)
-# add kwargs to make the bot understand more text (like "vs heavy" for rosa or "no mines" for ela)
-# first collect the operators(aka parse through the entire input) and THEN draw the stuff.
+# rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
+# add kwargs to make the bot understand more text ->alternative: pass on every "wrong" input as kwarg, make operators look for names (example: ela looks for "mine" or "mines")
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
-# add a shortLabel prompt, that removes all the conditional and buff stuff in the name
+# make GIFs for different amounts of targets for example, or different values of fixdef
 
 import os
 from typing import Callable, List
