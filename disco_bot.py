@@ -16,7 +16,6 @@
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# make this whole project usable without discord (token.txt not found -> use terminal input)
 # add average_dmg methods (which include skill down time and ramp up times etc)
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
@@ -32,6 +31,7 @@ import os
 from typing import Callable, List
 
 import discord
+from PIL import Image
 
 import damagecalc.commands as cmds
 from damagecalc.damage_formulas import operators
@@ -126,6 +126,15 @@ async def on_message(message):
 
 
 if __name__ == "__main__":
-	with open("token.txt", encoding="locale") as testfile:
-		token = testfile.readline()
-	client.run(token)
+	try:
+		with open("token.txt", encoding="locale") as testfile:
+			token = testfile.readline()
+		client.run(token)
+	except FileNotFoundError:
+		print("""In order to function as a discord bot you need a file "token.txt" containing your discord token in the same directory as disco_bot.py.\nYou can however still use !dps right here in the console, following the normal syntax.""")
+		while True:
+			print("Please enter your operators and prompts")
+			input_text = input()
+			result = cmds.dps_command(input_text.split())
+			image = Image.open(result.file.fp)
+			image.show()

@@ -12420,32 +12420,3 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Catapult","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","JessicaAlt","Kazemaru","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","Lutonada","Magallan","Manticore","Marcille","Matoimaru","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for more info)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Stormeye","Surtr","Suzuran","SwireAlt","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vermeil""Vigil","Vigna","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
-
-#copy from op_dict to show the plot. should only be used for testing
-test_ops = {}
-
-if __name__ == "__main__":
-	for x in op_dict.keys():
-		for skill in [1,2,3]:
-			operator = op_dict[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0,1],bonus=False)
-			try:
-				assert operator.skill_dps(100,40) != 0
-			except AssertionError:
-				print(f"The following request has returned 0 damage:\n"+ operator.get_name())
-	print("Seems to be working just fine.\nMake sure you added the new operator to the operator dictionary.")
-	
-	if len(list(test_ops.keys())) != 0:
-		defences = np.linspace(0,3000,301)
-		damages = np.zeros(301)
-		resistances = np.linspace(0,120,301)
-		kwargs = {"hits":1.0}
-		for x in test_ops.keys():
-			for skill in [1,2,3]:
-				operator = test_ops[x](-10,-1, skill, 3,-1,3, 1, TrTaTaSkMo= [True,True,True,True,True],buffs=[0,0,0,0],**kwargs)
-				op_name = operator.get_name()
-				damages= operator.skill_dps(defences,resistances)
-				#for i in range(301):
-				#	damages[i] = operator.skill_dps(defences[i],resistances[i])
-				pl.plot(defences, damages, label=op_name)
-		pl.legend()
-		pl.show()
