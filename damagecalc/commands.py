@@ -14,8 +14,10 @@ from damagecalc.utils import DiscordSendable
 import damagecalc.damage_formulas as df
 from damagecalc.damage_formulas import op_dict
 from damagecalc.healing_formulas import healer_dict
-
-#for the enemy/chapter prompt
+try:
+	from damagecalc.black_list import profanity
+except:
+	profanity = []
 
 modifiers = ["s1","s2","s3","e0","e1","e2","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x0","y0","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx1","modx2","modx3","mody1","mody2","mody3","modd1","modd2","modd3","mod1","mod2","mod3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7","sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6"]
 prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","sp","boost","recovery","spboost","spbuff","buffsp",
@@ -62,7 +64,12 @@ def dps_command(args: List[str])-> DiscordSendable:
 	#Adding the text prompt
 	for i, word in enumerate(args):
 		if word in ["text", "title"]:
-			plt.title(f"{' '.join(args[i+1:])}")
+			plot_title = f"{' '.join(args[i+1:])}"
+			add_title = True
+			for bad_word in profanity:
+				if bad_word in plot_title.lower():
+					add_title = False
+			if add_title: plt.title(plot_title)
 			args = args[:i]
 
 	#fix typos in operator names
@@ -171,13 +178,17 @@ def dps_command(args: List[str])-> DiscordSendable:
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
-		if not args[pos] in op_dict.keys() and not pos in scopes[:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
+		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
 			parsing_errors += (args[pos]+", ")
 	
 	parsing_error = False
 	if parsing_errors != "":
 		parsing_error = True
 		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-2]
+		for bad_word in profanity:
+			if bad_word in parsing_errors.lower():
+				parsing_errors = "Could not use some of the prompts"
+				break
 
 
 
