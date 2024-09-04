@@ -70,7 +70,7 @@ class Operator:
 				self.name += f" S{skill}"
 			else:
 				self.name += " NA"
-		self.skill = skill
+			self.skill = skill
 
 		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
 		if skill_lvl < max_skill_lvls[elite]:
@@ -133,9 +133,10 @@ class Operator:
 			module = 0
 		self.module = module
 
-		self.skill_params = op_data.skill_parameters[skill-1][skill_lvl-1]
-		self.skill_cost = op_data.skill_costs[skill-1][skill_lvl-1]
-		self.skill_duration = op_data.skill_durations[skill-1][skill_lvl-1]
+		if rarity > 2:
+			self.skill_params = op_data.skill_parameters[skill-1][skill_lvl-1]
+			self.skill_cost = op_data.skill_costs[skill-1][skill_lvl-1]
+			self.skill_duration = op_data.skill_durations[skill-1][skill_lvl-1]
 
 		#talent data format: [req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data]
 		self.talent1_params = op_data.talent1_defaults
@@ -1541,7 +1542,7 @@ class Bibeak(Operator):
 		return dps
 	
 class Blaze(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Blaze", pp, [1,2],[1],2,1,1)
 		if self.elite == 2 and not self.talent2_dmg and not self.skill == 2: self.name += " w/o talent2"
 		if self.module == 1 and self.module_dmg: self.name += " vsBlocked"
@@ -1624,24 +1625,19 @@ class BluePoison(Operator):
 		artsdmg = self.talent1_params[1]
 		artsdps = np.fmax(artsdmg * (1 - res/100), artsdmg * 0.05) if self.elite > 0 else 0
 			
-		####the actual skills
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]		
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = self.skill_cost
-			
 			avgphys = (sp_cost * hitdmg + skillhitdmg * min(2,self.targets)) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/((self.attack_speed + aspd)/100)) + artsdps * min(2,self.targets)
 		if self.skill == 2:
 			atkbuff = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			
 			dps = self.skill_params[1] * hitdmg/(self.atk_interval/((self.attack_speed+ aspd)/100)) + hitdmg/(self.atk_interval/((self.attack_speed+ aspd)/100)) * min(2,self.targets-1) + artsdps * min(3, self.targets)
-			
 		return dps
 		
 class Broca(Operator):
@@ -2022,7 +2018,7 @@ class Catapult(Operator):
 	def skill_dps(self, defense, res):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-		dps = hitdmg/self.atk_interval * self.attack_speed/100
+		dps = hitdmg/self.atk_interval * self.attack_speed/100 * self.targets
 		return dps
 
 class Ceobe(Operator):
@@ -2250,11 +2246,10 @@ class ChenAlter(Operator):
 		aspd = 8 if self.elite == 2 else 0 #im not going to include the water buff for now
 		atk_scale = 1.6 if self.module == 1 else 1.5
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		
 		if self.skill == 1:
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
-
-		####the actual skills
 		if self.skill == 3:
 			def_shred = self.skill_params[2] * (-1)
 			if self.shreds[0] < 1 and self.shreds[0] > 0:
@@ -2971,21 +2966,12 @@ class Dorothy(Operator):
 		return dps
 
 class Durin(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=39
-		lvl1atk = 268  #######including trust
-		maxatk = 370
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.name = "Durin"
-		self.buffs = buffs
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Durin",pp,[],[],0,6,0)
 	def skill_dps(self, defense, res):
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-		dps = hitdmg/(self.atk_interval/(1+aspd/100))
+		dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
 class Dusk(Operator):
