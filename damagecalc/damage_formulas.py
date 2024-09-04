@@ -7233,12 +7233,13 @@ class Manticore(Operator):
 
 class Marcille(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Marcille",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Marcille",pp,[1,2,3],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
 		
-		if self.skill == 1:
-			self.talent_dmg = self.talent_dmg and self.skill_dmg
+		if self.skill == 3:
+			self.talent_dmg = True
+			self.name += " FullCast"
 		if not self.talent_dmg: self.name += " noMana"
-		if self.talent2_dmg and self.elite == 2: self.name += " FullSquad"
+		if self.talent2_dmg and self.elite == 2 and self.skill != 3: self.name += " FullSquad"
 		if self.skill == 2 and self.skill_dmg: self.name += " 2ndActivation"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -7259,16 +7260,11 @@ class Marcille(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * self.targets
-
 		if self.skill == 3:
-			atkbuff += 0.5#self.skill_params[0]
 			skill_scale = self.skill_params[6]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-
-			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			hitdmgarts = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale *  0.05)
-
-			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale *  0.05)
+			dps = hitdmg * self.targets
 		return dps
 
 class Matoimaru(Operator):
@@ -10181,7 +10177,7 @@ class Shalem(Operator):
 		return dps
 
 class Sharp(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Sharp",pp,[1],[],1,1,0) #available skills, available modules, default skill, def pot, def mod
 	
 	def skill_dps(self, defense, res):
@@ -10534,7 +10530,7 @@ class Stainless(Operator):
 		return dps
 
 class Stormeye(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Stormeye",pp,[1],[],1,1,0) #available skills, available modules, default skill, def pot, def mod
 		if self.targets > 1: self.name += f" {self.targets}targets"
 	
@@ -11055,7 +11051,7 @@ class Toddifons(Operator):
 		return dps
 
 class Tomimi(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Tomimi", pp, [1,2], [2],2,6,2)
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 				
@@ -11077,7 +11073,7 @@ class Tomimi(Operator):
 		return dps
 
 class Totter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Totter",pp,[1,2],[1],2,6,1)
 		if self.talent_dmg: self.name += " vsInvis"
 		if self.module_dmg and self.module == 1: self.name += " vsHeavy"
