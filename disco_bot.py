@@ -26,6 +26,7 @@
 # add kwargs to make the bot understand more text ->alternative: pass on every "wrong" input as kwarg, make operators look for names (example: ela looks for "mine" or "mines")
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
+# drone/summon prompt for summoners
 
 import os
 from typing import Callable, List

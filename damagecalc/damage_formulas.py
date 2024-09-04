@@ -9737,76 +9737,20 @@ class Saga(Operator):
 
 class Scene(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 371  #######including trust
-		maxatk = 432
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Scene Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Scene P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		
-		#Dronestats:
-		dronelvl1 = 391
-		dronelvl80 = 477
-		self.droneinterval = 1.25
-		self.drone_atk = dronelvl1 + (dronelvl80-dronelvl1) * (level-1) / (maxlvl-1)
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 36
-				elif self.module_lvl == 2: self.base_atk += 28
-				else: self.base_atk += 20
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if not self.trait: self.name += " noDrones"   ##### keep the ones that apply
-		elif not self.talent1: self.name += " 1Drone"
+		super().__init__("Scene",pp,[1,2],[1],2,6,1)
+		if not self.trait_dmg: self.name += " noDrones" 
+		elif not self.talent_dmg: self.name += " 1Drone"
 		else: self.name += " 2Drones"
-		
-		self.buffs = buffs
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		drones = 2 if self.talent1 else 1
-		if not self.trait: drones = 0
-		
-		####the actual skills
-		if self.skill == 1:
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			atkbuff += 0.3 + 0.1 * self.mastery
-			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = np.fmax(final_drone - defense , final_drone * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+aspd/100)) * drones
-		if self.skill == 2:
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			atkbuff += 1.3 if self.mastery == 3 else 0.8 + 0.15 * self.mastery
-			final_drone = self.drone_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + hitdmgdrone/(self.droneinterval/(1+aspd/100)) * drones
+		drones = 2 if self.talent_dmg else 1
+		if not self.trait_dmg: drones = 0
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+		dps =  hitdmg/self.atk_interval * self.attack_speed/100
+		final_atk_drone = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		hitdmgdrone = np.fmax(final_atk_drone - defense , final_atk_drone * 0.05)
+		dps += hitdmgdrone/self.drone_atk_interval * self.attack_speed/100 * drones
 		return dps
 	
 class Schwarz(Operator):
