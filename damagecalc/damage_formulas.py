@@ -9282,97 +9282,45 @@ class Ray(Operator):
 	
 class ReedAlter(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 490  #######including trust
-		maxatk = 600
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 26
-		
-		self.skill = skill if skill in [1,2,3] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"ReedAlt Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"ReedAlt P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
+		super().__init__("ReedAlter",pp,[1,2,3],[1],2,1,1)
+		if not self.talent_dmg and not self.skill == 3 and self.elite > 0: self.name += " w/o cinder"
+		elif not self.skill == 3 and self.elite > 0: self.name += " withCinder"
+		if self.skill_dmg and self.skill == 2: self.name += " Sandwiched"
+		if self.targets > 1 and self.skill > 1: self.name += f" {self.targets}targets"
 
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 42
-				else: self.base_atk += 32
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		##### keep the ones that apply
-		if not self.talent1 and not self.skill == 3: self.name += " w/o cinder"
-		elif not self.skill == 3: self.name += " withCinder"
-		if self.skilldmg and self.skill == 2: self.name += " Sandwiched"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs	
+		if self.skill == 3:
+			final_atk = self.atk * (1 + self.skill_params[1] + self.buff_atk) + self.buff_atk_flat
+			nukedmg = final_atk * self.skill_params[3] * (1+self.buff_fragile)
+			self.name += f" ExplosionDmg:{int(nukedmg)}"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		dmg_scale = 1.3
-		if self.pot > 2: dmg_scale = 1.32
-		
-		if not self.talent1:
-			dmg_scale = 1
+		dmg_scale = self.talent1_params[2] if (self.talent_dmg and self.elite > 1) or self.skill == 3 else 1
 		
 		if self.skill == 1:
-			atkbuff += 0.34 + 0.03 * self.mastery
-			aspd += 35
-			if self.mastery == 3:
-				atkbuff += 0.02
-				aspd += 10
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			atkbuff = self.skill_params[0]
+			aspd = self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
+			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
 			
 		if self.skill == 2:
-			atk_scale = 1.8 + 0.2 * self.mastery
-			if self.mastery == 0: atk_scale = 1.9
-			multiplier = 2 if self.skilldmg else 1
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmgarts = np.fmax(1-res/100,  0.05) *final_atk * atk_scale * dmg_scale * multiplier
+			atk_scale = self.skill_params[1]
+			multiplier = 2 if self.skill_dmg else 1
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmgarts = np.fmax(1-res/100,  0.05) * final_atk * atk_scale * dmg_scale * multiplier
 			dps = hitdmgarts/0.8 * self.targets  #/1.5 * 3 (or /0.5) is technically the limit, the /0.8 come from the balls taking 2.4 for a rotation 
 			
 		if self.skill == 3:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			if self.mastery == 3: atkbuff += 0.05
-			atk_scale = 0.3 + 0.1 * self.mastery
-			dmg_scale = 1.32 if self.pot > 2 else 1.3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff = self.skill_params[1]
+			atk_scale = self.skill_params[2]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			directhits = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
-			atkdps = min(self.targets,2) * directhits/(self.atk_interval/(1+aspd/100))
+			atkdps = directhits/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
 			skillhits = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
 			skilldps = self.targets * skillhits
 			dps = atkdps + skilldps
-			
 		return dps
 	
-	def get_name(self):
-		if self.skill == 3:
-			skillbuff = 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + skillbuff) + self.buffs[1]
-			nukedmg = final_atk * (1.1 + 0.1 * self.mastery) * (1+self.buffs[3])
-			self.name += f" ExplosionDmg:{int(nukedmg)}"
-		return self.name
 
 class Rockrock(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
