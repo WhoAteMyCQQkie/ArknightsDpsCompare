@@ -10485,99 +10485,50 @@ class Tequila(Operator):
 
 class Thorns(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 604  #######including trust
-		maxatk = 741
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 26
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Thorns Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Thorns P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = min(4,max(1,targets))
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 55
-				elif self.module_lvl == 2: self.base_atk += 48
-				else: self.base_atk += 39
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.skill == 1 and not self.trait: self.name += "rangedAtk"   ##### keep the ones that apply
-		if self.talent1: self.name += " vsRanged"
-		self.buffs = buffs
+		super().__init__("Thorns",pp,[1,2,3],[1],3,1,1)
+		if self.skill == 1 and not self.trait_dmg: self.name += "rangedAtk"   ##### keep the ones that apply
+		if self.talent_dmg: self.name += " vsRanged"
 		try:
 			self.hits = kwargs['hits']
 		except KeyError:
 			self.hits = 0
 		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
-		if self.skill == 3 and not self.skilldmg: self.name += " firstActivation"
-
+		if self.skill == 3 and not self.skill_dmg: self.name += " firstActivation"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 		
 			
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		if self.module == 1:
-			aspd += 4 + self.module_lvl
 		bonus = 0.1 if self.module == 1 else 0
-		#talent1
-		artsdps = np.fmax((140-res/100),140 * 0.05) if self.pot > 4 else np.fmax((125-res/100),125 * 0.05)
-		if self.module == 1 and self.module_lvl == 3: artsdps += 10
-		if self.talent1: artsdps *= 2
-		stacks = 1
-		if self.module == 1 and self.module_lvl > 1: stacks = 4 if self.module_lvl == 3 else 3
-		artsdps = artsdps * stacks
+		arts_dot = 0 if self.elite < 2 else max(self.talent1_params)
+		if not self.talent_dmg: arts_dot *= 0.5
+		stacks = self.talent1_params[3] if self.module == 1 and self.module_lvl > 1 else 1
+		arts_dot_dps = np.fmax(arts_dot *(1-res/100) , arts_dot * 0.05) * stacks
 		
 		if self.skill == 1:
-			atkbuff += 0.6 + 0.15 * self.mastery
-			if self.mastery == 3: atkbuff -= 0.05
-			atk_scale = 1 if self.trait else 0.8
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atk_scale = 1 if self.trait_dmg else 0.8
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + artsdps + bonusdmg/(self.atk_interval/(1+aspd/100))
+			dps = (hitdmg + bonusdmg)/self.atk_interval * self.attack_speed/100 + arts_dot_dps
 		if self.skill == 2 and self.hits > 0:
 			atk_scale = 0.8
-			cooldown = 0.75 - 0.05 * self.mastery
-			atkbuff += 0.4 + 0.05 * self.mastery
-			if self.mastery == 3: atkbuff += 0.05
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			cooldown = self.skill_params[2]
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			if(1/self.hits < cooldown):
-				dps = (hitdmg/cooldown + artsdps + bonusdmg/cooldown) * min(self.targets,4)
+				dps = (hitdmg/cooldown + arts_dot_dps + bonusdmg/cooldown) * min(self.targets,4)
 			else:
 				cooldown = 1/self.hits
-				dps = (hitdmg/cooldown + artsdps) * min(self.targets,4)
+				dps = (hitdmg/cooldown + arts_dot_dps) * min(self.targets,4)
 		elif self.skill == 2:
 			return defense*0
 		if self.skill == 3:
-			bufffactor = 2 if self.skilldmg else 1
-			aspd += bufffactor * (16 + 3 * self.mastery)
-			atkbuff += bufffactor * (0.4 + 0.05 * self.mastery)
-			if self.mastery == 3: atkbuff += 0.05 * bufffactor
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			bufffactor = 2 if self.skill_dmg else 1
+			final_atk = self.atk * (1 + self.buff_atk + bufffactor * self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + artsdps + bonusdmg/(self.atk_interval/(1+aspd/100))
+			dps = (hitdmg + bonusdmg)/self.atk_interval * (self.attack_speed + bufffactor * self.skill_params[1])/100 + arts_dot_dps
 		return dps
 
 class Toddifons(Operator):
