@@ -14,6 +14,7 @@
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
+#TODO bug: !dps 0 1 2 3 gg gg targets 3 and !dps 0 1 2 3 gg gg t3 dont do the same thing, even though they should
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
