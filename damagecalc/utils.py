@@ -114,6 +114,7 @@ class PlotParametersSet(PlotParameters):
 #read in the operator specific parameters	
 def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 	 #make sure to reset the parameters of the global parameter set
+	previous_arg = " "
 	for arg in args:
 		if arg in ["s1","s2","s3"]:
 			pps.skills = {-1}
@@ -121,8 +122,12 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.promotions = {-1}
 		elif arg in ["p1","p2","p3","p4","p5","p6"]:
 			pps.pots = {-1}
-		elif arg in ["1","2","3","modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
+		elif arg in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
 			pps.module_lvls = {-1}
+		elif arg in ["1","2","3"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust"]:
+			pps.module_lvls = {-1}
+		elif arg in ["0"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust"]:
+			pps.modules = {-1}
 		elif arg in ["mod0","modx","x","mody","y","modd","d","no","mod","nomod"]:
 			pps.modules = {-1}
 		elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3","modx1","modx2","modx3","mody1","mody2","mody3","modd1","modd2","modd3","mod1","mod2","mod3"]:
@@ -133,6 +138,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.masteries = {-1}
 		elif arg in ["sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6","sl7","s7","slv7","l7","lv7","m0","m1","m2","m3","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]:
 			pps.masteries = {-1}
+		if arg not in ["1","2","3"]:
+			previous_arg = arg
 	i = 0
 	entries = len(args)
 	unused_inputs = set()
