@@ -8230,96 +8230,43 @@ class Odda(Operator):
 		return dps
 	
 class Pallas(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 627  #######including trust
-		maxatk = 737
-		self.atk_interval = 1.05   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [1,2,3] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Pallas Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Pallas P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = min(3,max(1,targets))
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 83
-				elif self.module_lvl == 2: self.base_atk += 73
-				else: self.base_atk += 55
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 40
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-
-		else: self.module = 0
-		
-		if not self.trait: self.name += " w/o trait"   ##### keep the ones that apply
-		if not self.talent1: self.name += " w/o vigor"
-		if self.skill == 3 and self.skilldmg: self.name += " selfbuffS3"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Pallas",pp,[1,2,3],[1,2],1,1,1)
+		if not self.trait_dmg: self.name += " w/o trait"
+		if self.elite > 0 and not self.talent_dmg: self.name += " w/o vigor"
+		if self.skill == 3 and not self.talent_dmg: self.skill_dmg = False
+		if self.skill == 3 and self.skill_dmg: self.name += " selfbuffS3"
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
 		atk_scale = 1
-		
-		#talent/module buffs
-		if self.talent1:
-			atkbuff += 0.25
-			if self.module == 1:
-				if self.module_lvl == 2: atkbuff += 0.02
-				if self.module_lvl == 3: atkbuff += 0.05
-		
-		if self.module == 2: aspd += 2 + self.module_lvl
-		
-		if self.trait: 
+		atkbuff = min(self.talent1_params) if self.talent_dmg and self.elite > 0 else 0
+		if self.trait_dmg: 
 			atk_scale = 1.3 if self.module == 1 else 1.2
 			
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 1.45 + 0.1 * self.mastery			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
+			skill_scale = self.skill_params[0]		
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			sp_cost = 2 if self.mastery == 3 else 3
-			avgphys = (sp_cost * hitdmg + 2* skillhitdmg) / (sp_cost + 1)
-			dps = avgphys/(self.atk_interval/(1+aspd/100))
+			sp_cost = self.skill_cost
+			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1)
+			dps = avgphys/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 2:
-			atkbuff += 0.5 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
+			dps = hitdmg/self.atk_interval * self.attack_speed/100	
 		
 		if self.skill == 3:
-			atkbuff += 0.7 + 0.1 * self.mastery
-			if self.skilldmg:
-				atkbuff += 0.4 + 0.05 * self.mastery
-				if self.mastery == 3: atkbuff -= 0.05
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			if self.skill_dmg:
+				atkbuff = max(atkbuff, self.skill_params[2]) #vigor doesnt stack
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 3)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100	 * min(self.targets, 3)
 				
 		return dps
 
@@ -8517,7 +8464,7 @@ class Penance(Operator):
 		return dps
 
 class Pepe(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Pepe",pp,[1,2,3],[],3,1,0)
 		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
 		if self.targets > 1: self.name += f" {self.targets}targets"
@@ -8525,12 +8472,10 @@ class Pepe(Operator):
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[0]
-			
-		####the actual skills
+
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			sp_cost = self.skill_cost
-			
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(0.5 * final_atk - defense, 0.5 *final_atk * 0.05) * (self.targets-1)
 			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) + np.fmax(0.5 * skill_scale * final_atk - defense, 0.5 * skill_scale * final_atk * 0.05) * (self.targets-1)
@@ -8543,7 +8488,6 @@ class Pepe(Operator):
 					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
 				else:
 					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)
-				
 			dps = avghit/(self.atk_interval/(self.attack_speed/100))
 
 		if self.skill == 2:
@@ -8551,28 +8495,20 @@ class Pepe(Operator):
 			aspd = self.skill_params[1]
 			if self.skill_dmg:
 				aspd += 2 * self.skill_params[2]
-			
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
-			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
-			
 			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) + hitdmgaoe/(self.atk_interval/((self.attack_speed+aspd)/100))*(self.targets - 1)
 		
 		if self.skill == 3:
 			self.atk_interval = 2
 			atkbuff += self.skill_params[0]
-			
 			if self.skill_dmg:
 				atkbuff += 4 * self.skill_params[2]
-			
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
-			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
-			
 			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgaoe/(self.atk_interval/(self.attack_speed/100))*(self.targets - 1)
-
 		return dps
 
 class Phantom(Operator):
@@ -8690,7 +8626,7 @@ class Pinecone(Operator):
 		return dps
 
 class Pith(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Pith",pp,[1],[],1,1,0) #available skills, available modules, default skill, def pot, def mod
 		if self.targets > 1: self.name += f" {self.targets}targets"
 	

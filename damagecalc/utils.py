@@ -124,9 +124,9 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.pots = {-1}
 		elif arg in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
 			pps.module_lvls = {-1}
-		elif arg in ["1","2","3"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits"]:
+		elif arg in ["1","2","3"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits","r","res","resis","resistance","d","def","defense"]:
 			pps.module_lvls = {-1}
-		elif arg in ["0"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits"]:
+		elif arg in ["0"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits","r","res","resis","resistance","d","def","defense"]:
 			pps.modules = {-1}
 		elif arg in ["mod0","modx","x","mody","y","modd","d","no","mod","nomod"]:
 			pps.modules = {-1}
