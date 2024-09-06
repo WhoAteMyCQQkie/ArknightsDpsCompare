@@ -8,13 +8,11 @@
 #TODO: specific Minijobs that really should be done asap
 # qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
 # Mudrock: include the SP gains from the module for S2 damage calculations
-# platinum: fix the dmg bonus, it counts from 0 to 2.5 seconds right now, which should be from 1 to 2.5 seconds i think
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
 # Wisadel: Add S1 and S2, and maybe double check S3's aoe
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
-#TODO bug: !dps 0 1 2 3 gg gg targets 3 and !dps 0 1 2 3 gg gg t3 dont do the same thing, even though they should
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add average_dmg methods (which include skill down time and ramp up times etc)
@@ -24,10 +22,10 @@
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
 # rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
-# add kwargs to make the bot understand more text ->alternative: pass on every "wrong" input as kwarg, make operators look for names (example: ela looks for "mine" or "mines")
+# add kwargs to make the bot understand more text ->alternative: pass on every "wrong" input as kwarg, make operators look for specific words (example: ela looks for "mine" or "mines")
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
-# drone/summon prompt for summoners
+# drone/summon(count) prompt for summoners
 
 import os
 from typing import Callable, List

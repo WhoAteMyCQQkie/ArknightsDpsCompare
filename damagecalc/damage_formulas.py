@@ -8704,73 +8704,22 @@ class Pith(Operator):
 		return dps*self.targets
 
 class Platinum(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 489  #######including trust
-		maxatk = 580
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Platinum",pp,[1,2],[1],2,1,1)
+		if self.module_dmg and self.module == 1: self.name += " aerial target"
 		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Platinum Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Platinum P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 40
-				elif self.module_lvl == 2: self.base_atk += 33
-				else: self.base_atk += 25
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-
-		if self.moduledmg and self.module == 1: self.name += " aerial target"
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		if self.module == 1 and self.moduledmg: atk_scale = 1.1
-		talent_windup = 2.5
-		talent_scale = 1
-		max_talent_scale = 1.8
-		if self.pot > 4: max_talent_scale += 0.1
-		if self.module == 1:
-			max_talent_scale += 0.1 * (self.module_lvl - 1)
-		
-			
-		####the actual skills
-		if self.skill == 1:
-			atkbuff += 0.6 + 0.15 * self.mastery
-			if self.mastery == 3: atkbuff -= 0.05
-		if self.skill == 2:
-			atkbuff += 0.7 + 0.1 * self.mastery
-			aspd -= 20
-			
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		atkcycle = self.atk_interval/(1+aspd/100)
-		actual_scale = atkcycle/talent_windup * (max_talent_scale - 1) + 1
-		if atkcycle > talent_windup: actual_scale = max_talent_scale
-		hitdmg = np.fmax(final_atk * atk_scale * actual_scale - defense, final_atk * atk_scale * actual_scale * 0.05)
-		dps = hitdmg/(self.atk_interval/(1+aspd/100))
+		aspd = -20 if self.skill == 2 else 0
+		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
+		final_atk = self.atk * (1 + max(self.skill_params) + self.buff_atk) + self.buff_atk_flat
+		if self.elite > 0:
+			extra_scale = self.talent1_params[3] - 1
+			atk_cycle = self.atk_interval /(self.attack_speed + aspd) * 100
+			charge_time = max(atk_cycle - 1, 0)
+			weight = min(1, charge_time / 1.5)
+			atk_scale *= 1 + weight * extra_scale
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		return dps
 	
 class Pozemka(Operator):
@@ -9197,13 +9146,12 @@ class Ray(Operator):
 			return(self.skill_dps(defense,res))
 	
 class ReedAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("ReedAlter",pp,[1,2,3],[1],2,1,1)
 		if not self.talent_dmg and not self.skill == 3 and self.elite > 0: self.name += " w/o cinder"
 		elif not self.skill == 3 and self.elite > 0: self.name += " withCinder"
 		if self.skill_dmg and self.skill == 2: self.name += " Sandwiched"
 		if self.targets > 1 and self.skill > 1: self.name += f" {self.targets}targets"
-
 		if self.skill == 3:
 			final_atk = self.atk * (1 + self.skill_params[1] + self.buff_atk) + self.buff_atk_flat
 			nukedmg = final_atk * self.skill_params[3] * (1+self.buff_fragile)
@@ -9218,14 +9166,12 @@ class ReedAlter(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
 			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
-			
 		if self.skill == 2:
 			atk_scale = self.skill_params[1]
 			multiplier = 2 if self.skill_dmg else 1
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(1-res/100,  0.05) * final_atk * atk_scale * dmg_scale * multiplier
 			dps = hitdmgarts/0.8 * self.targets  #/1.5 * 3 (or /0.5) is technically the limit, the /0.8 come from the balls taking 2.4 for a rotation 
-			
 		if self.skill == 3:
 			atkbuff = self.skill_params[1]
 			atk_scale = self.skill_params[2]
@@ -9358,7 +9304,7 @@ class Rosa(Operator):
 		return dps
 
 class Rosmontis(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Rosmontis",pp,[1,2,3],[1],3,1,1)
 		if self.skill == 3 and self.skill_dmg: self.name += " withPillarDefshred"
 		if self.skill == 3 and self.targets > 1: self.name += " TargetsOverlap"
@@ -9495,7 +9441,7 @@ class Saga(Operator):
 		return dps * (1+dmg)
 
 class Scene(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Scene",pp,[1,2],[1],2,6,1)
 		if not self.trait_dmg: self.name += " noDrones" 
 		elif not self.talent_dmg: self.name += " 1Drone"
