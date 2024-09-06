@@ -7524,7 +7524,7 @@ class Mountain(Operator):
 		return dps
 
 class Mousse(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Mousse", pp, [1,2],[],1,6,0)
 	
 	def skill_dps(self, defense, res):
@@ -7766,8 +7766,8 @@ def name_addition(S123,ranged,TrTaTaSkMo):
 	
 class MumuDorothy(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Dorothy(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Dorothy(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Dorothy)" + self.name[8:]
 		self.ranged = True
 		self.arts = False
@@ -7778,8 +7778,8 @@ class MumuDorothy(Muelsyse):
 
 class MumuEbenholz(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Ebenholz(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(lvl,pp,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Ebenholz(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Ebenholz)" + self.name[8:]
 		self.ranged = True
 		self.arts = True
@@ -7790,8 +7790,8 @@ class MumuEbenholz(Muelsyse):
 
 class MumuCeobe(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Ceobe(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Ceobe(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Ceobe)" + self.name[8:]
 		self.ranged = True
 		self.arts = True
@@ -7802,8 +7802,8 @@ class MumuCeobe(Muelsyse):
 		
 class MumuMudrock(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Mudrock(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Mudrock(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Mudrock)" + self.name[8:]
 		self.ranged = False
 		self.arts = False
@@ -7814,8 +7814,8 @@ class MumuMudrock(Muelsyse):
 
 class MumuRosa(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Rosa(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Rosa(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Rosa)" + self.name[8:]
 		self.ranged = True
 		self.arts = False
@@ -7826,25 +7826,25 @@ class MumuRosa(Muelsyse):
 
 class MumuSkadi(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Skadi(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Skadi(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Skadi)" + self.name[8:]
 		self.ranged = False
 		self.arts = False
 		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
+		self.summon_atk = operator.atk
 		S123 = skill if skill in [1,2,3] else 3
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
 class MumuSchwarz(Muelsyse):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Schwarz(lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
+		operator = Schwarz(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
 		self.name = "Muelsyse(Schwarz)" + self.name[8:]
 		self.ranged = True
 		self.arts = False
 		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
+		self.summon_atk = operator.atk
 		S123 = skill if skill in [1,2,3] else 3
 		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
 
@@ -9315,89 +9315,46 @@ class Rockrock(Operator):
 		return dps
 
 class Rosa(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 966  #######including trust
-		maxatk = 1142
-		self.atk_interval = 2.4   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 34
-		
-		self.skill = skill if skill in [1,2,3] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Rosa Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Rosa P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent1 = TrTaTaSkMo[1]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 90
-				elif self.module_lvl == 2: self.base_atk += 68
-				else: self.base_atk += 60
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		self.talent1 = self.talent1 and self.moduledmg
-		
-		if not self.talent1: self.name += " vsLight"
-		else: self.name += " vsHeavy"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Rosa",pp,[1,2,3],[1],2,1,1)
+		if self.module == 1: self.talent_dmg = self.talent_dmg and self.module_dmg
+		if self.elite > 0:
+			if not self.talent_dmg: self.name += " vsLight"
+			else: self.name += " vsHeavy"
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs	
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
+		atkbuff = self.talent2_params[0]
 		atk_scale = 1
-		
-		#talent/module buffs
-		atkbuff += 0.1 if self.pot > 4 else 0.08
-		
 		additional_scale = 0
 		defshred = 0
-		if self.talent1: #aka: if heavy
-			defshred = 0.6
+		if self.talent_dmg: #aka: if heavy
+			if self.elite > 0: defshred = 0.2 + 0.2 * self.elite
 			if self.module == 1:
 				atk_scale = 1.15
 				if self.module_lvl == 2: additional_scale = 0.4
 				if self.module_lvl == 3: additional_scale = 0.6
 		newdef = defense * (1-defshred)
 
-		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.6 + 0.15 * self.mastery
-			if self.mastery == 3: atkbuff -= 0.05
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
-			dps = (hitdmg+extradmg)/(self.atk_interval/(1+aspd/100))
+			dps = (hitdmg+extradmg)/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			atkbuff += 0.6 + 0.1 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
-			dps = (hitdmg+extradmg)/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+			dps = (hitdmg+extradmg)/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
 		if self.skill == 3:
-			atkbuff += 0.1 + 0.05 * self.mastery
-			maxtargets = 4 if self.mastery > 1 else 3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[2]
+			maxtargets = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
 			dps = (hitdmg+extradmg) * min(self.targets,maxtargets)
-			
 		return dps
 	
 	def total_dmg(self, defense, res):
