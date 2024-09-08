@@ -169,7 +169,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 				global_parameters = utils.PlotParametersSet()
 				utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
-	if plot_numbers == 0: return #maybe return a "no operator found, use !guide" hint instead?
+	if plot_numbers == 0: return DiscordSendable() #maybe return a "no operator found, use !guide" hint instead?
 
 	#find unused parts
 	parsing_errors = "" 
@@ -286,6 +286,118 @@ def dps_command(args: List[str])-> DiscordSendable:
 	else:
 		return DiscordSendable(file=file)
 
+
+def hps_command_new(args: List[str]) -> DiscordSendable:
+	global_parameters = utils.PlotParametersSet()
+	already_drawn_ops = []
+	short_names = False
+	healer_message = ""
+
+	#fix typos in operator names
+	for i in range(len(args)):
+		if utils.fix_typos(args[i], healer_dict.keys()) != "":
+			args[i] = utils.fix_typos(args[i], healer_dict.keys())
+	
+	#fixing missing spaces
+	entries = len(args)
+	j = 0
+	while j < entries:
+		if args[j] in prompts or args[j] in healer_dict.keys() or args[j] in modifiers or utils.is_float(args[j]):
+			pass
+		elif args[j][0] in "-123456789" and not args[j][-1] in "0123456789%": #missing space like buff 90exusiai
+			numberpos = 1
+			while args[j][numberpos] in "-0123456789.%":
+				numberpos += 1
+			temp = args[j]
+			args[j] = args[j][numberpos:]
+			args.insert(j,temp[:numberpos])
+			entries += 1
+		elif not args[j][0] in "-123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
+			numberpos = 2
+			wordlen = len(args[j])
+			while args[j][-numberpos] in "-0123456789.%":
+				numberpos += 1
+			temp = args[j]
+			args[j] = args[j][(wordlen-numberpos+1):]
+			args.insert(j,temp[:(wordlen-numberpos+1)])
+			entries += 1
+		j += 1
+	
+	#fix typos in prompts
+	for i in range(len(args)):
+		if args[i] not in healer_dict.keys() and args[i] not in prompts and len(args[i]) > 3:
+			for prompt in prompts:
+				if utils.levenshtein(args[i],prompt) == 1:
+					args[i] = prompt
+					break	
+
+
+	#Find scopes where which parameter set is active (global vs local)
+	global_scopes = [0]
+	local_scopes = []
+	for i, arg in enumerate(args):
+		if arg in healer_dict.keys():
+			local_scopes.append(i)
+		elif arg in ["g:","global","global:","reset","reset:"]:
+			global_scopes.append(i)
+	scopes = list(set(global_scopes + local_scopes))
+	scopes.sort()
+	scopes.append(len(args))
+
+	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
+	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
+		tmp = args[1]
+		args[1] = args[0]
+		args[0] = tmp
+	for i in range(1,len(args)-2):
+		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]  and not args[i+1] in "0123":
+			tmp = args[i+1]
+			args[i+1] = args[i+2]
+			args[i+2] = tmp
+
+	
+	plot_numbers = 0
+	#getting setting the plot parameters and plotting the units
+	utils.parse_plot_essentials(global_parameters, args)
+	for i in range(len(scopes)-1):
+		if scopes[i] in local_scopes:
+			local_parameters = copy.deepcopy(global_parameters)
+			if (scopes[i]+1) not in scopes:
+				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
+			for parameters in local_parameters.get_plot_parameters():
+				new_text = (healer_dict[args[scopes[i]]](parameters)).skill_hps() + "\n"
+				if not new_text in healer_message:
+					healer_message += new_text
+					plot_numbers += 1
+		elif scopes[i] in global_scopes:
+			if args[scopes[i]] in ["reset","reset:"]:
+				global_parameters = utils.PlotParametersSet()
+				utils.parse_plot_essentials(global_parameters, args)
+			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
+	if plot_numbers == 0: return DiscordSendable() #maybe return a "no operator found, use !guide" hint instead?
+
+	#find unused parts
+	parsing_errors = "" 
+	test_parameters = utils.PlotParametersSet()
+	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
+	for pos in unparsed_inputs:
+		if not args[pos] in healer_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
+			parsing_errors += (args[pos]+", ")
+	
+	parsing_error = False
+	if parsing_errors != "":
+		parsing_error = True
+		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-2]
+		for bad_word in profanity:
+			if bad_word in parsing_errors.lower():
+				parsing_errors = "Could not use some of the prompts"
+				break
+
+	if parsing_error:
+		healer_message = parsing_errors + "\n" + healer_message
+	healer_message = "Heals per second - **skill active**/skill down/*averaged* \n" + healer_message		
+	if plot_numbers > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
+	return DiscordSendable(healer_message)
 
   
 def hps_command(args: List[str]) -> DiscordSendable:

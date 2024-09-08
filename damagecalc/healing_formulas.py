@@ -633,10 +633,16 @@ class Silence(Healer):
 		avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
 		self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}*"
 		return self.name
+
+class Test():
+	def __init__(self,pp,**kwargs) -> None:
+		self.name = "the requested level: " + str(pp.level)
+	def skill_hps(self, **kwargs):
+		return self.name
 #################################################################################################################################################
 
 
-healer_dict = {"eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
+healer_dict = {"test":Test, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
 
 healers = ["Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu"]
 
