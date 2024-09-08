@@ -10782,7 +10782,7 @@ class Walter(Operator):
 	def total_dmg(self, defense, res):
 		if self.skill == 3:
 			self.atk_interval = 5
-			return(self.skill_dps(defense,res) * 6 * (self.atk_interval/(1+self.buffs[2]/100)))
+			return(self.skill_dps(defense,res) * 6 * (self.atk_interval/(self.attack_speed/100)))
 		else:
 			return(self.skill_dps(defense,res))
 
