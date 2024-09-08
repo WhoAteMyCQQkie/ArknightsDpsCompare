@@ -55,7 +55,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
            'Magallan': 'char_248_mgllan','SkadiAlter': 'char_1012_skadi2','SilenceAlter': 'char_1031_slent2','Ling': 'char_2023_ling','Stainless': 'char_4072_ironmn',
            'Virtuosa': 'char_245_cello','Phantom': 'char_250_phatom','TexasAlter': 'char_1028_texas2','YatoAlter': 'char_1029_yato2','Lee': 'char_322_lmlee',
            'SwireAlter': 'char_1033_swire2','Weedy': 'char_400_weedy','Aak': 'char_225_haak','Gladiia': 'char_474_glady','Mizuki': 'char_437_mizuki',
-           'SpecterAlter': 'char_1023_ghost2','Dorothy': 'char_4048_doroth','Shining': 'char_147_shining','Nightingale': 'char_179_cgbird','Kaltsit': 'char_003_kalts',
+           'SpecterAlter': 'char_1023_ghost2','Dorothy': 'char_4048_doroth','Shining': 'char_147_shining','Nightingale': 'char_179_cgbird','Mon3tr':'char_003_kalts' ,'Kaltsit': 'char_003_kalts',
 		   'Lumen': 'char_4042_lumen','EyjafjallaAlter': 'char_1016_agoat2','ReedAlter': 'char_1020_reed2','Hoshiguma': 'char_136_hsguma','Saria': 'char_202_demkni',
 		   'Blemishine': 'char_423_blemsh','Nian': 'char_2014_nian','Mudrock': 'char_311_mudrok','Penance': 'char_4065_judge','Eunectes': 'char_416_zumama',
 		   'Horn': 'char_4039_horn','JessicaAlter': 'char_1034_jesca2','Mountain': 'char_264_f12yin','Chongyue': 'char_2024_chyue','SilverAsh': 'char_172_svrash',
@@ -70,7 +70,9 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Lucilla': 'char_4079_haini', 'PhonoR0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
-		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3'} #, 'Shu': 'char_2025_shu' doesnt work for some reason
+		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3'} 
+#, 'Shu': 'char_2025_shu' doesnt work for some reason
+# replace kazemarus displaytoken (line 181387) with: "displayTokenDict": {"token_10022_kazema_shadow":true},
 
 
 def fileHelper():
