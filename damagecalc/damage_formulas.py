@@ -5620,7 +5620,6 @@ class Kazemaru(Operator):
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat	
 			final_atk2 = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
-			print(self.drone_atk)
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmg2 = np.fmax(final_atk2 - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -5715,107 +5714,44 @@ class Kjera(Operator):
 		return dps
 	
 class Kroos(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=55
-		lvl1atk = 308  #######including trust
-		maxatk = 425
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 21
-		
-		if level != maxlvl: self.name = f"Kroos Lv{level} P{self.pot} S1Lv7" #####set op name
-		else: self.name = f"Kroos P{self.pot} S1Lv7"
-		
-		self.buffs = buffs
-			
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Kroos",pp,[1],[],1,6,0)
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		crate = 0.2
-		cdmg = 1.6 if self.pot > 4 else 1.5
-
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+		crate = 0 if self.elite == 0 else self.talent1_params[0]
+		cdmg = self.talent1_params[1]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skill_scale = self.skill_params[0]
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		hitcrit = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
-		skilldmg = np.fmax(final_atk * 1.4 - defense, final_atk * 1.4 * 0.05) * 2
-		skillcrit =  np.fmax(final_atk * 1.4 * cdmg - defense, final_atk * 1.4 * cdmg * 0.05) * 2
+		skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * 2
+		skillcrit =  np.fmax(final_atk * skill_scale * cdmg - defense, final_atk * skill_scale * cdmg * 0.05) * 2
 		avghit = crate * hitcrit + (1-crate) * hitdmg
 		avgskill = crate * skillcrit + (1-crate) * skilldmg
-
-		dps = 0.2 * (4* avghit + avgskill)/(self.atk_interval/(1+aspd/100))
+		avgdmg = (avghit * self.skill_cost + avgskill) / (self.skill_cost+1)
+		dps = avgdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
 class KroosAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 486  #######including trust
-		maxatk = 577
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"KroosAlt Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"KroosAlt P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 31
-				elif self.module_lvl == 2: self.base_atk += 27
-				else: self.base_atk += 22
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("KroosAlter",pp,[1,2],[1],2,6,1)
 		if self.skill == 2:
-			if self.skilldmg: self.name += " 4hits"
+			if self.skill_dmg: self.name += " 4hits"
 			else: self.name += " 2hits"
-		if self.moduledmg and self.module == 1: self.name += " aerial target"
-		
-		self.buffs = buffs
+		if self.module_dmg and self.module == 1: self.name += " aerial target"
 			
-	
 	def skill_dps(self, defense, res):
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		self.atk_interval = 1.0
-		atk_scale = 1
-		crit_scale = 1.5
-		if self.pot > 4: crit_scale += 0.1
-		if self.moduledmg and self.module == 1:
-			atk_scale = 1.1
-		if self.module == 1:
-			if self.module_lvl == 2: crit_scale += 0.1
-			if self.module_lvl == 3: crit_scale += 0.15
-		
-		hits = 2
-		if self.skill == 2:
-			self.atk_interval = 0.625 if self.mastery == 3 else 0.7
-			if self.skilldmg: hits = 4
-		if self.skill == 1:
-			atkbuff += 0.3 + 0.03 * self.mastery
-			if self.mastery == 3: atkbuff+= 0.01
-
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		
-		normalhit = np.fmax(final_atk * atk_scale -defense, final_atk * atk_scale * 0.05)
-		crithit = np.fmax(final_atk * atk_scale * crit_scale -defense, final_atk * atk_scale * crit_scale * 0.05)
-
-		dps = hits*(0.2*crithit+0.8*normalhit)/(self.atk_interval/(1+aspd/100))
+		crate = 0 if self.elite == 0 else self.talent1_params[0]
+		cdmg = self.talent1_params[1]
+		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
+		atkbuff = self.skill_params[0] if self.skill == 1 else 0
+		atk_interval = self.atk_interval * (1 + self.skill_params[0]) if self.skill == 2 else self.atk_interval
+		hits = 4 if self.skill == 2 and self.skill_dmg else 2
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * atk_scale -defense, final_atk * atk_scale * 0.05)
+		critdmg = np.fmax(final_atk * atk_scale * cdmg -defense, final_atk * atk_scale * cdmg * 0.05)
+		avgdmg = critdmg * crate + hitdmg * (1-crate)
+		dps = hits * avgdmg/atk_interval * self.attack_speed/100
 		return dps
 
 class Laios(Operator):
