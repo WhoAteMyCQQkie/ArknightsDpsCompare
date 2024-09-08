@@ -10701,117 +10701,81 @@ class W(Operator):
 		return dps
 
 class Walter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 673  #######including trust
-		maxatk = 777
-		self.atk_interval = 2.1   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.shadow_atk = self.base_atk
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 32
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Wis'adel Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Wis'adel P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 55
-				else: self.base_atk += 45
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		##### keep the ones that apply
-		if self.skill == 2 and self.skilldmg: self.name += " overdrive"
-		if self.skill == 3: self.name += " 3shadows"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets"
-		
-		self.buffs = buffs
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Wisadel",pp,[1,2,3],[1],3,1,1)
+		self.shadows = 0
+		if self.elite == 2:
+			if self.skill == 3:
+				if self.talent2_dmg:
+					self.shadows = 3
+				else:
+					self.shadows = 2
+				if self.skill_params[1] == 1:
+					self.shadows -= 1
+			else:
+				self.shadows = 1 if self.talent2_dmg else 0
+		if self.elite == 2: self.name += f" shadows:{self.shadows}"
+		if self.skill == 2 and self.skill_dmg: self.name += " overdrive"
+		if self.targets > 1:
+			self.name += f" {self.targets}targets"
+			if self.skill == 2: self.name += "(NonOverlapping)"
 			
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		if self.module == 1:
-			aspd += 4 + self.module_lvl
-		
-		#talent/module buffs
 		bonushits = 2 if self.module == 1 else 1
-		maintargetscale = 1.15
-		crate = 0.15
-		shadowexplosion = 1.6 if self.pot >4 else 1.5
-		if self.module == 1:
-			if self.module_lvl == 2: 
-				shadowexplosion += 0.2
-				maintargetscale += 0.05
-			if self.module_lvl == 3: 
-				shadowexplosion += 0.25
-				maintargetscale += 0.1
+		maintargetscale = 1 if self.elite == 0 else self.talent1_params[0]
+		explosionscale = 0 if self.elite == 0 else self.talent1_params[2]
+		prob = 1 - 0.85 ** bonushits
 	
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 1.2 + 0.2 * self.mastery
+			prob2 = 1 - 0.85 ** (bonushits+2)
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk  * 0.05)
-			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
-			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
-			sp_cost = 2 if self.mastery == 3 else 3
-			avghit = (sp_cost * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1) * self.targets
-			dps = avghit/(self.atk_interval/(1+aspd/100))
-			
+			hitdmg_main = np.fmax(final_atk * maintargetscale - defense, final_atk * maintargetscale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			bonushitdmg_main = np.fmax(final_atk * maintargetscale * 0.5 - defense, final_atk * maintargetscale * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05)
+			skillhitdmg_main = np.fmax(final_atk * maintargetscale * skill_scale - defense, final_atk * maintargetscale * skill_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
+			sp_cost = self.skill_cost
+			avghit_main = (sp_cost * (hitdmg_main + bonushitdmg_main * bonushits) + hitdmg_main + (bonushits+2)*skillhitdmg_main) / (sp_cost + 1)
+			avghit = (sp_cost * (hitdmg + bonushitdmg * bonushits) + hitdmg + (bonushits+2)*skillhitdmg) / (sp_cost + 1)
+			avg_explosion = (sp_cost * explosiondmg * prob + explosiondmg * prob2) / (sp_cost + 1)
+			dps = (avghit_main+avg_explosion)/self.atk_interval * self.attack_speed/100
+			if self.targets > 1:
+				dps += (avghit+avg_explosion)/self.atk_interval * self.attack_speed/100 * (self.targets - 1)
 			
 		if self.skill == 2:
-			self.atk_interval = 1.4
-			atkbuff += 0.35 if self.mastery == 3 else 0.25
-
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk  * 0.05) * bonushits
-			dps = (hitdmg+ bonushitdmg)/(self.atk_interval/(1+aspd/100)) * self.targets
+			atk_interval = self.atk_interval + self.skill_params[0]
+			atkbuff = self.skill_params[1]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			atk_scale = self.skill_params[2] if self.skill_dmg else 1
+			hitdmg_main = np.fmax(final_atk * maintargetscale * atk_scale - defense, final_atk * maintargetscale * atk_scale * 0.05)
+			#hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonushitdmg_main = np.fmax(final_atk * maintargetscale * atk_scale * 0.5 - defense, final_atk * maintargetscale * atk_scale * 0.05)
+			#bonushitdmg = np.fmax(final_atk * atk_scale * 0.5 - defense, final_atk * atk_scale * 0.05)
+			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
+			dps = (hitdmg_main + bonushitdmg_main * bonushits + prob * explosiondmg)/self.atk_interval * self.attack_speed/100
+			if self.skill_dmg: dps *= 4
+			elif self.targets > 1: dps *= min(3, self.targets)
 		
 		if self.skill == 3:
-			
 			self.atk_interval = 5
-			atkbuff += 1.5 + 0.1 * self.mastery
-			skill_scale = 1.9 + 0.1 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			mainhitdmg = np.fmax(final_atk * maintargetscale *skill_scale - defense, final_atk * maintargetscale * skill_scale * 0.05)
-			aoehitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			mainaftershocks = np.fmax(final_atk * maintargetscale * skill_scale * 0.5 - defense, final_atk * skill_scale * maintargetscale * 0.5 * 0.05)
-			aoeaftershocks = np.fmax(final_atk * 0.5 - defense, final_atk * 0.5 * 0.05)
-			shadowexplosion = np.fmax(final_atk * shadowexplosion - defense, final_atk * shadowexplosion * 0.05)
-			if self.targets == 1:
-				dps = (mainhitdmg + mainaftershocks * bonushits + shadowexplosion)/(self.atk_interval/(1+aspd/100))
-			else:
-				#main target
-				dmg = mainhitdmg + mainaftershocks * bonushits + (self.targets - 1) * (aoehitdmg + aoeaftershocks * bonushits) + min(2,self.targets) * self.targets * shadowexplosion
-				dps = dmg/(self.atk_interval/(1+aspd/100))
+			atkbuff = self.skill_params[0]
+			skill_scale = self.skill_params[3]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg_main = np.fmax(final_atk * maintargetscale * skill_scale - defense, final_atk * maintargetscale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			bonushitdmg_main = np.fmax(final_atk * maintargetscale * skill_scale * 0.5 - defense, final_atk * skill_scale * maintargetscale * 0.5 * 0.05)
+			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk * 0.5 * 0.05)
+			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
+			dps = (hitdmg_main + bonushitdmg_main * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100
+			if self.targets > 1:
+				dps += (hitdmg + bonushitdmg * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100
 		
-		shadowthorns = 1 #if self.talent2 else 0
-		if self.skill == 3: shadowthorns += 2
-		shadowhit = np.fmax(self.shadow_atk * (1-res/100), self.shadow_atk * 0.05) * shadowthorns
+		shadowhit = np.fmax(self.drone_atk * (1-res/100), self.drone_atk * 0.05) * self.shadows
 		dps += shadowhit/4
 		return dps
 	
