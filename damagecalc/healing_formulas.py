@@ -288,61 +288,20 @@ class Purestream(Healer):
 		return self.name
 
 class Quercus(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
-		maxlvl=80
-		lvl1atk = 384  #######including trust
-		maxatk = 463
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		#if self.pot > 3: self.base_atk += 21
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Quercus Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Quercus P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += " ModX"
-				if self.module_lvl == 3: self.base_atk += 30
-				elif self.module_lvl == 2: self.base_atk += 20
-				else: self.base_atk += 15
-				self.name += f"{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		self.buffs = buffs
-		self.boost = boost
+	def __init__(self, pp, **kwargs):
+		super().__init__("Quercus",pp,[1,2],[1],1,1,1)
 	
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 20
-		skillcost = 50
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		healfactor = 1 if self.module == 1 else 0.75
-		
-		####the actual skills
+		heal_factor = 1 if self.module == 1 else 0.75
 		if self.skill == 1:
-			atkbuff += 0.4 if self.mastery == 3 else 0.3 + 0.03* self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skillhps = healfactor * final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			self.name += f": **{int(skillhps)}**/0"
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk/self.atk_interval *self.attack_speed/100 * (1+self.buff_fragile)
+			self.name += f": **{int(skill_hps)}**/0"
 		if self.skill == 2:
-			aspd += 45 + 5 * self.mastery
-			skillduration = 17 if self.mastery == 3 else 15
-			skillcost = 28 - self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skillhps = healfactor * final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			skillhps = heal_factor * final_atk/self.atk_interval *(self.attack_speed+aspd)/100 * (1+self.buff_fragile)
+			avghps = (skillhps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
 		return self.name
 
