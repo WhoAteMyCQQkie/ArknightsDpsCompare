@@ -10802,56 +10802,15 @@ class Whislash(Operator):
 		return dps
 
 class Wildmane(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 538  #######including trust
-		maxatk = 628
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Wildmane Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Wildmane P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 40
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		self.buffs = buffs
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("WildMane",pp,[1,2],[1],1,6,1)
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		if self.module == 1:
-			aspd += 2 + self.module_lvl
-		
-		####the actual skills
-		if self.skill == 1:
-			aspd += 135 if self.mastery == 3 else 100 + 10 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
-		if self.skill == 2:
-			atkbuff += 0.8 if self.mastery == 3 else 0.6 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+		aspd = self.skill_params[0] if self.skill == 1 else 0
+		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class YatoAlter(Operator):
