@@ -6957,74 +6957,41 @@ class Mlynar(Operator):
 		return dps
 
 class Mon3tr(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 1149  #######including trust
-		maxatk = 1402
-		self.atk_interval = 2.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Mon3tr Lv{level} S{self.skill}" #####set op name
-		else: self.name = f"Mon3tr S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1: self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2: self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-
-		if not self.talent2 and self.module == 2 and self.module_lvl > 1: self.name += " NotInKalRange"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Mon3tr",pp,[1,2,3],[1,2],3,1,2)
+		if not self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " NotInKalRange"
 		if self.skill == 3:
-			skillduration = 20
-			if self.mastery == 2: skillduration = 19
-			if self.mastery < 2: skillduration = 18
-			self.name += f" TrueDmg with decay over {skillduration}s"
+			if self.skill_dmg:
+				self.name += " skillStart"
+			else:
+				self.name += " skillEnd"
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
+		if self.module == 2:
+			self.attack_speed -= 4 + self.module_lvl #because we want mon3trs attack speed
 
-		
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		if self.module == 2 and self.talent2:
-			if self.module_lvl == 2: aspd += 12
-			if self.module_lvl == 3: aspd += 20
+		aspd = 0
+		if self.module == 2 and self.talent_dmg:
+			if self.module_lvl == 2: aspd = 12
+			if self.module_lvl == 3: aspd = 20
 			
 		####the actual skills
 		if self.skill == 1:
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
 		
 		if self.skill == 2:
-			atkbuff += 0.5 + 0.1 * self.mastery
-			if self.mastery == 2: atkbuff += 0.05
-			if self.mastery == 3: atkbuff += 0.1
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))*min(self.targets,3)
+			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
 		
 		if self.skill == 3:
-			atkbuff += (1.9 + 0.2 * self.mastery) * (1 - res/120)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			dps = final_atk/(self.atk_interval/(1+aspd/100))
+			final_atk = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk_start = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			dps_max = final_atk_start/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
+			dps_min = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
+			dps = dps_max if self.skill_dmg else dps_min
 		return dps
 
 class Morgan(Operator):
