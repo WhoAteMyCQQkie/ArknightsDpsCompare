@@ -289,8 +289,6 @@ def dps_command(args: List[str])-> DiscordSendable:
 
 def hps_command_new(args: List[str]) -> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()
-	already_drawn_ops = []
-	short_names = False
 	healer_message = ""
 
 	#fix typos in operator names
@@ -399,7 +397,10 @@ def hps_command_new(args: List[str]) -> DiscordSendable:
 	if plot_numbers > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
 	return DiscordSendable(healer_message)
 
-  
+
+
+
+
 def hps_command(args: List[str]) -> DiscordSendable:
 	#read the message
 	entries = len(args)

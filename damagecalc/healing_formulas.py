@@ -1,20 +1,24 @@
-class Healer:
-	
-	def avg_dps(self,defense,res):
-		print("The operator has not implemented the avg_dps method")
-		return -100
+from damagecalc.damage_formulas import Operator
+from damagecalc.utils import PlotParameters
+
+class Healer(Operator):
+	def skill_hps(self, **kwargs):
+		return("Operator not implemented")
 		
-	def skill_dps(self, defense, res, targets, high):
-		print("The operator has not implemented the skill_dps method")
-		return -100
+class Breeze(Healer):
+	def __init__(self, params: PlotParameters, **kwargs):
+		super().__init__("Breeze",params,[1,2],[1],2,1,1)
 	
-	def skill_hps(self):
-		return -100
-		
-	def avg_hps(self):
-		return -100
-	
-	def get_name(self):
+	def skill_hps(self, **kwargs):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		skilldown_hps = final_atk/self.atk_interval * self.attack_speed/100 * min(self.targets,3) * (1 + self.buff_fragile)
+		skill_hps = final_atk_skill/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		if self.skill == 1 and self.targets > 1: skill_hps *= min(2,self.targets)
+		if self.skill == 2 and self.targets > 1: skill_hps *= 1 + 0.5 * (self.targets - 1)
+		avg_hps = (skill_hps * self.skill_duration + skilldown_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+
+		self.name += f": **{int(skill_hps)}**/{int(skilldown_hps)}/*{int(avg_hps)}*"
 		return self.name
 
 class Example(Healer):
@@ -642,9 +646,9 @@ class Test():
 #################################################################################################################################################
 
 
-healer_dict = {"test":Test, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
+healer_dict = {"test":Test, "breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
 
-healers = ["Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu"]
+healers = ["Breeze","Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu"]
 
 if __name__ == "__main__":
 	for operator in healer_dict.values():
