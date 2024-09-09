@@ -228,49 +228,21 @@ class Lumen(Healer):
 		return self.name
 
 class Myrtle(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
-		maxlvl=70
-		lvl1atk = 436  #######including trust
-		maxatk = 520
-		self.atk_interval = 1   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Myrtle Lv{level} P{self.pot} S2" #####set op name
-		else: self.name = f"Myrtle P{self.pot} S2"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-
-		self.buffs = buffs
-		self.boost = boost
+	def __init__(self, pp, **kwargs):
+		super().__init__("Myrtle",pp,[1,2],[1],2,6,1)
 	
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 16
-		skillcost = 27 - self.mastery
-		atkbuff = self.buffs[0]
-		
-		extraheal = 28 if self.pot > 4 else 25
-		if self.module == 1:
-			if self.module_lvl == 2: extraheal += 3
-			if self.module_lvl == 3: extraheal += 5
-
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		skillhps = final_atk * (0.35 + 0.05 * self.mastery) * (1+self.buffs[3])
-		avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
-		self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}* + {extraheal}hps to vanguards"
+		if self.elite < 2 and self.skill == 1: 
+			self.name += "no heals =("
+			return self.name
+		if self.elite == 2 and self.skill == 1:
+			self.name += f" {self.talent1_params[0]}hps to vanguards"
+			return self.name
+		extraheal = self.talent1_params[0]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skillhps = final_atk * self.skill_params[0] * (1+self.buff_fragile) * min(self.targets,9)
+		avghps = skillhps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}* + {extraheal}hps to vanguards"
 		return self.name
 
 class Ptilopsis(Healer):
