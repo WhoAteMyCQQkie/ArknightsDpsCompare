@@ -5443,7 +5443,6 @@ class JessicaAlter(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
-
 		
 class Kafka(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -6604,6 +6603,10 @@ class Marcille(Operator):
 			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale *  0.05)
 			dps = hitdmg * self.targets
 		return dps
+	
+	def total_dmg(self, defense, res):
+		if self.skill == 3: self.skill_duration = 10
+		return super().total_dmg(defense, res)
 
 class Matoimaru(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):

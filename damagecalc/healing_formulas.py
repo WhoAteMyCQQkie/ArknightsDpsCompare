@@ -86,81 +86,34 @@ class Eyjaberry(Healer):
 
 
 class Lumen(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
-		maxlvl=90
-		lvl1atk = 477  #######including trust
-		maxatk = 585
-		self.atk_interval = 2.9   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Lumen Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Lumen P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.module = module if module in [0,1,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += " ModX"
-				if self.module_lvl == 3: self.base_atk += 45
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
-			elif self.module == 2:
-				self.name += " ModY"
-				if self.module_lvl == 3: self.base_atk += 45
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		self.buffs = buffs
-		self.boost = boost
+	def __init__(self, pp, **kwargs):
+		super().__init__("Lumen",pp,[1,2,3],[1,2],3,6,2)
+		if self.module != 2 and not self.trait_dmg: self.name += " atRange"
 	
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 20
-		skillcost = 50
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		healscale = 0.85
-		
-		first_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		basehps = first_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
+		range_heal = 1 if self.module == 2 or self.trait_dmg else 0.8
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = final_atk * range_heal /self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
 		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.9 if self.mastery == 3 else 0.7 + 0.05* self.mastery
-			skillduration = 30
-			skillcost = 30 if self.mastery == 3 else 32
+			skill_scale = self.skill_params[0]
+			heal_duration = self.skill_params[1]
+			skill_hps = final_atk * skill_scale * (1 + self.buff_fragile) * min(self.targets,9)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
+			atks_per_skillactivation = int(sp_cost / atkcycle) + 1
+			avg_hps = base_hps + skill_hps * heal_duration / (atks_per_skillactivation * atkcycle)
+			self.name += f": **{int(skill_hps+base_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		if self.skill == 2:
-			self.atk_interval -= 2.1 if self.mastery == 3 else 1.9
-			skillduration = 40 if self.mastery == 3 else 36 + self.mastery
-			skillcost = 100
+			skill_hps = final_atk * self.skill_params[0] * (1+self.buff_fragile) * min(self.targets,self.skill_params[1])
+			avg_hps = base_hps + skill_hps / self.skill_cost * (1 + self.sp_boost)
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		if self.skill == 3:
-			aspd += 20 if self.mastery == 0 else 30
-			atkbuff += 0.4 + 0.05 * self.mastery
-			skillcost = 50 if self.mastery == 3 else 57 - 2 * self.mastery
-			skill_scale = 1.5 if self.mastery == 0 else 1.55 + 0.15 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skillhps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			if self.module == 2:
-				
-				self.name += f": **{int(skillhps)}**/{int(basehps)}"
-			else:
-				self.name += f": **{int(skillhps)}**/{int(basehps)} or **{int(skillhps*0.8)}**/{int(basehps*0.8)} at range"
-		
-		#final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		#skillhps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-		#avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
-		#self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}*"
+			aspd = self.skill_params[0]
+			atkbuff = self.skill_params[3]
+			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_hps = final_atk_skill * range_heal / self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
 		return self.name
 
 class Myrtle(Healer):
