@@ -4652,67 +4652,26 @@ class Hibiscus(Operator):
 		return dps
 
 class Highmore(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 606  #######including trust
-		maxatk = 710
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
+	def __init__(self, pp, *args,**kwargs):
+		super().__init__("Highmore",pp,[1,2],[1],1,6,1)
+		if self.talent_dmg: self.name += " in IS3"
+		if self.targets > 1: self.name += f" {self.targets}targets"
 
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Highmore Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Highmore P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent: self.name += " in IS3"
-
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]		
-		#talent/module buffs
-		
-		if self.module == 1:
-			aspd += 3 + self.module_lvl
-		if self.talent:
-			aspd += 25
-		
-		####the actual skills
+		aspd = self.talent2_params[0] if self.talent_dmg else 0
+
 		if self.skill == 1:
-			skill_scale = 1.35 + 0.1 * self.mastery			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]			
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			sp_cost = 2 if self.mastery == 3 else 3
-			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1) * self.targets
-			dps = avgphys/(self.atk_interval/(1+aspd/100))
-		else:
-			atkbuff += 0.6 if self.mastery == 3 else 0.5 + 0.03 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			sp_cost = self.skill_cost
+			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1)
+			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
+		if self.skill == 2:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
-			
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
 		return dps
 
 class Hoederer(Operator):
@@ -5004,7 +4963,6 @@ class Humus(Operator):
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100 * self.targets
-			
 		return dps
 
 class Iana(Operator):
