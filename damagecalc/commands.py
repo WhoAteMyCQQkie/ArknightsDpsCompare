@@ -23,7 +23,7 @@ modifiers = ["s1","s2","s3","e0","e1","e2","p1","p2","p3","p4","p5","p6","m0","m
 prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","sp","boost","recovery","spboost","spbuff","buffsp",
 		   "color","colour","colorblind","colourblind","blind","g:","global","global:","t","target","targets","t1","t2","t3","t4","t5","t6","t7","t8","t9","r","res","resis","resistance","l","low","h","high","low1","l1","lowtrait","traitlow","high1","h1","hightrait","traithigh","low2","l2","lowtalent","talentlow","lowtalent1","talent1low","high2","h2","hightalent","talenthigh","hightalent1","talent1high","low3","l3","talentlow","lowtalent2","talent2low","high3","h3","talenthigh","hightalent2","talent2high","low4","l4","lows","slow","lowskill","skilllow","high4","h4","highs","shigh","highskill","skillhigh","low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow","high5","h5","highm","mhigh","highmod","modhigh","highmodule","modulehigh","lowtalents","hightalents",
 			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
-			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","maxdef","limit","range","scale",
+			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","maxdef","limit","range","scale","healing","healingbonus","hb","bonus",
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
 			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2","trust","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]
 
@@ -172,20 +172,20 @@ def dps_command(args: List[str])-> DiscordSendable:
 	if plot_numbers == 0: return DiscordSendable() #maybe return a "no operator found, use !guide" hint instead?
 
 	#find unused parts
-	parsing_errors = "" 
+	error_message = "" 
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
 		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
-			parsing_errors += (args[pos]+", ")
+			error_message += (args[pos]+", ")
 	
 	parsing_error = False
-	if parsing_errors != "":
+	if error_message != "":
 		parsing_error = True
-		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-2]
+		error_message = "Could not use the following prompts: " + error_message[:-2]
 		for bad_word in profanity:
-			if bad_word in parsing_errors.lower():
-				parsing_errors = "Could not use some of the prompts"
+			if bad_word in error_message.lower():
+				error_message = "Could not use some of the prompts"
 				break
 
 
@@ -282,7 +282,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	plt.close()
 	#return DiscordSendable(file=file)
 	if parsing_error:
-		return DiscordSendable(content=parsing_errors, file=file)
+		return DiscordSendable(content=error_message, file=file)
 	else:
 		return DiscordSendable(file=file)
 
@@ -343,12 +343,12 @@ def hps_command(args: List[str]) -> DiscordSendable:
 	scopes.append(len(args))
 
 	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
-	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
+	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
 		tmp = args[1]
 		args[1] = args[0]
 		args[0] = tmp
 	for i in range(1,len(args)-2):
-		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","limit","maxres","maxdef","hits","hit","aspd","fragile","atk"]  and not args[i+1] in "0123":
+		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","hits","hit","aspd","fragile","atk"]  and not args[i+1] in "0123":
 			tmp = args[i+1]
 			args[i+1] = args[i+2]
 			args[i+2] = tmp
@@ -356,7 +356,6 @@ def hps_command(args: List[str]) -> DiscordSendable:
 	
 	plot_numbers = 0
 	#getting setting the plot parameters and plotting the units
-	utils.parse_plot_essentials(global_parameters, args)
 	for i in range(len(scopes)-1):
 		if scopes[i] in local_scopes:
 			local_parameters = copy.deepcopy(global_parameters)
@@ -367,32 +366,33 @@ def hps_command(args: List[str]) -> DiscordSendable:
 				if not new_text in healer_message:
 					healer_message += new_text
 					plot_numbers += 1
+					if plot_numbers > 19: break
 		elif scopes[i] in global_scopes:
 			if args[scopes[i]] in ["reset","reset:"]:
 				global_parameters = utils.PlotParametersSet()
-				utils.parse_plot_essentials(global_parameters, args)
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
+		if plot_numbers > 19: break
 	if plot_numbers == 0: return DiscordSendable() #maybe return a "no operator found, use !guide" hint instead?
 
 	#find unused parts
-	parsing_errors = "" 
+	error_message = "" 
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
 		if not args[pos] in healer_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
-			parsing_errors += (args[pos]+", ")
+			error_message += (args[pos]+", ")
 	
 	parsing_error = False
-	if parsing_errors != "":
+	if error_message != "":
 		parsing_error = True
-		parsing_errors = "Could not use the following prompts: " + parsing_errors[:-2]
+		error_message = "Could not use the following prompts: " + error_message[:-2]
 		for bad_word in profanity:
-			if bad_word in parsing_errors.lower():
-				parsing_errors = "Could not use some of the prompts"
+			if bad_word in error_message.lower():
+				error_message = "Could not use some of the prompts"
 				break
 
+	healer_message = "Heals per second - **skill active**/skill down/*averaged* \n" + healer_message
 	if parsing_error:
-		healer_message = parsing_errors + "\n" + healer_message
-	healer_message = "Heals per second - **skill active**/skill down/*averaged* \n" + healer_message		
+		healer_message =  error_message + "\n" + healer_message
 	if plot_numbers > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
 	return DiscordSendable(healer_message)

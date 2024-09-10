@@ -247,7 +247,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
-		elif args[i] in ["fragile","frag","dmg"]:
+		elif args[i] in ["fragile","frag","dmg","healing","healingbonus","hb","bonus"]:
 			i+=1
 			pps.buffs[3] = 0
 			if args[i][-1] == "%": args[i] = args[i][:-1]
