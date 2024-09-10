@@ -469,7 +469,13 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.all_conditionals = True
 		elif args[i].isnumeric():
 			x = int(args[i])
-			if x > 3 and x < 90:
+			try:
+				essential_prompt = args[i-1] in ["maxdef","limit","range","scale","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense",
+									 "fixeddefense","setdef","setdefense","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance",
+									 "set","fix","fixed","chapter","chapter2","enemy","enemy2"]
+			except:
+				essential_prompt = False
+			if x > 3 and x < 90 and not essential_prompt:
 				pps.levels.add(x)
 				pps.levels.discard(-1)
 			else:
