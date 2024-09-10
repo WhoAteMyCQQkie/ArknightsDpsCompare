@@ -77,10 +77,10 @@ class Myrtle(Healer):
 	
 	def skill_hps(self, **kwargs):
 		if self.elite < 2 and self.skill == 1: 
-			self.name += "no heals =("
+			self.name += ": No heals =("
 			return self.name
 		if self.elite == 2 and self.skill == 1:
-			self.name += f" {int(self.talent1_params[0])}hps to vanguards"
+			self.name += f": {int(self.talent1_params[0])}hps to vanguards"
 			return self.name
 		extraheal = self.talent1_params[0]
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
@@ -198,42 +198,25 @@ class Shu(Healer):
 class Silence(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Silence",pp,[1,2],[1],2,1,1)
-		#TODO
+		if self.module_dmg and self.module == 1: self.name += " healingMelee"
 	
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 20
-		skillcost = 50
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		aspd += 14 if self.pot > 4 else 12
-		if self.module == 1:
-			aspd += 3 + self.module_lvl
-			if self.module_lvl == 2: aspd += 3
-			if self.module_lvl == 3: aspd += 5
+		aspd = self.talent1_params[0] if self.elite > 0 else 0
+		heal_factor = 1.15 if self.module == 1 and self.module_dmg else 1
 
-		
-		first_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		basehps = first_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-		####the actual skills
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = heal_factor * final_atk / self.atk_interval * (self.attack_speed + aspd)/100 * (1 + self.buff_fragile)
+
 		if self.skill == 1:
-			atkbuff += 0.9 if self.mastery == 3 else 0.7 + 0.05* self.mastery
-			skillduration = 30
-			skillcost = 30 if self.mastery == 3 else 32
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
 		if self.skill == 2:
-			self.atk_interval -= 2.1 if self.mastery == 3 else 1.9
-			skillduration = 10
-			skillcost = 18 if self.mastery == 3 else 22 - self.mastery
-
-			
-		
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		skillhps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-		avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
-		self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}*"
+			skill_hps = self.drone_atk * min(self.targets,8)
+			avg_hps = skill_hps * min(1, 10 / self.skill_cost * (1 + self.sp_boost))
+			skill_hps += base_hps
+			avg_hps += base_hps
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
 #################################################################################################################################################
@@ -241,4 +224,4 @@ class Silence(Healer):
 
 healer_dict = {"breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
 
-healers = ["Breeze","Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu"]
+healers = ["Breeze","Eyjafjalla","Lumen","Myrtle","Ptilopsis","Purestream","Quercus","Shu","Silence"]
