@@ -196,36 +196,9 @@ class Shu(Healer):
 		return self.name
 
 class Silence(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
-		maxlvl=80
-		lvl1atk = 460  #######including trust
-		maxatk = 557
-		self.atk_interval = 2.85   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Silence Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Silence P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += " ModY"
-				if self.module_lvl == 3: self.base_atk += 47
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f"{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		self.buffs = buffs
-		self.boost = boost
+	def __init__(self, pp, **kwargs):
+		super().__init__("Silence",pp,[1,2],[1],2,1,1)
+		#TODO
 	
 	def skill_hps(self, **kwargs):
 		skillhps = 0
