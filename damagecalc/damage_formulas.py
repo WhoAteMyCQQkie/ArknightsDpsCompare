@@ -3367,98 +3367,51 @@ class Exusiai(Operator):
 		return dps
 		
 class Eyjafjalla(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 625  #######including trust
-		maxatk = 735
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 27
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Eyjafjalla Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Eyjafjalla P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.skilldmg = TrTaTaSkMo[3]
-	
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 55
-				else: self.base_atk += 40
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.skilldmg:
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Eyjafjalla",pp,[1,2,3],[1],3,1,1)
+		if self.skill_dmg:
 			if self.skill == 1: self.name += " 2ndSkilluse"
 			if self.skill == 2: self.name += " permaResshred"
-		if not self.skilldmg and self.skill == 2: self.name += " minResshred"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+		if not self.skill_dmg and self.skill == 2: self.name += " minResshred"
+		if self.targets > 1 and self.skill < 2: self.name += f" {self.targets}targets"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		self.atk_interval = 1.6
-		atk_scale = 1
-		atkbuff += 0.14
-		resignore = 0
-		if self.pot == 6: atkbuff += 0.02
-		if self.module == 1: 
-			atkbuff += 0.04 * (self.module_lvl - 1)
-			resignore = 10
+		atkbuff = self.talent1_params[0] if self.elite > 0 else 0
+		resignore = 10 if self.module == 1 else 0
 		newres = np.fmax(0, res - resignore)
-		
-		####the actual skills
+
 		if self.skill == 1:
-			aspd += 45 + 5 * self.mastery
-			if self.skilldmg: atkbuff += 0.45 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			aspd = self.skill_params[0]
+			if self.skill_dmg: atkbuff += self.skill_params[2]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
-			
+			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
-			atk_scale = 3.1 + 0.2 * self.mastery
-			sp_cost = 5 if self.mastery == 3 else 6
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			resshred = 0.25 if self.mastery == 3 else 0.2
-			newres2 = np.fmax(0, res*(1-resshred)-resignore)
-			
+			atk_scale = self.skill_params[2]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
+			newres2 = np.fmax(0, res*(1+self.skill_params[5])-resignore)
 			hitdmg = np.fmax(final_atk  * (1-newres2/100), final_atk * 0.05)
-			if not self.skilldmg: hitdmg = np.fmax(final_atk  * (1-newres/100), final_atk * 0.05)
+			if not self.skill_dmg: hitdmg = np.fmax(final_atk  * (1-newres/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * (1-newres2/100), final_atk* atk_scale * 0.05)
 			aoeskilldmg = np.fmax(0.5 * final_atk * atk_scale * (1-newres/100), 0.5 * final_atk* atk_scale * 0.05)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg + (self.targets - 1) * aoeskilldmg
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (self.targets - 1) * aoeskilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation						
-			
-			dps = avghit/(self.atk_interval/(1+aspd/100))
-			
+				if self.skill_params[3] > 1:
+					avghit = (skilldmg + (self.targets - 1) * aoeskilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + (self.targets - 1) * aoeskilldmg + (atks_per_skillactivation - 1) * hitdmg) / (int(atks_per_skillactivation)+1)								
+			dps = avghit/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 3:
 			self.atk_interval = 0.5
-			atkbuff += 0.85 + 0.15 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
-			maxtargets = 6 if self.mastery == 3 else 5
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * min(self.targets, maxtargets)
+			maxtargets = self.skill_params[2]
+			dps = hitdmgarts/self.atk_interval * self.attack_speed/100 * min(self.targets, maxtargets)
 			 
 		return dps
 
