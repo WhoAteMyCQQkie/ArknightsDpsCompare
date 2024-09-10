@@ -1,4 +1,6 @@
 #to function, this script needs four jsons (see lines 133ff). You find these on Github if you look for "Arknights Gamedata". the path is something like: gamedataRepository/CN/gamedata/excel
+#IMPORTANT!!!: You probably have to edit the jsons if you want to update the script. See line 77f
+
 import json
 import dill
 
@@ -70,9 +72,10 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Lucilla': 'char_4079_haini', 'PhonoR0': 'char_4136_phonor', 'Underflow': 'char_4137_udflow', 'Doc': 'char_4125_rdoc', 'Wanqing': 'char_4119_wanqin',
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
-		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3'} 
-#, 'Shu': 'char_2025_shu' doesnt work for some reason
-# replace kazemarus displaytoken (line 181387) with: "displayTokenDict": {"token_10022_kazema_shadow":true},
+		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3', 'Shu': 'char_2025_shu'} 
+
+# character_table.json: replace kazemarus displaytoken (line 181387) with: "displayTokenDict": {"token_10022_kazema_shadow":true},
+#!!! battle_equip_table.json: search for valueStr (2 occurences) and remove the entire entry from the "blackboard" for Shu to work, otherwise remove shu from id_dict
 
 
 def fileHelper():
@@ -340,8 +343,6 @@ class OperatorData:
 								self.talent1_module_extra.append([equip_lvl, talent_data])
 							elif candidate["prefabKey"] in ["20","21"]:
 								self.talent2_module_extra.append([equip_lvl, talent_data])
-
-		#TODO: drone stats
 	
 		x = character_data[key]["displayTokenDict"]
 		if x != None:
@@ -364,22 +365,6 @@ class OperatorData:
 					self.drone_atk_e2.append(drone_atk2)
 
 
-		
-
-
-
-
-
-
-
-#operator_stats = OperatorData('char_2023_ling')
-#operator_stats2 = OperatorData('char_214_kafka')
-#print(operator_stats.drone_atk_interval)
-
-#print(operator_stats.skill_costs, operator_stats.skill_durations)
-#print(operator_stats.available_modules)
-#print(operator_stats.aspd_module)
-#print(operator_stats.atk_module)
 
 #"""
 if __name__ == "__main__":
