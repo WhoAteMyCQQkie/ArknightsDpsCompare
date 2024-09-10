@@ -22,68 +22,23 @@ class Breeze(Healer):
 		return self.name
 
 class Eyjaberry(Healer):
-	def __init__(self, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, buffs=[0,0,0,0], boost = 0.0, **kwargs):
-		maxlvl=90
-		lvl1atk = 384  #######including trust
-		maxatk = 469
-		self.atk_interval = 2.9   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1,3] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Eyjaberry Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Eyjaberry P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.buffs = buffs
-		self.boost = boost
+	def __init__(self, pp, **kwargs):
+		super().__init__("EyjafjallaAlter",pp,[1,3],[1],1,1,1)
+
 	def skill_hps(self, **kwargs):
-		skillhps = 0
-		basehps = 0
-		avghps = 0
-		skillduration = 20
-		skillcost = 50
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		
-		first_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		basehps = first_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-		####the actual skills
+		talent_scale = 0 if self.elite < 1 else self.talent1_params[0] * 3
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = (final_atk/self.atk_interval * self.attack_speed/100 + final_atk * talent_scale) * (1 + self.buff_fragile)
 		if self.skill == 1:
-			first_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			basehps = first_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			basehpstalent = 0.3 * first_atk * (1+self.buffs[3])
-			basehps += basehpstalent
-			atkbuff += 0.4 if self.mastery == 3 else 0.3
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			skillhps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			skillhpstalent = 0.3 * final_atk * (1+self.buffs[3])
-			skillhps += skillhpstalent
-			self.name += f": **{int(skillhps)}**/{int(basehps)}, of which {int(skillhpstalent)}/{int(basehpstalent)} come from her talent"
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = (final_atk_skill/self.atk_interval * self.attack_speed/100 + final_atk_skill * talent_scale) * (1 + self.buff_fragile) * min(self.targets,2)
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
 		if self.skill == 3:
-			skill_scale = 0.45 + 0.05 * self.mastery
-			skillduration = 50
-			skillcost = 70 if self.mastery == 0 else 69 - 3 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			basehps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-			basehpstalent = 0.3 * first_atk * (1+self.buffs[3])
-			basehps += basehpstalent
-			skillhps = final_atk * skill_scale/(self.atk_interval/(1+aspd/100)) * 5 * (1+self.buffs[3])
-			skillhps += basehpstalent
-			avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
-			self.name += f": **{int(skillhps)}**/{int(basehps)}/{int(avghps)}, of which {int(basehpstalent)} comes from her talent, which can realistically be active on 5 targets for a total of **{int(skillhps + 4 * basehpstalent)}** hps"
-
-		
-		#final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		#skillhps = final_atk/(self.atk_interval/(1+aspd/100)) * (1+self.buffs[3])
-		#avghps = (basehps * skillcost/(1+self.boost) + skillhps * skillduration)/(skillduration + skillcost/(1+self.boost))
-		#self.name += f": **{int(skillhps)}**/{int(basehps)}/*{int(avghps)}*"
+			skill_scale = self.skill_params[0]
+			skill_hps = (5 * skill_scale * final_atk/self.atk_interval * self.attack_speed/100 + final_atk * talent_scale * min(self.targets,5)) * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
-
 
 class Lumen(Healer):
 	def __init__(self, pp, **kwargs):
