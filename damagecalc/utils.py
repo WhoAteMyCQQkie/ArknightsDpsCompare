@@ -482,6 +482,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				unused_inputs.add(i)
 		else:
 			unused_inputs.add(i)
+			pps.input_kwargs[args[i]] = True
 		if not -1 in pps.module_lvls and 0 in pps.modules and len(pps.modules) == 1:
 			pps.modules.add(-1)
 		i += 1

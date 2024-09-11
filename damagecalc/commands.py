@@ -182,10 +182,10 @@ def dps_command(args: List[str])-> DiscordSendable:
 	parsing_error = False
 	if error_message != "":
 		parsing_error = True
-		error_message = "Could not use the following prompts: " + error_message[:-2]
+		error_message = "The following inputs are not part of the standard prompts and may have had no effect: " + error_message[:-2]
 		for bad_word in profanity:
 			if bad_word in error_message.lower():
-				error_message = "Could not use some of the prompts"
+				error_message = "Could not use some of the prompts."
 				break
 
 
