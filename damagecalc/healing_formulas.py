@@ -290,19 +290,41 @@ class Silence(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Sussurro(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Sussurro",pp,[1,2],[2],2,6,2)
+		if self.elite > 0 and self.talent_dmg: self.name += " ≤10DP"
+		if self.module_dmg and self.module == 2: self.name += " <50%Hp"
+	
+	def skill_hps(self, **kwargs):
+		heal_factor_talent = self.talent1_params[1] if self.elite > 0 and self.talent_dmg else 1
+		heal_factor = 1.15 if self.module == 2 and self.module_dmg else 1
+
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = heal_factor * heal_factor_talent * final_atk / self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill == 1:
+			skill_hps = heal_factor * heal_factor_talent * final_atk_skill/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		if self.skill == 2:
+			aspd = self.skill_params[1]
+			skill_hps = heal_factor * heal_factor_talent * final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class UOfficial(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("UOfficial",pp,[],[],0,6)
 	
 	def skill_hps(self, **kwargs):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		base_hps = final_atk * 0.1 * self.targets
+		base_hps = final_atk * 0.1 * min(self.targets,9)
 		self.name += f": hps:{int(base_hps)}"
 		return self.name
 #################################################################################################################################################
 
 
 healer_dict = {"ansel": Ansel, "breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence, "uofficial": UOfficial}
+			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial}
 
-healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shu","Silence","UOfficial"]
+healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shu","Silence","Sussurro","UOfficial"]
