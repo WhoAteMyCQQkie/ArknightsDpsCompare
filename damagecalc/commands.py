@@ -34,21 +34,21 @@ def simple(content: str) -> Callable[[List[str]], DiscordSendable]:
 	return lambda args: DiscordSendable(content)
 
 def calc_command(args: List[str]) -> DiscordSendable:
+	manager = multiprocessing.Manager()
+	return_dict = manager.dict()
+    
+	process = multiprocessing.Process(target=utils.calc_message, args=((' '.join(args)), return_dict))
+	process.start()
+    
+    #if the process is still running after 2 seconds, kill it
+	process.join(2)
+	if process.is_alive():
+		process.terminate()
+		process.join()
+		return DiscordSendable("Exceeded reasonable computation time.")
+    
+	return DiscordSendable(return_dict.get('result', 'No result'))
 
-	# Note that multiprocessing may add quite a bit of overhead in spawning a worker thread, but also a lot of safety for a potentially risky computation.
-	#start = time.time()
-	pool = multiprocessing.Pool(processes=1)
-	output = "Exceeded reasonable computation time"
- 
-	try:
-		output = pool.apply_async(utils.calc_message, (' '.join(args),)).get(timeout=2) 
-	except multiprocessing.context.TimeoutError:
-		pass
-	finally:
-		pool.close()
-	
-	#output += "Completed in " + str(round((time.time() - start) * 1000)) + "ms"
-	return DiscordSendable(output)
 
 def dps_command(args: List[str])-> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()

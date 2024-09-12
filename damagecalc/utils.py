@@ -766,8 +766,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	return True
 
-def calc_message(sentence: str):
-	
+def calc_message(sentence: str, return_dict):
 	#Check, that the input really is just a simple calculation and not possibly malicious code, using a context free grammar
 	grammar = nltk.CFG.fromstring("""
 		S -> N | '(' S ')' | S '+' S | S '-' S | S '*' S | S '/' S | S '*' '*' S
@@ -791,25 +790,26 @@ def calc_message(sentence: str):
 		elif letter == " ": continue
 		else: output.append(letter)
 	
-	
 	try:
 		is_valid = any(parser.parse(output))
 		if is_valid:
 			command = ""
 			for letter in output:
 				command += letter
-			command = "print("+command+")"
-			result = subprocess.run(['python', '-c', command], capture_output=True, text=True, timeout=1, check=False)
-			if "ZeroDivisionError" in result.stderr: raise ZeroDivisionError
-			if len(str(result.stdout)) < 200:
-				return str(result.stdout)
+			result = eval(command)
+			#command = "print("+command+")"
+			#computation = subprocess.run(['python', '-c', command], capture_output=True, text=True, timeout=1, check=False)
+			#result = computation.stdout
+			#if "ZeroDivisionError" in computation.stderr: raise ZeroDivisionError
+			if len(str(result)) < 200:
+				return_dict['result'] = result
 			else:
-				return "Result too large."
+				return_dict['result'] = "Result too large"
 		else:
-			return "Invalid syntax."
+			return_dict['result'] = "Invalid syntax."
 	except ValueError:
-		return "Only numbers and +-x/*^() are allowed as inputs."
+		return_dict['result'] = "Only numbers and +-x/*^() are allowed as inputs."
 	except ZeroDivisionError:
-		return "Congrats, you just divided by zero."
+		return_dict['result'] = "Congrats, you just divided by zero."
 	except subprocess.TimeoutExpired:
-		return "The thread did not survive trying to process this request."
+		return_dict['result'] = "The thread did not survive trying to process this request."
