@@ -10178,7 +10178,7 @@ class Walter(Operator):
 			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
 			dps = (hitdmg_main + bonushitdmg_main * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100
 			if self.targets > 1:
-				dps += (hitdmg + bonushitdmg * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100
+				dps += (hitdmg + bonushitdmg * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100 * (self.targets-1)
 		
 		shadowhit = np.fmax(self.drone_atk * (1-res/100), self.drone_atk * 0.05) * self.shadows
 		dps += shadowhit/4

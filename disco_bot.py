@@ -2,19 +2,19 @@
 
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators / Update the old operators to the super().__init__ design
-# #TODO: UPDATE HPS COMMAND BEFORE -> implement more healers (and probably fix the kwargs situation before many more are added)
 # implement various total_dmg methods for operators, where that doesnt work automatically
+# update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
 
 #TODO: specific Minijobs that really should be done asap
 # qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
 # Mudrock: include the SP gains from the module for S2 damage calculations
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
-# Wisadel: Add S1 and S2, and maybe double check S3's aoe
 # kaltsit: the true damage of S3 cant handle changes in max res
 # add new modules for ifrit, gladiia.
-# muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu)
+# muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu) #update: mumu is completely broken with the update
 
 #TODO: bigger changes that may be complicated or even unrealistic
+# read damage type melee/arts from json, include into own normal attack dps
 # add average_dmg methods (which include skill down time and ramp up times etc)
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
@@ -22,7 +22,6 @@
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
 # rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
-# add kwargs to make the bot understand more text ->alternative: pass on every "wrong" input as kwarg, make operators look for specific words (example: ela looks for "mine" or "mines")
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
 # drone/summon(count) prompt for summoners

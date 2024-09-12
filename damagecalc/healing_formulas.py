@@ -4,6 +4,20 @@ from damagecalc.utils import PlotParameters
 class Healer(Operator):
 	def skill_hps(self, **kwargs):
 		return("Operator not implemented")
+
+class Ansel(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Ansel",pp,[1],[],1,6,)
+	
+	def skill_hps(self, **kwargs):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		targets = 1 if self.elite == 0 or self.targets == 1 else 1 + self.talent1_params[0]
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * targets * (1 + self.buff_fragile)
+		skill_hps = final_atk_skill/self.atk_interval * self.attack_speed/100 * targets * (1 + self.buff_fragile)
+		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
 		
 class Breeze(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
@@ -38,6 +52,30 @@ class Eyjaberry(Healer):
 			skill_hps = (5 * skill_scale * final_atk/self.atk_interval * self.attack_speed/100 + final_atk * talent_scale * min(self.targets,5)) * (1 + self.buff_fragile)
 			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
+class Hibiscus(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Hibiscus",pp,[1],[],1,6)
+	
+	def skill_hps(self, **kwargs):
+		atkbuff = self.talent1_params[0]
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0] + atkbuff) + self.buff_atk_flat
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		skill_hps = final_atk_skill/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
+class Lancet2(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Lancet2",pp,[],[],0,6)
+	
+	def skill_hps(self, **kwargs):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		self.name += f": hps:{int(base_hps)} + {int(self.talent1_params[0])} on deploy"
 		return self.name
 
 class Lumen(Healer):
@@ -121,7 +159,6 @@ class Paprika(Healer):
 		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
-
 
 class Ptilopsis(Healer):
 	def __init__(self, pp, **kwargs):
@@ -253,9 +290,19 @@ class Silence(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class UOfficial(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("UOfficial",pp,[],[],0,6)
+	
+	def skill_hps(self, **kwargs):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = final_atk * 0.1 * self.targets
+		self.name += f": hps:{int(base_hps)}"
+		return self.name
 #################################################################################################################################################
 
 
-healer_dict = {"breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "lumen": Lumen, "myrtle": Myrtle, "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence}
+healer_dict = {"ansel": Ansel, "breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
+			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence, "uofficial": UOfficial}
 
-healers = ["Breeze","Eyjafjalla","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shu","Silence"]
+healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shu","Silence","UOfficial"]
