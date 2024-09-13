@@ -18,7 +18,49 @@ class Ansel(Healer):
 		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
+
+class Blemishine(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Blemishine",pp,[1,2,3],[2,1],3,1,1)
+		if self.module == 1 and self.skill != 2 and not self.module_dmg: self.name += " >50%Hp"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.skill == 1: self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+			
+		if self.skill == 1: #TODO when the skill doesnt hold charges, the skill healing drops as it has to align with atk cycle
+			skill_scale = self.skill_params[1]
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 1.2
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			skill_hps = final_atk * heal_scale * skill_scale * (1+ self.buff_fragile)
+			avg_hps = skill_hps / sp_cost
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+
+		skill_recovery = 1/self.atk_interval * self.attack_speed/100
+		if self.hits > 0:
+			skill_recovery += self.hits
 		
+		if self.skill == 2:
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_scale = self.skill_params[1]
+			skill_hps = final_atk_skill * skill_scale * min(self.targets,13)
+			avg_hps = (skill_hps * self.skill_duration + self.skill_cost/skill_recovery)/ (self.skill_duration + self.skill_cost/skill_recovery)
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		
+		if self.skill == 3:
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_scale = self.skill_params[3]
+			skill_hps = heal_scale * skill_scale * final_atk_skill/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + self.skill_cost/skill_recovery)/ (self.skill_duration + self.skill_cost/skill_recovery)
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+
+		return self.name
+
 class Breeze(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
 		super().__init__("Breeze",params,[1,2],[1],2,1,1)
@@ -267,7 +309,6 @@ class Shining(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
-
 class Shu(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Shu",pp,[1,2,3],[1],3,1,1)
@@ -305,7 +346,6 @@ class Shu(Healer):
 			if self.skill_dmg:
 				aspd += self.skill_params[2]
 				atkbuff += self.skill_params[1]
-			print(atkbuff,aspd,self.atk)
 
 			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			skill_hps = heal_scale* final_atk_skill/self.atk_interval * (self.attack_speed + aspd)/100 * (1 + self.buff_fragile)
@@ -372,7 +412,7 @@ class UOfficial(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
+healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
 			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial}
 
-healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial"]
+healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial"]

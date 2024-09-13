@@ -362,7 +362,7 @@ def hps_command(args: List[str]) -> DiscordSendable:
 			if (scopes[i]+1) not in scopes:
 				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
 			for parameters in local_parameters.get_plot_parameters():
-				new_text = (healer_dict[args[scopes[i]]](parameters)).skill_hps() + "\n"
+				new_text = (healer_dict[args[scopes[i]]](parameters, **parameters.input_kwargs)).skill_hps() + "\n"
 				if not new_text in healer_message:
 					healer_message += new_text
 					plot_numbers += 1
