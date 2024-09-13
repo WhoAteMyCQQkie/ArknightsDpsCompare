@@ -202,6 +202,29 @@ class Paprika(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Perfumer(Healer):
+	def __init__(self, params: PlotParameters, **kwargs):
+		super().__init__("Perfumer",params,[1,2],[2],2,6,2)
+	
+	def skill_hps(self, **kwargs):
+		targets = 4 if self.module == 2 else 3
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		aspd = self.skill_params[1] if self.skill == 2 else 0
+
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * min(self.targets,targets) * (1 + self.buff_fragile)
+		skill_hps = final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 *  min(self.targets,targets) * (1 + self.buff_fragile)
+		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+
+		heal_factor = self.talent1_params[0]
+		if self.module == 2 and self.module_lvl > 1: heal_factor += 0.005 * self.module_lvl
+		aura_heal = final_atk * heal_factor * self.targets if self.elite > 0 else 0
+		aura_heal_skill = final_atk_skill * heal_factor * self.targets if self.elite > 0 else 0
+		aura_heal_avg = (aura_heal_skill * self.skill_duration + aura_heal * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+
+		self.name += f": **{int(skill_hps+aura_heal_skill)}**/{int(base_hps+aura_heal)}/*{int(avg_hps+aura_heal_avg)}*  (**{int(aura_heal_skill)}**/{int(aura_heal)}/*{int(aura_heal_avg)}* from global aura heal)"
+		return self.name
+
 class Ptilopsis(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Ptilopsis",pp,[1,2],[1],2,1,1)
@@ -445,6 +468,6 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
+			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial","Whisperain"]
