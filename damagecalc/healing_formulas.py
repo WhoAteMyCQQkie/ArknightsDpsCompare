@@ -193,7 +193,8 @@ class Purestream(Healer):
 		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * ranged_heal
 		skill_scale = self.skill_params[0]
 		if self.skill == 1:
-			skill_hps = final_atk * skill_scale * heal_scale * (1+self.buff_fragile) * self.targets
+			max_targets = 18 if self.elite > 0 else 12
+			skill_hps = final_atk * skill_scale * heal_scale * (1+self.buff_fragile) * min(self.targets,max_targets)
 			avg_hps = base_hps + skill_hps / self.skill_cost * (1+ self.sp_boost)
 		if self.skill == 2:
 			atk_interval = self.atk_interval * 0.12
@@ -219,6 +220,53 @@ class Quercus(Healer):
 			avghps = (skillhps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
 		return self.name
+
+class Shining(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Shining",pp,[1,2,3],[2,1],2,1,1)
+		if self.module_dmg:
+			if self.module == 1: self.name += " <50%Hp"
+			if self.module == 2: self.name += " ground"
+	
+	def skill_hps(self, **kwargs):
+		heal_factor = 1.15 if self.module != 0 and self.module_dmg else 1
+		aspd = self.talent2_params[0]
+		atkbuff = 0
+		if self.skill == 2 and self.module == 1 and self.module_lvl > 1: atkbuff += 0.05 + 0.1 * self.module_lvl
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		base_hps = heal_factor * final_atk / self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+
+		if self.skill == 1:
+			atkbuff += self.skill_params[0]
+			aspd += self.skill_params[1]
+			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		if self.skill == 2:
+			base_heal = heal_factor * final_atk * (1 + self.buff_fragile)
+			skill_heal =  final_atk * self.skill_params[1] + base_heal
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/((self.attack_speed+aspd)/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avg_heal = skill_heal
+			if atks_per_skillactivation > 1:
+				if self.skill_params[3] > 1:
+					avg_heal = (skill_heal + (atks_per_skillactivation - 1) * base_heal) / atks_per_skillactivation
+				else:
+					avg_heal = (skill_heal + int(atks_per_skillactivation) * base_heal) / (int(atks_per_skillactivation)+1)
+			avg_hps = avg_heal/self.atk_interval*(self.attack_speed+aspd)/100
+			self.name += f": {int(base_hps)}/*{int(avg_hps)} including the shield*"
+			return self.name
+		if self.skill == 3:
+			atkbuff += self.skill_params[1]
+			sp_boost = self.sp_boost
+			if self.module == 1 and self.module_lvl > 1: sp_boost += 0.15 + 0.15 * self.module_lvl
+			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ sp_boost))/(self.skill_duration + self.skill_cost /(1+ sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 
 class Shu(Healer):
 	def __init__(self, pp, **kwargs):
@@ -325,6 +373,6 @@ class UOfficial(Healer):
 
 
 healer_dict = {"ansel": Ansel, "breeze":Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial}
+			   "paprika": Paprika, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial}
 
-healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shu","Silence","Sussurro","UOfficial"]
+healers = ["Ansel","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial"]

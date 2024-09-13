@@ -5711,7 +5711,7 @@ class Ling(Operator):
 		if self.skill == 3 and self.trait_dmg:
 			if self.skill_dmg: self.name += "(Chonker)"
 			else: self.name += "(small)"			
-		if not self.talent2_dmg: self.name += " noTalent2Stacks"
+		if not self.talent2_dmg and self.elite == 2: self.name += " noTalent2Stacks"
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" 
 			
 	
