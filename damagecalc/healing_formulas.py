@@ -286,6 +286,20 @@ class Quercus(Healer):
 			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
 		return self.name
 
+class Saileach(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Saileach",pp,[1,2],[1],2,1,1)
+	
+	def skill_hps(self, **kwargs):
+		if self.skill == 1: 
+			self.name += ": No heals =("
+			return self.name
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skillhps = final_atk * self.skill_params[1]
+		avghps = skillhps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
+		return self.name
+
 class Shining(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Shining",pp,[1,2,3],[2,1],2,1,1)
@@ -468,6 +482,6 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
+			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Shining","Shu","Silence","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Sussurro","UOfficial","Whisperain"]
