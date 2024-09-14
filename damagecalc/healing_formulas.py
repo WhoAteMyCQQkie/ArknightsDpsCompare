@@ -354,7 +354,7 @@ class Shu(Healer):
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			skill_hps = final_atk * heal_scale * skill_scale * (1+ self.buff_fragile)
 			avg_hps = skill_hps / sp_cost
-			self.name += f": **{int(skill_hps+grassheal)}**/{int(grassheal)}/*{int(avg_hps+grassheal)}*"
+			self.name += f": **{int(skill_hps)}**/{int(grassheal)}/*{int(avg_hps+grassheal)}*"
 		
 		if self.skill == 2:
 			self.atk_interval = 2.5

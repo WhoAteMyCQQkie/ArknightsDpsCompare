@@ -186,6 +186,15 @@ class OperatorData:
 		
 		self.aspd_trust = character_data[key]["favorKeyFrames"][1]["data"]["attackSpeed"]
 
+		#figure out damage type
+		self.physical = True
+		if character_data[key]["profession"] in ["SUPPORT","CASTER","MEDIC"]:
+			self.physical = False
+		if character_data[key]["subProfessionId"] in ["craftsman"]:
+			self.physical = True
+		if character_data[key]["subProfessionId"] in ["artsfghter"]:
+			self.physical = False
+
 		#read skill values
 		skill_ids = [skill_entry["skillId"] for skill_entry in character_data[key]["skills"]]
 		
@@ -229,7 +238,7 @@ class OperatorData:
 				talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 				self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
 		
-		#set_defaults (this maybe needs to be changed for some characters, but it should be helpful most of the time)
+		#set defaults for talents at E0/E1 (this maybe needs to be changed for some characters, but it should be helpful most of the time)
 		for data in character_data[key]["talents"][0]["candidates"][-1]["blackboard"]:
 			if data["key"] in ["atk", "prob", "duration", "attack_speed", "attack@prob", "magic_resistance", "sp_recovery_per_sec", "base_attack_time", "magic_resist_penetrate_fixed"]:
 				self.talent1_defaults.append(0)
