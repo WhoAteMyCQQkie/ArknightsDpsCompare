@@ -56,7 +56,7 @@ class DiscordSendable:
 
 class PlotParameters:
 	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],sp_boost=0,targets=-1,trust=100,conditionals=[True,True,True,True,True],
-			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = True,enemies=[],**kwargs):
+			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = 0,enemies=[],**kwargs):
 		#Operator Parameters
 		self.pot = pot
 		self.promotion = promotion
@@ -434,7 +434,9 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				i+=1
 			i-=1
 		elif args[i] in ["total","totaldmg"]:
-			pps.normal_dps = not pps.normal_dps
+			pps.normal_dps = 1 if pps.normal_dps != 1 else 0
+		elif args[i] in ["avg","avgdmg","average","averagedmg"]:
+			pps.normal_dps = 2 if pps.normal_dps != 2 else 0
 		elif args[i] in ["l","low"]:
 			pps.conditionals = [False,False,False,False,False]
 		elif args[i] in ["h","high"]:
@@ -609,7 +611,7 @@ def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0
 	operator = operator_input(pp,pp.level,pp.pot,pp.skill,pp.mastery-7,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
 	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers, short)
 
-def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = True, plotnumbers = 0, short = False):
+def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = 0, plotnumbers = 0, short = False):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -636,7 +638,8 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	if basebuffs[1] != 0: 
 		op_name += f" +{int(basebuffs[1])}bAtk"
 		operator.base_atk += basebuffs[1]
-	if not normal_dps and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
+	if normal_dps == 1 and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
+	if normal_dps == 2 and operator.skill_dps(100,100) != operator.avg_dps(100,100): op_name += " avgDMG"
 	op_name = operator.get_name() + op_name
 	if op_name in already_drawn_ops: return False
 	already_drawn_ops.append(op_name)
@@ -657,19 +660,22 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	
 	############### Normal DPS graph ################################
 	if graph_type == 0:
-		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		if normal_dps == 0: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		elif normal_dps == 2: damages = operator.avg_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
-				if normal_dps: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
@@ -679,7 +685,8 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		newdefences = np.concatenate((defences,fulldef))
 		newresistances = np.concatenate((np.zeros(accuracy),resistances))
 		
-		if normal_dps: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		if normal_dps == 0: damages = operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		elif normal_dps == 2: damages = operator.avg_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
@@ -687,13 +694,15 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		for defen in defens:
 			if defen >= 0:
 				defen = min(max_def-1,defen)
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],0)*(1+buffs[3])
 				plt.text(defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(119,res)
-				if normal_dps: demanded = operator.skill_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
@@ -703,7 +712,8 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		newdefences = np.concatenate((np.zeros(accuracy), defences))
 		newresistances = np.concatenate((resistances, fullres))
 		
-		if normal_dps: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		if normal_dps == 0: damages=operator.skill_dps(newdefences,newresistances)*(1+buffs[3])
+		elif normal_dps == 2: damages = operator.avg_dps(newdefences,newresistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(newdefences,newresistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, 2*accuracy)
 		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
@@ -711,13 +721,15 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		for defen in defens:
 			if defen >= 0:
 				defen = min(max_def-1,defen)
-				if normal_dps: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(max_def/2+defen/2,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				res = min(max_res-1,res)
-				if normal_dps: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(0,max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
@@ -726,14 +738,17 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		defences = np.empty(accuracy)
 		defences.fill(max(0,fixval-shreds[1])*shreds[0])
 		
-		if normal_dps: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		if normal_dps == 0: damages=operator.skill_dps(defences,resistances)*(1+buffs[3])
+		elif normal_dps == 2: damages = operator.avg_dps(defences,resistances)*(1+buffs[3])
 		else: damages=operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for res in ress:
 			if res >= 0:
-				demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### DPS graph with a fixed res value ################################
@@ -741,14 +756,17 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		resistances = np.empty(accuracy)
 		resistances.fill(max(fixval-shreds[3],0)*shreds[2])
 		
-		if normal_dps: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
+		if normal_dps == 0: damages = operator.skill_dps(defences,resistances)*(1+buffs[3])
+		elif normal_dps == 2: damages = operator.avg_dps(defences,resistances)*(1+buffs[3])
 		else: damages = operator.total_dmg(defences,resistances)*(1+buffs[3])
 		xaxis = np.linspace(0,max_def, accuracy)
 		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
 		
 		for defen in defens:
 			if defen >= 0:
-				demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
+				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
+				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
+				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	
 	############### Graph with images of enemies -> enemy prompt ################################

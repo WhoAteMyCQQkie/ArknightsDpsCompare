@@ -29,6 +29,7 @@ class Operator:
 		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
 		self.targets = max(1,params.targets)
 		self.sp_boost = params.sp_boost
+		self.physical = op_data.physical
 		
 		elite = 2 if params.promotion < 0 else params.promotion
 		elite = max(0,min(max_promotions[rarity-1],elite))
@@ -245,13 +246,13 @@ class Operator:
 		#TODO:remove this when all operators are changed to the new format. this is needed for base buffs
 		self.base_atk = 0
 
-	def normal_attack(self,defense,res,arts = False, extra_buffs = [0,0], hits = 1, aoe = 1):
+	def normal_attack(self,defense,res, extra_buffs = [0,0,0], hits = 1, aoe = 1):
 		final_atk = self.atk * (1 + extra_buffs[0] + self.buff_atk) + extra_buffs[1] + self.buff_atk_flat
-		if arts:
+		if not self.physical:
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 		else:
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-		dps = hits * hitdmg / self.atk_interval * self.attack_speed/100 * aoe
+		dps = hits * hitdmg / self.atk_interval * (self.attack_speed + extra_buffs[2])/100 * aoe
 		return dps
 
 	def try_kwargs(self, target, keywords, **kwargs):
@@ -270,10 +271,6 @@ class Operator:
 				case 3: self.talent2_dmg= False
 				case 4: self.skill_dmg = False
 				case 5: self.module_dmg = False
-	
-	def avg_dps(self,defense,res):
-		print("The operator has not implemented the avg_dps method")
-		return -100
 		
 	def skill_dps(self, defense, res):
 		print("The operator has not implemented the skill_dps method")
@@ -288,6 +285,17 @@ class Operator:
 			return (self.skill_dps(defense,res))
 		else:
 			return (self.skill_dps(defense,res) * self.skill_duration)
+	
+	def avg_dps(self,defense,res):
+		try:
+			x = self.skill_duration
+		except AttributeError: #aka the operator is not on the json system yet
+			return (self.skill_dps(defense,res))
+		if self.skill_duration < 1:
+			return (self.skill_dps(defense,res))
+		else:
+			damage = (self.total_dmg(defense,res) + self.normal_attack(defense,res) * self.skill_cost/(1+self.sp_boost))/(self.skill_duration+self.skill_cost/(1+self.sp_boost))
+			return damage
 	
 	def get_name(self):
 		return self.name
