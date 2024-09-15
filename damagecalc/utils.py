@@ -308,6 +308,17 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
+		elif args[i] in ["numbers","dmgnumbers","damage","damagenumbers"]:
+			if pps.graph_type == 1:
+				pps.res = np.linspace(0,pps.max_res,9)
+				pps.defen = np.linspace(0,pps.max_def,9)[:-1]
+			elif pps.graph_type == 2:
+				pps.res = np.linspace(0,pps.max_res,9)[:-1]
+				pps.defen = np.linspace(0,pps.max_def,9)
+			elif pps.graph_type == 3:
+				pps.res = np.linspace(0,pps.max_res,13)
+			else:
+				pps.defen = np.linspace(0,pps.max_def,13)
 		elif args[i] in ["shred","shreds","debuff","ignore"]:
 			i+=1
 			pps.shred = [1,0,1,0]
