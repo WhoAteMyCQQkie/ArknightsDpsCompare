@@ -4498,7 +4498,8 @@ class Hoolheyak(Operator):
 class Horn(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Horn",pp,[1,2,3],[],3,1,1)
-		self.try_kwargs(3,["afterrevive","revive","after"],**kwargs)
+		self.try_kwargs(3,["afterrevive","revive","after","norevive"],**kwargs)
+		self.try_kwargs(4,["overdrive","nooverdrive"],**kwargs)
 		if self.talent2_dmg and self.elite == 2: self.name += " afterRevive"
 		if self.skill_dmg and not self.skill == 1: self.name += " overdrive"
 		elif not self.skill == 1: self.name += " no overdrive"
@@ -4877,6 +4878,7 @@ class Indra(Operator):
 class Ines(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Ines",pp,[1,2,3],[],2,1,0)
+		self.try_kwargs(4,["steal","nosteal"],**kwargs)
 		if self.skill == 2:
 			if self.skill_dmg: self.name += " maxSteal"
 			else: self.name += " noSteal"
@@ -5000,6 +5002,7 @@ class Jackie(Operator):
 class Jaye(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Jaye",pp,[1,2],[1],2,6,1)
+		self.try_kwargs(2,["infected","vsInfected","notinfected","noinfected"],**kwargs)
 		if self.talent_dmg: self.name += " vsInfected"
 	
 	def skill_dps(self, defense, res):
@@ -5158,7 +5161,6 @@ class Kirara(Operator):
 			hitdmg = np.fmax(final_atk * skill_scale * (1- res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg * self.targets
 		return dps
-
 
 class Kjera(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
@@ -8216,6 +8218,7 @@ class Ray(Operator):
 class ReedAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("ReedAlter",pp,[1,2,3],[1],2,1,1)
+		self.try_kwargs(4,["sandwich","sandwiched","nosandwich","notsandwiched","notsandwich","nosandwiched"],**kwargs)
 		if not self.talent_dmg and not self.skill == 3 and self.elite > 0: self.name += " w/o cinder"
 		elif not self.skill == 3 and self.elite > 0: self.name += " withCinder"
 		if self.skill_dmg and self.skill == 2: self.name += " Sandwiched"
@@ -8375,6 +8378,7 @@ class Rosa(Operator):
 class Rosmontis(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Rosmontis",pp,[1,2,3],[1],3,1,1)
+		self.try_kwargs(4,["pillar","pillarshred","pillardefshred","nopillardefshred","nopillarshred","nopillar"],**kwargs)
 		if self.skill == 3 and self.skill_dmg: self.name += " withPillarDefshred"
 		if self.skill == 3 and self.targets > 1: self.name += " TargetsOverlap"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
