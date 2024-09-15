@@ -415,6 +415,26 @@ class Silence(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Skalter(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("SkadiAlter",pp,[1,2],[],2,1,0)
+		if self.elite == 2 and self.talent2_dmg and self.talent_dmg: self.name += " AHinRange"
+	
+	def skill_hps(self, **kwargs):
+		targets = 9 if self.elite == 0 else 8+13
+		atkbuff = self.talent2_params[0] if self.elite == 2 else 0
+		if self.elite == 2 and self.talent_dmg and self.talent2_dmg: atkbuff = self.talent2_params[1]
+		final_atk = self.atk * (1 + self.buff_atk+atkbuff) + self.buff_atk_flat
+		base_hps = final_atk * 0.1 * min(self.targets,targets)
+		if self.skill == 1:
+			skill_hps = final_atk * self.skill_params[1] * min(self.targets,targets)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		if self.skill == 2:
+			skill_hps = final_atk * self.skill_params[2] * min(self.targets,targets)
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
+		return self.name
+
 class Sussurro(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Sussurro",pp,[1,2],[2],2,6,2)
@@ -482,6 +502,7 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach, "shining": Shining, "shu": Shu, "silence": Silence, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
+			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach, "shining": Shining, "shu": Shu, "silence": Silence,
+			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
