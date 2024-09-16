@@ -77,6 +77,19 @@ class Breeze(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(skilldown_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Doc(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Doc",pp,[1,2],[2],2,1,2)
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = self.skill_params[2] if self.skill == 1 else self.skill_params[0]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skill_hps = final_atk * heal_scale * (1+self.buff_fragile)
+		avg_hps = skill_hps / self.skill_cost * (1+ self.sp_boost)
+		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		if self.skill == 1: self.name += " only to self"
+		return self.name
+
 class Eyjaberry(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("EyjafjallaAlter",pp,[1,3],[1],1,1,1)
@@ -501,8 +514,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
+healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
 			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
