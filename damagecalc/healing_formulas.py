@@ -182,6 +182,33 @@ class Myrtle(Healer):
 		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}* + {int(extraheal)}hps to vanguards"
 		return self.name
 
+class Nearl(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Nearl",pp,[1,2],[1],1,1,1)
+		if self.skill == 1: self.module_dmg = True
+		if self.module == 1 and not self.module_dmg: self.name += " >50%Hp"
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		talent_scale = self.talent1_params[0]
+		if self.module == 1:
+			if self.module_lvl == 2: talent_scale += 0.03
+			if self.module_lvl == 3: talent_scale += 0.05
+
+		if self.skill == 1: #TODO when the skill doesnt hold charges, the skill healing drops as it has to align with atk cycle
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 1.2
+			skill_hps = final_atk * heal_scale * talent_scale * self.skill_params[0] * (1+ self.buff_fragile)
+			avg_hps = skill_hps / sp_cost
+		if self.skill == 2:
+			self.atk_interval = 2.76
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = final_atk_skill * heal_scale * talent_scale / self.atk_interval * self.attack_speed/100 * (1+ self.buff_fragile)
+			avg_hps = skill_hps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		
+		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		return self.name
+
 class Paprika(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Paprika",pp,[1,2],[],2,1,0)
@@ -311,6 +338,32 @@ class Saileach(Healer):
 		skillhps = final_atk * self.skill_params[1]
 		avghps = skillhps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
 		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
+		return self.name
+
+class Saria(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Saria",pp,[1,2,3],[1,2],1,1,1)
+		if self.skill == 1: self.module_dmg = True
+		if self.elite > 0 and not self.talent_dmg: self.name += " noStacks"
+		if self.module == 1 and not self.module_dmg: self.name += " >50%Hp"
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		atkbuff = 5 * self.talent1_params[2] if self.talent_dmg else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+
+		if self.skill == 1: #TODO when the skill doesnt hold charges, the skill healing drops as it has to align with atk cycle
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 1.2
+			skill_hps = final_atk * heal_scale * self.skill_params[0] * (1+ self.buff_fragile)
+			avg_hps = skill_hps / sp_cost
+		if self.skill == 2: #TODO when the skill doesnt hold charges, the skill healing drops as it has to align with atk cycle
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 1.2
+			skill_hps = final_atk * heal_scale * self.skill_params[0] * (1+ self.buff_fragile) * min(self.targets,21)
+			avg_hps = skill_hps / sp_cost
+		if self.skill == 3:
+			skill_hps = final_atk * heal_scale * self.skill_params[0] * (1+ self.buff_fragile) * min(self.targets,25)
+			avg_hps = skill_hps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
 		return self.name
 
 class Shining(Healer):
@@ -514,8 +567,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle, 
-			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach, "shining": Shining, "shu": Shu, "silence": Silence,
+healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,
+			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
