@@ -1295,91 +1295,31 @@ class Beehunter(Operator):
 		return dps
 
 class Bibeak(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 543 
-		maxatk = 682
-		self.atk_interval = 1.3  
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 22
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Bibeak Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Bibeak P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = min(2,max(1,targets))
-		self.talent1 = TrTaTaSkMo[1]
-
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 55
-				else: self.base_atk += 45
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if not self.talent1: self.name += " w/o talent"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Bibeak",pp,[1,2],[1],1,6,1)
+		if self.elite > 0 and not self.talent_dmg: self.name += " w/o talent"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		dmg_multiplier = 1
-		#talent/module buffs
-		if self.talent1:
-			buffcount = 5
-			if self.pot > 4: buffcount += 1
-			if self.module == 1:
-				if self.module_lvl > 1:
-					buffcount += 1
-				if self.module == 2: atkbuff += buffcount*0.01
-				if self.module == 3: atkbuff += buffcount*0.02
-			aspd += buffcount * 6
+		aspd = self.talent1_params[0] * self.talent1_params[1] if self.talent_dmg else 0
+		atkbuff = 0.01 * (self.module_lvl-1) * self.talent1_params[1] if self.talent_dmg and self.module == 1 and self.module_lvl > 1 else 0
+		dmg_multiplier = 1.1 if self.module == 1 else 1
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 
-		if self.module == 1:
-			dmg_multiplier = 1.1
-			
-		####the actual skills
 		if self.skill == 1:
-			atk_scale = 1.5 + 0.1 * self.mastery
-
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)*dmg_multiplier
-			skillartsdmg = np.fmax(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
-			sp_cost = 2 if self.mastery == 3 else 3
-			
-			avgphys = 2 * (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			avgarts = 0 if self.targets == 1 else skillartsdmg/(sp_cost +1)
-			
-			dps = (avgphys+avgarts)/(self.atk_interval/(1+aspd/100))
-		else:
-			atk_scale = 1.7 + 0.1 * self.mastery
-
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			skillartsdmg = np.fmax(final_atk* atk_scale *(1-res/100), final_atk * atk_scale * 0.05)*dmg_multiplier
-			sp_cost = 10 - self.mastery
-			
-			avgarts = skillartsdmg/sp_cost * min(self.targets, 6)
-			
-			dps = (hitdmg+avgarts)/(self.atk_interval/(1+aspd/100))
+			skill_scale = self.skill_params[0]
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * dmg_multiplier
+			skillartsdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_multiplier
+			sp_cost = self.skill_cost
+			avg_phys = 2 * (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
+			avg_arts = 0 if self.targets == 1 else skillartsdmg / (sp_cost +1)
+			dps = (avg_phys+avg_arts)/self.atk_interval * (self.attack_speed + aspd)/100
+		if self.skill == 2:
+			skill_scale = self.skill_params[2]
+			skillartsdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_multiplier
+			avg_hit = (2 * hitdmg * self.skill_cost + skillartsdmg * min(self.targets, self.skill_params[0])) / self.skill_cost
+			dps = avg_hit/self.atk_interval * (self.attack_speed + aspd)/100
 		return dps
 	
 class Blaze(Operator):
@@ -1646,8 +1586,9 @@ class Bryophyta(Operator):
 class Cantabile(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Cantabile",pp,[1,2],[],2,1,0)
-		if self.talent_dmg: self.name += " melee"
-		else: self.name += " ranged"
+		if self.elite > 0:
+			if self.talent_dmg: self.name += " melee"
+			else: self.name += " ranged"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
