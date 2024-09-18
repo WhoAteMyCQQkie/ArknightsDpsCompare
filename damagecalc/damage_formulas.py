@@ -6930,88 +6930,22 @@ class Narantuya(Operator):
 		return dps
 
 class NearlAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 968  #######including trust
-		maxatk = 1149
-		self.atk_interval = 1.5   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 35
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"NTRKnight Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"NTRKnight P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 105
-				elif self.module_lvl == 2: self.base_atk += 95
-				else: self.base_atk += 70
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 90
-				elif self.module_lvl == 2: self.base_atk += 79
-				else: self.base_atk += 65
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.moduledmg: 
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("NearlAlter",pp,[1,2,3],[1,2],3,1,1)
+		if self.module_dmg: 
 			if self.module == 1: self.name += " blockedTarget"
 			if self.module == 2: self.name += " afterRevive"
-		
-		self.buffs = buffs
-			
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		def_shred = 0.2
-		if self.pot > 4: def_shred += 0.03
-		if self.module == 1:
-			if self.module_lvl == 2: def_shred += 0.05
-			elif self.module_lvl == 3: def_shred += 0.08
-		
-		if self.moduledmg:
-			if self.module == 1: atk_scale = 1.15
-			if self.module == 2: aspd += 30
-			
+		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		aspd = 30 if self.module == 2 and self.module_dmg else 0
+		def_shred = self.talent2_params[0] if self.elite == 2 else 0
+		newdef = defense * (1 - def_shred)
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 		if self.skill == 1:
-			atkbuff += 0.55 + 0.05 * self.mastery
-			aspd += 38 + 4 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			
-		if self.skill == 2:
-			atkbuff += 1.2
-			if self.mastery == 1: atkbuff += 0.1
-			elif self.mastery == 2: atkbuff += 0.25
-			elif self.mastery == 3: atkbuff += 0.4
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
-		if self.skill == 3:
-			atkbuff += 1
-			if self.mastery == 1: atkbuff += 0.1
-			elif self.mastery == 2: atkbuff += 0.25
-			elif self.mastery == 3: atkbuff += 0.4
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk *atk_scale - (defense * (1-def_shred)), final_atk* atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))  
-			
+			aspd += self.skill_params[1]
+		hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Nian(Operator):
