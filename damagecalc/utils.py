@@ -144,7 +144,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 	entries = len(args)
 	unused_inputs = set()
 	while i < entries:
-		if args[i] in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits","r","res","resis","resistance","d","def","defense","fixres","fixdef","fix"]:
+		if args[i] in ["maxdef","limit","range","scale","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance"]:
 			i += 1
 		elif args[i] in ["s1","s2","s3"]: 
 			pps.skills.add(int(args[i][1]))
