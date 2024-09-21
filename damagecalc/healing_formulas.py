@@ -209,6 +209,44 @@ class Nearl(Healer):
 		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
 		return self.name
 
+class Nightingale(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Nightingale",pp,[1,2,3],[1,2],3,1,1)
+	
+	def skill_hps(self, **kwargs):
+		heal_factor = 0.99 + 0.02 * self.module_lvl if self.module ==1 and self.module_lvl > 1 else 1
+		targets = 4 if self.module == 2 else 3
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = heal_factor * final_atk / self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile) * min(self.targets, targets)
+
+		if self.skill == 1:
+			atkbuff = self.skill_params[0]
+			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed)/100 * (1 + self.buff_fragile) * min(self.targets, targets)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		if self.skill == 2:
+			base_heal = heal_factor * final_atk * (1 + self.buff_fragile) * min(self.targets, targets)
+			skill_heal =  final_atk * self.skill_params[0] + base_heal * min(self.targets, targets)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/((self.attack_speed)/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avg_heal = skill_heal
+			if atks_per_skillactivation > 1:
+				if self.skill_params[3] > 1:
+					avg_heal = (skill_heal + (atks_per_skillactivation - 1) * base_heal) / atks_per_skillactivation
+				else:
+					avg_heal = (skill_heal + int(atks_per_skillactivation) * base_heal) / (int(atks_per_skillactivation)+1)
+			avg_hps = avg_heal/self.atk_interval*(self.attack_speed)/100
+			self.name += f": {int(base_hps)}/*{int(avg_hps)} including the shield*"
+			return self.name
+		if self.skill == 3:
+			atkbuff = self.skill_params[0]
+			final_atk_skill = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed)/100 * (1 + self.buff_fragile) * min(self.targets, targets)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Nightmare(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Nightmare",pp,[1],[2],1,1,2)
@@ -544,7 +582,6 @@ class Spot(Healer):
 		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
 		return self.name
 
-
 class Sussurro(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Sussurro",pp,[1,2],[2],2,6,2)
@@ -611,8 +648,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightmare":Nightmare,
+healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Spot","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Spot","Sussurro","UOfficial","Whisperain"]
