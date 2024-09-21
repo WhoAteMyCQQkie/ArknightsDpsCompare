@@ -282,9 +282,12 @@ class OperatorData:
 			has_module = False
 			has_second_module = False
 		
+		has_third_module = key in ['char_003_kalts','char_4046_ebnhlz','char_250_phatom'] #I will assume this will stay in the minority
+		
 		modules = []
 		if has_module: modules = [2]
 		if has_second_module: modules = [2,3]
+		if has_third_module: modules = [2,3,4]
 		for mod in modules:
 			module_key = f"uniequip_00{mod}_" + name_id
 			atk_data = []
@@ -342,6 +345,27 @@ class OperatorData:
 							req_level = candidate["unlockCondition"]["level"]
 							req_pot = candidate["requiredPotentialRank"]
 							req_module = 2
+							req_mod_lvl = equip_lvl
+							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
+							if candidate["prefabKey"] == "1":
+								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+							elif candidate["prefabKey"] == "2":
+								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+							elif candidate["prefabKey"] in ["10","11"]:
+								self.talent1_module_extra.append([equip_lvl, talent_data])
+							elif candidate["prefabKey"] in ["20","21"]:
+								self.talent2_module_extra.append([equip_lvl, talent_data])
+		if has_third_module:
+			module_key = "uniequip_004_" + name_id
+			for module_lvl in module_data[module_key]["phases"][1:]:
+				equip_lvl = module_lvl["equipLevel"]
+				for part in module_lvl["parts"]:
+					if part["target"] == "TALENT" or part["target"] == "TALENT_DATA_ONLY":
+						for candidate in part["addOrOverrideTalentDataBundle"]["candidates"]:
+							req_promo = 2
+							req_level = candidate["unlockCondition"]["level"]
+							req_pot = candidate["requiredPotentialRank"]
+							req_module = 3
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
 							if candidate["prefabKey"] == "1":

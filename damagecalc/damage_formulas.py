@@ -103,6 +103,8 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
+					if name in ["Kaltsit","Phantom","Mon3tr"]:
+						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
 		
@@ -6351,7 +6353,7 @@ class Mlynar(Operator):
 
 class Mon3tr(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mon3tr",pp,[1,2,3],[1,2],3,1,2)
+		super().__init__("Mon3tr",pp,[1,2,3],[1,2,3],3,1,3)
 		if not self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " NotInKalRange"
 		if self.skill == 3:
 			if self.skill_dmg:
@@ -6359,7 +6361,7 @@ class Mon3tr(Operator):
 			else:
 				self.name += " skillEnd"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
-		if self.module == 2:
+		if self.module in [2,3]:
 			self.attack_speed -= 4 + self.module_lvl #because we want mon3trs attack speed
 
 	def skill_dps(self, defense, res):
@@ -6367,21 +6369,22 @@ class Mon3tr(Operator):
 		if self.module == 2 and self.talent_dmg:
 			if self.module_lvl == 2: aspd = 12
 			if self.module_lvl == 3: aspd = 20
+		atkbuff = 0.25 * (self.module_lvl - 1) if self.module == 3 else 0
 			
 		####the actual skills
 		if self.skill == 1:
-			final_atk = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
 		
 		if self.skill == 2:
-			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
+			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1] + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
 		
 		if self.skill == 3:
-			final_atk = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
-			final_atk_start = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			final_atk_start = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] + atkbuff) + self.buff_atk_flat
 			dps_max = final_atk_start/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
 			dps_min = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
 			dps = dps_max if self.skill_dmg else dps_min
