@@ -3290,7 +3290,7 @@ class Firewhistle(Operator):
 
 class Flamebringer(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Flamebringer",pp,[1,2],[2],)
+		super().__init__("Flamebringer",pp,[1,2],[2],2,6,2)
 		if self.module_dmg and self.module == 2: self.name += " afterRevive"
 
 	def skill_dps(self, defense, res):
@@ -3391,75 +3391,27 @@ class Flametail(Operator):
 		return dps
 
 class Flint(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 516  #######including trust
-		maxatk = 620
-		self.atk_interval = 0.78   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Flint Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Flint P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 55
-				elif self.module_lvl == 2: self.base_atk += 45
-				else: self.base_atk += 30
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.skill == 1 and not self.talent: self.name += " blocking"
-		if self.module == 1 and self.moduledmg: self.name += " >50%Hp"
-		
-		
-		self.buffs = buffs
-			
-	
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Flint",pp,[1,2],[1],2,1,1)
+		if self.skill == 1 and not self.talent_dmg: self.name += " blocking"
+		if self.module == 1 and self.module_dmg: self.name += " >50%Hp"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 1 and self.moduledmg: aspd += 10
-		dmgscale = 1.45 if self.pot > 4 else 1.4
-		if self.module == 1: dmgscale += 0.05 * (self.module_lvl -1)
-		if self.skill == 1 and not self.talent: dmgscale = 1
-		
-		
-		####the actual skills
+		dmgscale = 1 if self.skill == 1 and not self.talent_dmg else self.talent1_params[0]
+		aspd = 10 if self.module == 1 and self.module_dmg else 0
 		
 		if self.skill == 1:
-			skill_scale = 2.3 if self.mastery == 3 else 1.9 + 0.1 * self.mastery			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
+			skill_scale = self.skill_params[0]	
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			sp_cost = 4
-			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			dps = avgphys/(self.atk_interval/(1+aspd/100))
+			avgphys = (self.skill_cost * hitdmg + skillhitdmg) / (self.skill_cost + 1)
+			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			aspd += 40 + 5 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			aspd += self.skill_params[1]
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps*dmgscale
 
 class Folinic(Operator):
