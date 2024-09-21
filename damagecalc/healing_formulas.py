@@ -265,6 +265,21 @@ class Perfumer(Healer):
 		self.name += f": **{int(skill_hps+aura_heal_skill)}**/{int(base_hps+aura_heal)}/*{int(avg_hps+aura_heal_avg)}*  (**{int(aura_heal_skill)}**/{int(aura_heal)}/*{int(aura_heal_avg)}* from global aura heal)"
 		return self.name
 
+class Podenco(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Podenco",pp,[1],[1],1,6,1)
+	
+	def skill_hps(self, **kwargs):
+		atkbuff = self.talent1_params[0]
+		aspd = self.talent1_params[1] if self.module == 1 and self.module_lvl > 1 else 0
+		if self.skill == 1:
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skillhps = final_atk/self.atk_interval *(self.attack_speed+aspd)/100 * (1+self.buff_fragile)
+			avghps = (skillhps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
+		return self.name
+
 class Ptilopsis(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Ptilopsis",pp,[1,2],[1],2,1,1)
@@ -568,7 +583,7 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,
-			   "paprika": Paprika, "perfumer": Perfumer, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
+			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "uofficial": UOfficial,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Paprika","Perfumer","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sussurro","UOfficial","Whisperain"]
