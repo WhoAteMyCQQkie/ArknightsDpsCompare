@@ -19,6 +19,25 @@ class Ansel(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Bassline(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Bassline",pp,[1,2],[2],1,1,2)
+	
+	def skill_hps(self, **kwargs):
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 1: #TODO when the skill doesnt hold charges, the skill healing drops as it has to align with atk cycle
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 1.2
+			skill_hps = final_atk * self.skill_params[0] * (1+ self.buff_fragile)
+			avg_hps = skill_hps / sp_cost
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		if self.skill == 2:
+			self.atk_interval = 2.5
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = final_atk_skill / self.atk_interval * self.attack_speed/100 * (1+ self.buff_fragile)
+			avg_hps = skill_hps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}* or **{int(skill_hps * (1+self.skill_params[2]))}**/0/*{int(avg_hps* (1+self.skill_params[2]))}* inlcuding the barrier"
+		return self.name
+
 class Blemishine(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Blemishine",pp,[1,2,3],[2,1],3,1,1)
@@ -764,8 +783,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
