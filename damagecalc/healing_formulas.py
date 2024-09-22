@@ -223,6 +223,38 @@ class Lumen(Healer):
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
 		return self.name
 
+class Mulberry(Healer):
+	def __init__(self, params: PlotParameters, **kwargs):
+		super().__init__("Mulberry",params,[1,2],[1],2,6,1)
+		if self.elite > 0 and not self.talent_dmg: self.name += " No 2.Medic"
+	
+	def skill_hps(self, **kwargs):
+		atkbuff = self.talent1_params[0] if self.talent_dmg else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		if self.skill == 1:
+			skill_factor = self.skill_params[0]
+			skill_heal = final_atk * skill_factor * (1 + self.buff_fragile)
+			base_heal = final_atk * (1 + self.buff_fragile)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avg_heal = skill_heal
+			if atks_per_skillactivation > 1:
+				if self.skill_params[2] > 1:
+					avg_heal = (skill_heal + (atks_per_skillactivation - 1) * base_heal) / atks_per_skillactivation
+				else:
+					avg_heal = (skill_heal + int(atks_per_skillactivation) * base_heal) / (int(atks_per_skillactivation)+1)
+			skill_hps = skill_heal/self.atk_interval*self.attack_speed/100
+			avg_hps = avg_heal/self.atk_interval*self.attack_speed/100
+		if self.skill == 2:
+			atk_interval = self.atk_interval * self.skill_params[0]
+			skill_hps = final_atk/atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Myrtle(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Myrtle",pp,[1,2],[1],2,6,1)
@@ -824,8 +856,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
