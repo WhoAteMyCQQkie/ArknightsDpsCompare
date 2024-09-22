@@ -625,6 +625,27 @@ class Silence(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class SilenceAlter(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("SilenceAlter",pp,[1,2,3],[1],2,6,1)
+	
+	def skill_hps(self, **kwargs):
+		heal_factor = 1 if self.module == 1 else 0.75
+		if self.skill in [1,3]:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile)
+		if self.skill == 2:
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk/self.atk_interval *(self.attack_speed+self.skill_params[0])/100 * (1+self.buff_fragile)
+		avg_hps = (skill_hps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		if self.elite == 2:
+			aura_heal_skill = final_atk * self.talent2_params[1] * min(self.targets,16)
+			aura_heal_base = (self.atk * (1 + self.buff_atk) + self.buff_atk_flat) * self.talent2_params[1] * min(self.targets,16)
+			aura_heal_avg = (aura_heal_skill * self.skill_duration + aura_heal_base * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			self.name += f" + **{int(aura_heal_skill)}**/{int(aura_heal_base)}/*{int(aura_heal_avg)}* if allies have <50%HP (double for Rhinelab)"
+		return self.name
+
 class Skalter(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("SkadiAlter",pp,[1,2],[],2,1,0)
@@ -804,7 +825,7 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
-			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
+			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
