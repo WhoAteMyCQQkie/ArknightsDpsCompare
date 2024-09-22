@@ -446,6 +446,15 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 						break
 				i+=1
 			i-=1
+		elif args[i] in ["hp","hitpoints"]:
+			i+=1
+			while i < entries:
+				try:
+					pps.input_kwargs["hp"] = int(args[i])
+				except ValueError:
+					break
+				i+=1
+			i-=1
 		elif args[i] in ["total","totaldmg"]:
 			pps.normal_dps = 1 if pps.normal_dps != 1 else 0
 		elif args[i] in ["avg","avgdmg","average","averagedmg"]:

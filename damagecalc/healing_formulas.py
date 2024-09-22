@@ -646,6 +646,38 @@ class UOfficial(Healer):
 		self.name += f": *{int(base_hps)}*"
 		return self.name
 
+class Warfarin(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Warfarin",pp,[1,2],[1],1,1,1)
+		if self.module == 1 and not self.module_dmg: self.name += " >50%Hp"
+		if self.skill == 1:
+			try:
+				self.target_hp = max(100,kwargs['hp'])
+			except KeyError:
+				self.target_hp = 1000 * (self.elite + 1)
+			self.name += f" {int(self.target_hp)}Hp target"
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = final_atk * heal_scale /self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+
+		if self.skill == 1:
+			base_heal = heal_scale * final_atk * (1 + self.buff_fragile)
+			skill_heal =  self.skill_params[0] * self.target_hp * heal_scale * (1 + self.buff_fragile) + base_heal
+			avg_heal = (base_heal * self.skill_cost + skill_heal)/(self.skill_cost+1)
+			skill_hps = skill_heal/self.atk_interval * self.attack_speed/100
+			avg_hps = avg_heal/self.atk_interval * self.attack_speed/100
+
+		if self.skill == 2:
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = heal_scale * final_atk_skill/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+			avg_hps = (skill_hps * 15 + base_hps * (self.skill_cost /(1+ self.sp_boost) - 15)) / (self.skill_cost /(1+ self.sp_boost))
+			if (self.skill_cost /(1+ self.sp_boost)) <= 15: avg_hps = skill_hps
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
+
 class Whisperain(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Whisperain",pp,[1,2],[1],2,1,1)
@@ -682,6 +714,6 @@ class Whisperain(Healer):
 
 healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
-			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "uofficial": UOfficial,"whisperain":Whisperain}
+			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","UOfficial","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","UOfficial","Warfarin","Whisperain"]
