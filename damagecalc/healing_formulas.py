@@ -123,6 +123,26 @@ class Hibiscus(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Kaltsit(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Kaltsit",pp,[1,2,3],[1,2,3],3,1,1)
+		if self.module == 3:
+			self.name = self.name[:-9] + f"α{self.module_lvl}"
+		if self.module_dmg:
+			if self.module == 1: self.name += " <50%Hp"
+			if self.module == 2: self.name += " ground"
+	
+	def skill_hps(self, **kwargs):
+		targets = 2 if self.module == 3 else 1
+		heal_factor = 1.15 if self.module in [1,2] and self.module_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = heal_factor * final_atk / self.atk_interval * (self.attack_speed)/100 * (1 + self.buff_fragile) * min(self.targets,targets)
+		aspd = self.skill_params[0] if self.skill == 2 else 0
+		skill_hps = heal_factor * final_atk/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile) * min(self.targets,targets)
+		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Lancet2(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Lancet2",pp,[],[],0,6)
@@ -677,7 +697,6 @@ class Warfarin(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
-
 class Whisperain(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Whisperain",pp,[1,2],[1],2,1,1)
@@ -712,8 +731,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,
+healer_dict = {"ansel": Ansel, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Blemishine","Breeze","Doc","Eyjafjalla","Hibiscus","Kaltsit","Lancet2","Lumen","Myrtle","Nearl","Nightingale","Nightmare","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","Skalter","Sora","Spot","Sussurro","SwireAlt","UOfficial","Warfarin","Whisperain"]
