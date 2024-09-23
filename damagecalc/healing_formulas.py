@@ -128,6 +128,26 @@ class Eyjaberry(Healer):
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Gavial(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Gavial",pp,[1,2],[2],1,6,2)
+		if self.module_dmg and self.module == 2: self.name += " groundUnit"
+		if self.elite > 0 and self.talent_dmg: self.name += f" first{int(self.talent1_params[2])}sec"
+		if self.skill_dmg: self.name += " lowHp"
+	
+	def skill_hps(self, **kwargs):
+		atkbuff = self.talent1_params[0] if self.talent_dmg else 0
+		heal_factor = 1.15 if self.module == 2 and self.module_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		skill_duration = self.skill_params[4]
+		skill_factor = self.skill_params[1] if self.skill_dmg else self.skill_params[0]
+		base_hps = heal_factor * final_atk / self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		targets = min(self.targets,12) if self.skill == 2 else 1
+		skill_hps = heal_factor * skill_factor * final_atk * (1 + self.buff_fragile) * targets
+		avg_hps = base_hps + skill_hps * skill_duration / (self.skill_cost /(1+ self.sp_boost) + 1.2)
+		self.name += f": **{int(skill_hps + base_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Gummy(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Gummy",pp,[1,2],[1],1,1,1)
@@ -730,13 +750,13 @@ class Spot(Healer):
 
 class Sussurro(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Sussurro",pp,[1,2],[2],2,6,2)
+		super().__init__("Sussurro",pp,[1,2],[1],2,6,1)
 		if self.elite > 0 and self.talent_dmg: self.name += " ≤10DP"
-		if self.module_dmg and self.module == 2: self.name += " <50%Hp"
+		if self.module_dmg and self.module == 1: self.name += " <50%Hp"
 	
 	def skill_hps(self, **kwargs):
 		heal_factor_talent = self.talent1_params[1] if self.elite > 0 and self.talent_dmg else 1
-		heal_factor = 1.15 if self.module == 2 and self.module_dmg else 1
+		heal_factor = 1.15 if self.module == 1 and self.module_dmg else 1
 
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		base_hps = heal_factor * heal_factor_talent * final_atk / self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
@@ -856,8 +876,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gavial":Gavial, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gavial","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
