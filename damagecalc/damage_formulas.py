@@ -474,63 +474,28 @@ class Absinthe(Operator):
 			return(self.skill_dps(defense,res) * (27 + self.mastery))
 
 class Aciddrop(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 645  #######including trust
-		maxatk = 815
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 30
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Aciddrop Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Aciddrop P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent: self.name += " directFront"
-		
-		self.buffs = buffs
-			
-	
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Aciddrop",pp,[1,2],[1],2,6,1)
+		if self.talent_dmg and self.elite > 0: self.name += " directFront"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		mindmg = 0.25
-		if self.module == 1:
-			aspd += 2 + self.module_lvl
-			mindmg += 0.05 * (self.module_lvl - 1)
-		if self.talent:
-			mindmg += 0.15
-			
-		####the actual skills
+		if self.elite == 0:
+			mindmg = 0.05
+		elif self.talent_dmg:
+			mindmg = self.talent1_params[1]
+		else:
+			mindmg = self.talent1_params[0]
+
 		if self.skill == 1:
-			aspd += 70 if self.mastery == 3 else 50 + 6 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * mindmg)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
-			atkbuff += 0.32 if self.mastery == 0 else 0.31 + 0.03 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * mindmg)
-			dps = 2*hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = 2 * hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
 class Amiya(Operator):
