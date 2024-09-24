@@ -423,6 +423,45 @@ class Paprika(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Papyrus(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Papyrus",pp,[1,2],[],2,1,0)
+	
+	def skill_hps(self, **kwargs):
+		targets = min(self.targets,4)
+		target_scaling = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2]
+		target_scaling_skill = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2 + 0.75**3]
+		shield_scale = self.talent1_params[0]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
+
+		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * target_scaling[targets]
+		base_hps_shield = base_hps + shield_scale * final_atk /self.atk_interval * self.attack_speed/100 * min(self.targets,3)
+
+		if self.skill == 1:
+			shield_scale *= self.skill_params[1]
+			skill_scale = self.skill_params[0]
+			skill_hps = skill_scale * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * target_scaling[targets]
+			skill_hps_shield = skill_hps + shield_scale * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * min(self.targets,3)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/self.attack_speed*100
+			atks_per_skillactivation = sp_cost / atkcycle
+			avg_hps = skill_hps
+			avg_hps_shield = skill_hps_shield
+			if atks_per_skillactivation > 1:
+				avg_hps = (skill_hps + (atks_per_skillactivation - 1) * base_hps) / atks_per_skillactivation
+				avg_hps_shield = (skill_hps_shield + (atks_per_skillactivation - 1) * base_hps_shield) / atks_per_skillactivation
+		if self.skill == 2:
+			atk_interval = self.atk_interval + self.skill_params[0]
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
+			skill_hps = final_atk_skill/atk_interval *self.attack_speed/100 * (1+self.buff_fragile) * target_scaling_skill[targets]
+			skill_hps_shield = skill_hps + shield_scale * final_atk/atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * targets
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			avg_hps_shield = (skill_hps_shield * self.skill_duration + base_hps_shield * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+
+		self.name += f": **{int(skill_hps_shield)}**/{int(base_hps_shield)}/*{int(avg_hps_shield)}* or **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}* without the shield"
+		return self.name
+
 class Perfumer(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
 		super().__init__("Perfumer",params,[1,2],[2],2,6,2)
@@ -892,7 +931,7 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gavial":Gavial, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
-			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
+			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gavial","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gavial","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Wanqing","Warfarin","Whisperain"]
