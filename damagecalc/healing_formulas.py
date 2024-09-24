@@ -811,6 +811,21 @@ class UOfficial(Healer):
 		self.name += f": *{int(base_hps)}*"
 		return self.name
 
+class Wanqing(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Wanqing",pp,[1,2],[1],2,6,1)
+	
+	def skill_hps(self, **kwargs):
+		print(self.skill_params)
+		if self.skill == 1: 
+			self.name += ": No heals =("
+			return self.name
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skillhps = final_atk * self.skill_params[1] * (1+self.buff_fragile) * min(self.targets,9)
+		avghps = skillhps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
+		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
+		return self.name
+
 class Warfarin(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Warfarin",pp,[1,2],[1],1,1,1)
@@ -878,6 +893,6 @@ class Whisperain(Healer):
 
 healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "gavial":Gavial, "gummy": Gummy, "hibiscus": Hibiscus, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
-			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"warfarin":Warfarin,"whisperain":Whisperain}
+			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gavial","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Doc","Eyjafjalla","Gavial","Gummy","Hibiscus","Kaltsit","Lancet2","Lumen","Mulberry","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","UOfficial","Wanqing","Warfarin","Whisperain"]
