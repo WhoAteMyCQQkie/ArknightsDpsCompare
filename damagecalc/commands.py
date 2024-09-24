@@ -3,6 +3,7 @@ import itertools
 import multiprocessing
 from typing import Callable, List
 import copy
+import base64
 
 import discord
 import matplotlib.pyplot as plt
@@ -14,10 +15,11 @@ from damagecalc.utils import DiscordSendable
 import damagecalc.damage_formulas as df
 from damagecalc.damage_formulas import op_dict
 from damagecalc.healing_formulas import healer_dict
-try:
-	from damagecalc.black_list import profanity
-except:
-	profanity = []
+
+#These are a bunch of bad words that should not be used by the bot and might even get it banned. I wanted them included in the script itself, 
+#but i also do not want them in clear text in an open source project, hence the base64 encoding.
+encoded_profanity = ['bmVncm8=', 'bmlnZ2Vy', 'bmVnZXI=', 'bmlnbm9n', 'bmlnZ2E=', 'bmlnZXI=', 'bmlnYQ==', 'YWRvbGY=', 'aGl0bGVy', 'ZmFnZ290', 'Y3VudA==', 'c2hpdA==', 'ZnVjaw==', 'bmF6aQ==', 'cmV0YXJk', 'ZG93bnk=', 'Yml0Y2g=', 'd2hvcmU=', 'c2x1dA==', 'cmFwZQ==', 'cmFwaXN0', 'cGVkbw==']
+profanity = [base64.b64decode(wort.encode("utf-8")).decode("utf-8") for wort in encoded_profanity]
 
 modifiers = ["s1","s2","s3","e0","e1","e2","p1","p2","p3","p4","p5","p6","m0","m1","m2","m3","0","1","2","3","mod0","mod1","mod2","mod3","modlvl","modlvl1","modlvl2","modlvl3","modlv","modlv1","modlv2","modlv3","mod","x0","y0","x","x1","x2","x3","y","y1","y2","y3","d","d1","d2","d3","modx1","modx2","modx3","mody1","mody2","mody3","modd1","modd2","modd3","mod1","mod2","mod3","modx","mody","modd","module","no","nomod","s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3","sl7","s7","slv7","l7","lv7","sl1","slv1","sl2","slv2","sl3","slv3","sl4","slv4","sl5","slv5","sl6","slv6"]
 prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","sp","boost","recovery","spboost","spbuff","buffsp","numbers","dmgnumbers","damage","damagenumbers",
