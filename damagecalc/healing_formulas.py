@@ -989,15 +989,24 @@ class Tuye(Healer):
 	def skill_hps(self, **kwargs):
 		heal_scale = 1.15 if self.module == 2 and self.module_dmg else 1
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile)
+		base_hps = heal_scale * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile)
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
-			skill_hps = final_atk * (1+skill_scale) * heal_scale * (1+self.buff_fragile)
+			skill_hps = final_atk * (heal_scale * (1+self.buff_fragile) + skill_scale) 
 			avg_hps = base_hps + skill_hps / self.skill_cost * (1+ self.sp_boost)
+			if self.elite > 0:
+				base_hps_ideal = final_atk * self.talent1_params[1] / 4 * (1+self.buff_fragile)
+				skill_hps_ideal = final_atk * (self.talent1_params[1]* heal_scale * (1+self.buff_fragile) +skill_scale) 
+				avg_hps_ideal = base_hps_ideal + skill_hps_ideal / self.skill_cost * (1+ self.sp_boost)
+				self.name += f": ideal talent usage **{int(skill_hps_ideal)}**/{int(base_hps_ideal)}/*{int(avg_hps_ideal)}*, realistic"
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		if self.skill == 2:
 			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			skill_hps = heal_scale * final_atk_skill/ self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+			if self.elite > 0:
+				base_hps_ideal = heal_scale * final_atk * self.talent1_params[1] / 4 * (1+self.buff_fragile)
+				skill_hps_ideal = heal_scale * self.talent1_params[1] * final_atk_skill/ 4 * (1 + self.buff_fragile)
+				self.name += f": ideal talent usage **{int(skill_hps_ideal)}**/{int(base_hps_ideal)}, realistic"
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)} + up to 3 emergency heals of {int(final_atk_skill * heal_scale * self.skill_params[2])}"
 		return self.name
 
