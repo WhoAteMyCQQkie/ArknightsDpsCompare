@@ -27,7 +27,7 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 			"d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk",
 			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","maxdef","limit","range","scale","healing","healingbonus","hb","bonus","avg","avgdmg","average","averagedmg","hp","hitpoints",
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
-			   "atk","attack","fragile","frag","dmg","aspd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2","trust","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]
+			   "atk","0%","attack","fragile","frag","dmg","aspd","apsd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2","trust","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -73,6 +73,13 @@ def dps_command(args: List[str])-> DiscordSendable:
 					add_title = False
 			if add_title: plt.title(plot_title)
 			args = args[:i]
+
+	#some
+	for i in range(len(args)-1):
+		if args[i] == "no" or args[i+1] == "alter" or (args[i] in ["la","zuo"] and args[i+1] in ["pluma","le"]):
+			args[i+1] = args[i]+args[i+1]
+			args[i] = "null"
+		if args[i+1].startswith("+"): args[i+1] = args[i+1][1:]
 
 	#fix typos in operator names
 	for i in range(len(args)):
@@ -178,7 +185,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
-		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind"]:
+		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind","null"]:
 			error_message += (args[pos]+", ")
 	
 	parsing_error = False

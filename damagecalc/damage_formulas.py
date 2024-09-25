@@ -3333,7 +3333,7 @@ class Flametail(Operator):
 		atkbuff = self.buffs[0]
 		aspd = self.buffs[2]
 		atk_scale = 1
-		self.atk_interval = 0.35
+		self.atk_interval = 0.7*1.05
 		#talent/module buffs
 		if self.moduledmg and self.module == 1: atkbuff += 0.08
 		cdmg = 1

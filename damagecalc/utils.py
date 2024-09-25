@@ -239,7 +239,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				i+=1
 			i-=1
 
-		elif args[i] in ["aspd","speed","atkspeed","attackspeed","atkspd"]:
+		elif args[i] in ["aspd","apsd","speed","atkspeed","attackspeed","atkspd"]:
 			i+=1
 			pps.buffs[2] = 0
 			while i < entries:
