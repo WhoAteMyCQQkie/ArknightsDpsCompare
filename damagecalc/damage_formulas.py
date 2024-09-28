@@ -1248,7 +1248,7 @@ class Blaze(Operator):
 		aspd = 0
 		atk_scale = 1.1 if self.module_dmg and self.module == 1 else 1
 		targets = 3 if self.elite == 2 else 2
-		if (self.talent2_dmg or self.skill == 2) and self.module == 1: #talent buff is active when s2 gets activated
+		if (self.talent2_dmg or self.skill == 2) and self.module == 1 and self.module_lvl > 1: #talent buff is active when s2 gets activated
 			atkbuff = self.talent2_params[0]
 			aspd =  self.talent2_params[1]
 			
