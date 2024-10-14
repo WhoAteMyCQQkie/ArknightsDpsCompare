@@ -879,12 +879,14 @@ class SilenceAlter(Healer):
 
 class Skalter(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("SkadiAlter",pp,[1,2],[],2,1,0)
+		super().__init__("SkadiAlter",pp,[1,2],[1],2,1,1)
 		if self.elite == 2 and self.talent2_dmg and self.talent_dmg: self.name += " AHinRange"
+		if self.module == 1 and not self.module_dmg: self.name += " noModBonus"
 	
 	def skill_hps(self, **kwargs):
 		targets = 9 if self.elite == 0 else 8+13
 		atkbuff = self.talent2_params[0] if self.elite == 2 else 0
+		if self.module == 1 and self.module_dmg: atkbuff += 0.08
 		if self.elite == 2 and self.talent_dmg and self.talent2_dmg: atkbuff = self.talent2_params[1]
 		final_atk = self.atk * (1 + self.buff_atk+atkbuff) + self.buff_atk_flat
 		base_hps = final_atk * 0.1 * min(self.targets,targets)
@@ -899,18 +901,20 @@ class Skalter(Healer):
 
 class Sora(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Sora",pp,[1],[],1,1,0)
+		super().__init__("Sora",pp,[1],[1],1,1,1)
+		if self.module == 1 and not self.module_dmg: self.name += " noModBonus"
 	
 	def skill_hps(self, **kwargs):
 		targets = 9 if self.elite == 0 else 13
-		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		atkbuff = 0.08 if self.module == 1 and self.module_dmg else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		if self.elite == 0: self.talent1_params[1] = 0
 		base_hps = final_atk * 0.1 * min(self.targets,targets)
 		if self.skill == 1:
 			skill_hps = final_atk * self.skill_params[0] * min(self.targets,targets)
-			skill_cost = self.skill_cost if self.elite == 0 else self.skill_cost * (0.5 + 0.5 * self.talent1_params[1])
+			skill_cost = self.skill_cost if self.elite == 0 else self.skill_cost * ((1 - self.talent1_params[0]) + self.talent1_params[0] * self.talent1_params[1])
 			avg_avg_hps = (skill_hps * self.skill_duration + base_hps * skill_cost /(1+ self.sp_boost))/(self.skill_duration + skill_cost /(1+ self.sp_boost))
-			max_avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost *(1-self.talent1_params[0]) /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost *(1-self.talent1_params[0]) /(1+ self.sp_boost))
+			max_avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost *(1-self.talent1_params[1]) /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost *(1-self.talent1_params[1]) /(1+ self.sp_boost))
 			min_avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_avg_hps)}* ranging from *{int(min_avg_hps)}* to *{int(max_avg_hps)}*"
 		return self.name
