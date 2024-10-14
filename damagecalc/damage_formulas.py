@@ -9511,7 +9511,48 @@ class Vigna(Operator):
 		avgdmg = crate * critdmg + (1-crate) * hitdmg
 		dps = avgdmg / self.atk_interval * self.attack_speed/100
 		return dps
-		
+
+class Vina(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("VinaVictoria", pp, [1,2,3],[],3,1,0)
+		if self.talent_dmg:
+			self.count = 8 if self.skill == 3 else 3
+		else:
+			self.count = 4 if self.skill == 3 else 0
+		if self.elite > 0: self.name += f" {self.count}Allies"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe	
+	
+	def skill_dps(self, defense, res):
+		atkbuff = self.talent1_params[1] * self.count		
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			hits = self.skill_cost
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05)
+			skilldmgarts = np.fmax(final_atk * skill_scale *(1-res/100), final_atk * skill_scale * 1)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/((self.attack_speed)/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avghit = skilldmgarts
+			if atks_per_skillactivation > 1:
+				avghit = (skilldmgarts + int(atks_per_skillactivation) * hitdmgarts) / (int(atks_per_skillactivation)+1)
+			dps = avghit/(self.atk_interval/(self.attack_speed/100))
+
+		if self.skill == 2:
+			atkbuff += self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * min(self.targets,2)
+		if self.skill == 3:
+			atk_interval = self.atk_interval + self.skill_params[0]
+			atkbuff += self.skill_params[1]
+			maxtargets = self.skill_params[2]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 1)
+			hitdmg_lion = np.fmax(self.drone_atk *(1-res/100), self.drone_atk * 1)
+			dps = hitdmgarts/(atk_interval/(self.attack_speed/100)) * min(self.targets,maxtargets) + hitdmg_lion/self.drone_atk_interval * min(self.targets, self.count)
+		return dps
+
 class Virtuosa(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -10324,7 +10365,7 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 		"mumu": MumuDorothy, "muelsyse": MumuDorothy, "mumudorothy": MumuDorothy,  "mumu1": MumuDorothy, "mumu2": MumuEbenholz,"mumuebenholz": MumuEbenholz, "mumu3": MumuCeobe,"mumuceobe": MumuCeobe, "mumu4": MumuMudrock,"mumumudrock": MumuMudrock, "mumu5": MumuRosa,"mumurosa": MumuRosa, "mumu6": MumuSkadi,"mumuskadi": MumuSkadi, "mumu7": MumuSchwarz,"mumuschwarz": MumuSchwarz, 
 		"narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, "tachanka": Tachanka, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "thorns": Thorns, "thorn": Thorns,"toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
-		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
+		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Catapult","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
