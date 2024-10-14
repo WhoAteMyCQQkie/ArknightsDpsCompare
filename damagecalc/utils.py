@@ -194,7 +194,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.modules.discard(-1)
 			pps.module_lvls.add(int(args[i][-1]))
 			pps.module_lvls.discard(-1)
-		elif args[i] in ["0","no","mod","module","nomod","modlvl","modlv","x0","y0","mod0"]:
+		elif args[i] in ["0","no","mod","module","nomod","nomodule","modlvl","modlv","x0","y0","mod0"]:
 			pps.modules.add(0)
 			pps.modules.discard(-1)
 		elif args[i] in ["s1m0","s1m1","s1m2","s1m3","s2m0","s2m1","s2m2","s2m3","s3m0","s3m1","s3m2","s3m3"]:
