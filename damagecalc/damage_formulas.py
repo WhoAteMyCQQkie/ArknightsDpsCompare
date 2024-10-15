@@ -4566,74 +4566,23 @@ class Ifrit(Operator):
 		return dps
 
 class Indra(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 504  #######including trust
-		maxatk = 605
-		self.atk_interval = 0.78   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Indra Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Indra P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Indra",pp,[1,2],[1],2,1,1)
+		if self.module_dmg and self.module == 1: self.name += " >50% HP"
 
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 45
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.moduledmg and self.module == 1: self.name += " >50% HP"
-		
-
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.moduledmg and self.module == 1:
-			aspd += 10
-			
-		####the actual skills
+		aspd = 10 if self.module_dmg and self.module == 1 else 0
 		if self.skill == 1:
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			atkbuff += 1.1 + 0.1 * self.mastery
-			newdef = defense * (1 - (0.45 + 0.05 * self.mastery)) 
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			newdef = defense * (1 - self.skill_params[1]) 
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			skilldmg = np.fmax(final_atk - newdef, final_atk * 0.05)
-
-			dps = 0.2*(4*hitdmg + skilldmg)/(self.atk_interval/(1+aspd/100))
-		
+			dps = 0.2*(4*hitdmg + skilldmg)/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
-			atkbuff += 0.75 + 0.15 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Ines(Operator):
@@ -10370,4 +10319,4 @@ op_dict = {"aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "<:amimiya:12
 #The implemented operators
 operators = ["Aak","Absinthe","Aciddrop","Amiya","AmiyaGuard","Andreana","Angelina","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Catapult","Ceobe","Chen","Chalter","Chongyue","Click","Coldshot","Conviction","Dagda","Degenbrecher","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for more info)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vermeil""Vigil","Vigna","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
+		"Rosa","Rosmontis","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
