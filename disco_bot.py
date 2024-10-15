@@ -2,20 +2,18 @@
 
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators / Update the old operators to the super().__init__ design
-# implement various total_dmg methods for operators, where that doesnt work automatically
+# implement various total_dmg and avg_dmg methods for operators, where that doesnt work automatically
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
 
 #TODO: specific Minijobs that really should be done asap
 # qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
 # Mudrock: include the SP gains from the module for S2 damage calculations
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
-# kaltsit: the true damage of S3 cant handle changes in max res
+# indra: dodge mechanics can make use of the hits prompts
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu) #update: mumu is completely broken with the update
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# read damage type melee/arts from json, include into own normal attack dps
-# add average_dmg methods (which include skill down time and ramp up times etc)
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
