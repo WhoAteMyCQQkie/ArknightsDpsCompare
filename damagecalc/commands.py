@@ -74,12 +74,21 @@ def dps_command(args: List[str])-> DiscordSendable:
 			if add_title: plt.title(plot_title)
 			args = args[:i]
 
-	#some
+	#some more error correction with wrong spaces
 	for i in range(len(args)-1):
 		if args[i] == "no" or args[i+1] == "alter" or (args[i] in ["la","zuo"] and args[i+1] in ["pluma","le"]):
 			args[i+1] = args[i]+args[i+1]
 			args[i] = "null"
 		if args[i+1].startswith("+"): args[i+1] = args[i+1][1:]
+	
+	#error correction: remove illegal inputs
+	for i in range(len(args)-1):
+		if args[i] in ["+",","]:
+			args[i] = "null"
+		elif args[i][0] in ["+",","]:
+			args[i] = args[i][1:]
+		elif args[i][-1] in ["+",","]:
+			args[i] = args[i][:-1]
 
 	#fix typos in operator names
 	for i in range(len(args)):
