@@ -145,6 +145,40 @@ class Chestnut(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class CivilightEterna(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("CivilightEterna",pp,[1,2,3],[1],3,6,1)
+		if self.module == 1 and not self.module_dmg: self.name += " noModBonus"
+	
+	def skill_hps(self, **kwargs):
+		targets = 9 if self.elite == 0 else 13
+		atkbuff = 0.08 if self.module == 1 and self.module_dmg else 0
+		final_atk = self.atk * (1 + self.buff_atk+atkbuff) + self.buff_atk_flat
+		trait_factor = self.talent1_params[5] * 6 / 8 + 1 * 2 / 8  #it's active for 6 seconds reactivated every 8 seconds
+		base_hps = final_atk * 0.1 * min(self.targets,targets) * trait_factor * min(1, 4 / self.targets) #not all operators benefit from trait factor
+		dust_heal_scale = self.talent1_params[6] if self.module == 1 and self.module_lvl > 1 else 0
+		dust_heal = dust_heal_scale * final_atk / 12 * 3 / 2 * (1 + self.buff_fragile) * min(self.targets, 4)#12 second for a revolution, 3 orbs, only every second affects ops.
+		base_hps += dust_heal
+		if self.skill == 1:
+			new_trait = self.skill_params[0]
+			skill_hps = final_atk * new_trait * min(self.targets,targets) * trait_factor * min(1, 8 / self.targets)
+			dust_heal *=  min(self.targets, 8) / min(self.targets, 4)
+			skill_hps += dust_heal
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
+		if self.skill == 2:
+			skill_hps = final_atk * 0.1 * min(self.targets,targets)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		if self.skill == 3:
+			targets += 8
+			new_trait = self.skill_params[0]
+			skill_hps = final_atk * new_trait * min(self.targets,targets) * trait_factor
+			dust_heal *= min(self.targets, targets) / min(self.targets, 4)
+			skill_hps += dust_heal
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Doc(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Doc",pp,[1,2],[2],2,1,2)
@@ -1104,8 +1138,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Hibiscus","Honeyberry","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Hibiscus","Honeyberry","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
