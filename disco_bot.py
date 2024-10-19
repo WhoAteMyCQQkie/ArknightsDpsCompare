@@ -12,6 +12,7 @@
 # indra: dodge mechanics can make use of the hits prompts
 # add new modules for ifrit, gladiia.
 # muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu) #update: mumu is completely broken with the update
+# Horn: the second module somehow overwrites talent 1 with the modified talent 2 parameters. the jsons seem actually correct. wtf?
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # clean up plotting, so that the parts are not scattered around in the code
@@ -23,6 +24,7 @@
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
 # drone/summon(count) prompt for summoners
+# lower limit for axis scale
 
 import os
 from typing import Callable, List
