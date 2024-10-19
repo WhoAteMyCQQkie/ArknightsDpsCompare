@@ -5171,7 +5171,6 @@ class Lava3star(Operator):
 		dps = hitdmg / self.atk_interval * (self.attack_speed + self.skill_params[0]) / 100 * self.targets
 		return dps
 
-
 class Lavaalt(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("LavaAlter",pp,[1,2],[1],2,6,1)
@@ -5650,56 +5649,21 @@ class LuoXiaohei(Operator):
 		return dps
 
 class Lutonada(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 616  #######including trust
-		maxatk = 790
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Lutonada Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Lutonada P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Lutonada",pp,[1,2],[1],2,6,1)
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		####the actual skills
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		if self.skill == 1:
-			skill_scale = 2 + 0.1 * self.mastery			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
+			skill_scale = self.skill_params[0]	
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			sp_cost = 3 if self.mastery == 3 else 4
+			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			dps = avgphys/(self.atk_interval/(1+aspd/100))
+			dps = avgphys/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			skill_scale = 0.7 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[3]
 			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg / 2 * self.targets
 		return dps
