@@ -5759,7 +5759,6 @@ class May(Operator):
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
-
 class Melantha(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Melantha",pp,[1],[],1,6,0)
@@ -5771,72 +5770,27 @@ class Melantha(Operator):
 		return dps
 
 class Meteor(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 446  #######including trust
-		maxatk = 530
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Meteor Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Meteor P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.talent1 = TrTaTaSkMo[1]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 30
-				elif self.module_lvl == 2: self.base_atk += 27
-				else: self.base_atk += 22
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.module == 1: self.talent1 = self.talent1 and self.moduledmg
-		if self.talent1: self.name += " vsAerial"
-
-		self.buffs = buffs
-			
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Meteor",pp,[1],[1],1,6,1)
+		if self.module == 1: self.talent_dmg = self.talent_dmg and self.module_dmg
+		if self.talent_dmg and self.elite > 0: self.name += " vsAerial"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		talentscale = 1
-		if self.talent1:
-			talentscale = 1.4 if self.pot > 4 else 1.35
-
-		if self.module == 1:
-			if self.talent1: 
-				atk_scale = 1.1
-				if self.module_lvl == 3: talentscale += 0.15
-				elif self.module_lvl == 2: talentscale += 0.05
+		atk_scale = 1.1 if self.module == 1 and self.talent_dmg else 1
+		talentscale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 			
-			
-		####the actual skills
 		if self.skill == 1:
-			sp_cost = 4 
-			skill_scale = 1.5 + 0.1 * self.mastery
-			defshred = 0.35 if self.mastery == 3 else 0.3 + 0.01 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * atk_scale * talentscale - defense * (1-defshred), final_atk * atk_scale * talentscale * 0.05)
-			skilldmg = np.fmax(final_atk * atk_scale * talentscale * skill_scale - defense * (1-defshred), final_atk * atk_scale * talentscale * skill_scale * 0.05)
-			avgdmg = (sp_cost * hitdmg + skilldmg) / (sp_cost + 1)
-			
-			dps = avgdmg/(self.atk_interval/(1+aspd/100))
+			sp_cost = self.skill_cost 
+			skill_scale = self.skill_params[0]
+			defshred = self.skill_params[1]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmglow = np.fmax(final_atk * atk_scale * talentscale - defense, final_atk * atk_scale * talentscale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale * talentscale - defense * (1+defshred), final_atk * atk_scale * talentscale * 0.05)
+			reapply_duration = (self.skill_cost+1) * self.atk_interval / self.attack_speed * 100
+			avghitdmg = hitdmg * min(1, 5/reapply_duration) + hitdmglow * (1- min(1, 5/reapply_duration))
+			skilldmg = np.fmax(final_atk * atk_scale * talentscale * skill_scale - defense * (1+defshred), final_atk * atk_scale * talentscale * skill_scale * 0.05)
+			avgdmg = (sp_cost * avghitdmg + skilldmg) / (sp_cost + 1)
+			dps = avgdmg/self.atk_interval * self.attack_speed/100
 		
 		return dps
 
