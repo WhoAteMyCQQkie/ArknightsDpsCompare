@@ -4313,21 +4313,15 @@ class Horn(Operator):
 		if self.module_dmg and self.module == 2: self.name += " rangedAtk"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"
-		self.pot = pp.pot
 			
 	def skill_dps(self, defense, res):
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 		atkbuff = self.talent1_params[0]
 		aspd = self.talent2_params[2] if self.talent2_dmg else 0
-		if self.module == 2: 
-			atkbuff = 0.2
-			if self.pot > 2: atkbuff += 0.03
 		if self.module == 2 and self.module_dmg: aspd += 10
 		if self.module == 2 and self.module_lvl > 1:
 			if self.module_lvl == 2: aspd += 5
 			if self.module_lvl == 3: aspd += 8
-			if self.talent2_dmg:
-				aspd += 2 * (self.module_lvl - 1)
 
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]

@@ -348,14 +348,16 @@ class OperatorData:
 							req_module = 2
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-							if candidate["prefabKey"] == "1":
-								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
-							elif candidate["prefabKey"] == "2":
-								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
-							elif candidate["prefabKey"] in ["10","11"]:
-								self.talent1_module_extra.append([equip_lvl, talent_data])
-							elif candidate["prefabKey"] in ["20","21"]:
-								self.talent2_module_extra.append([equip_lvl, talent_data])
+							if candidate["prefabKey"] in ["1","2"]:
+								if candidate["name"] == talent1_name:
+									self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+							else:
+								if candidate["name"] == talent1_name:
+									self.talent1_module_extra.append([equip_lvl, talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_module_extra.append([equip_lvl, talent_data])
 		if has_third_module:
 			module_key = "uniequip_004_" + name_id
 			for module_lvl in module_data[module_key]["phases"][1:]:
@@ -369,14 +371,16 @@ class OperatorData:
 							req_module = 3
 							req_mod_lvl = equip_lvl
 							talent_data = [tal_data["value"] for tal_data in candidate["blackboard"]]
-							if candidate["prefabKey"] == "1":
-								self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
-							elif candidate["prefabKey"] == "2":
-								self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
-							elif candidate["prefabKey"] in ["10","11"]:
-								self.talent1_module_extra.append([equip_lvl, talent_data])
-							elif candidate["prefabKey"] in ["20","21"]:
-								self.talent2_module_extra.append([equip_lvl, talent_data])
+							if candidate["prefabKey"] in ["1","2"]:
+								if candidate["name"] == talent1_name:
+									self.talent1_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_parameters.append([req_promo,req_level,req_module,req_mod_lvl,req_pot,talent_data])
+							else:
+								if candidate["name"] == talent1_name:
+									self.talent1_module_extra.append([equip_lvl, talent_data])
+								elif candidate["name"] == talent2_name:
+									self.talent2_module_extra.append([equip_lvl, talent_data])
 	
 		x = character_data[key]["displayTokenDict"]
 		if x != None:
