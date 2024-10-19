@@ -794,6 +794,26 @@ class Saria(Healer):
 		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
 		return self.name
 
+class Senshi(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Senshi",pp,[1,2],[2],1,6,2)
+	
+	def skill_hps(self, **kwargs):
+		skill_scale = self.skill_params[0]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 1:#TODO self buff with atk is possible and can actually be active with an sp boost from ptilo... ugh
+			sp_cost= self.skill_cost/(1+self.sp_boost) + 3
+			skill_hps = final_atk * skill_scale * (1+ self.buff_fragile)
+			avg_hps = skill_hps / sp_cost
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}* "
+		if self.skill == 2:
+			skill_scale_2 = self.skill_params[1]
+			skill_hps = final_atk * skill_scale * (1+ self.buff_fragile) * min(self.targets,9)
+			extra_heal = final_atk * skill_scale_2 * (1+ self.buff_fragile) * min(self.targets,9)
+			avg_hps = (extra_heal + skill_hps * 10) / (10 + self.skill_cost/(1+self.sp_boost))
+			self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}* (*inlcuding the final heal of* **{int(extra_heal)}**)"
+		return self.name
+
 class Shining(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Shining",pp,[1,2,3],[2,1],2,1,1)
@@ -1158,7 +1178,7 @@ class Whisperain(Healer):
 
 
 healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
-			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
+			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
