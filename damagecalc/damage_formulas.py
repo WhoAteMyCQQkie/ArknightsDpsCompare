@@ -8194,7 +8194,8 @@ class Skadi(Operator):
 		super().__init__("Skadi",pp,[1,2,3],[2,1],2,1,1)
 		if self.module_dmg: 
 			if self.module == 1: self.name += " vsBlocked"
-			if self.module == 2: self.name += " afterRevive"	
+			if self.module == 2: self.name += " afterRevive"
+		if self.skill == 2: self.skill_duration = self.skill_params[1]	
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[0] + self.skill_params[0]
