@@ -342,6 +342,32 @@ class Honeyberry(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Hung(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Hung",pp,[1,2],[2],1,1,2)
+		if self.elite == 2 and self.talent_dmg: self.name += " highGroundTarget"
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
+	
+	def skill_hps(self, **kwargs):
+		heal_scale = self.talent1_params[0] if self.talent_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+
+		if self.skill == 1:
+			skill_hps = final_atk * heal_scale * self.skill_params[0] * (1+ self.buff_fragile)
+			avg_hps = skill_hps / (self.skill_cost/self.hits) if self.hits > 0 else 0
+		if self.skill == 2:
+			self.atk_interval = 2.5
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			skill_hps = final_atk_skill * heal_scale / self.atk_interval * self.attack_speed/100 * (1+ self.buff_fragile)
+			avg_hps = skill_hps * self.skill_duration / (self.skill_duration + self.skill_cost/self.hits) if self.hits > 0 else 0
+		
+		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+		return self.name
+
 class Kaltsit(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Kaltsit",pp,[1,2,3],[1,2,3],2,1,1)
@@ -1177,8 +1203,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
