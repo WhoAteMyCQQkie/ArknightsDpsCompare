@@ -17,7 +17,7 @@
 #TODO: bigger changes that may be complicated or even unrealistic
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
-# add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio)
+# add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
 # rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
