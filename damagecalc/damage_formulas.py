@@ -409,74 +409,24 @@ class Aak(Operator):
 		return dps
 
 class Absinthe(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 601  #######including trust
-		maxatk = 703
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Absinthe Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Absinthe P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		#if(kwargs['bonus']): self.name += " it works"
-
-		self.talent1 = TrTaTaSkMo[1]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 30
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		if self.skill == 2 and self.module == 1 and self.module_lvl > 1: self.talent1= True
-		if self.talent1: self.name += " lowHpTarget"
-
-		self.buffs = buffs
-
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Absinthe",pp,[1,2],[1],2,6,1)
+		if self.skill == 2 and self.module == 1 and self.module_lvl > 1: self.talent_dmg = True
+		if self.talent_dmg: self.name += " lowHpTarget"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		dmg_scale = 1
-		#talent/module buffs
-		if self.talent1:
-			dmg_scale = 1.24
-			if self.pot > 4: dmg_scale += 0.06
-			if self.module == 1:
-				if self.module_lvl == 2: dmg_scale += 0.05
-				if self.module_lvl == 3: dmg_scale += 0.08
-		newres = res
-		if self.module == 1:
-			newres = np.fmax(0,res-10)
-
-			
-		####the actual skills
+		dmg_scale = self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 1
+		newres = np.fmax(0,res-10) if self.module == 1 else res
 		if self.skill == 1:
-			atkbuff += 0.6 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)*dmg_scale	
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
-		
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05) * dmg_scale	
+			dps = hitdmgarts/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			atk_scale = 0.75 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)*dmg_scale	
-			dps = 4*hitdmgarts/(self.atk_interval/(1+aspd/100))
+			atk_scale = self.skill_params[1]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05) * dmg_scale	
+			dps = 4 * hitdmgarts/self.atk_interval * self.attack_speed/100
 		return dps
 	
 	def total_dmg(self, defense, res):
