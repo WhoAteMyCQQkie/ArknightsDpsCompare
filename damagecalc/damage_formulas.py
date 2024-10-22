@@ -2272,113 +2272,45 @@ class Doc(Operator):
 		return dps
 
 class Dorothy(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 556  #######including trust
-		maxatk = 661
-		self.atk_interval = 0.85   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 27
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Dorothy Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Dorothy P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3] and self.trait
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 57
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 42
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if not self.trait: self.name += " noMines"   ##### keep the ones that apply
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Dorothy",pp,[1,2,3],[2],3,1,2)
+		if not self.trait_dmg: self.name += " noMines"
 		else:
-			if not self.talent1: self.name += " 1MinePerSPcost"
+			if not self.talent_dmg: self.name += " 1MinePerSPcost"
 			else: self.name += " 1MinePer5s"
-			if self.skill == 1 and self.skilldmg: " withDefshredNormalAtks"
-		
-		if self.talent2: self.name += " maxTalent2"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+			if self.skill == 1 and self.skill_dmg: " withDefshredNormalAtks"
+		if self.talent2_dmg: self.name += " maxTalent2"
+		if self.targets > 1: self.name += f" {self.targets}targets"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.talent2:
-			atkbuff += 0.2 if self.pot < 5 else 0.24
-			if self.module == 2:
-				if self.module_lvl == 2: atkbuff += 0.1 if self.pot < 5 else 0.12
-				if self.module_lvl == 3: atkbuff += 0.2 if self.pot < 5 else 0.24
+		atkbuff = self.talent2_params[0] * self.talent2_params[1] if self.talent2_dmg else 0
 		cdmg = 1.2 if self.module == 2 else 1
-		sp_cost = 12 if self.mastery == 3 else 16 - self.mastery
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-		####the actual skills
+		sp_cost = max(self.skill_cost / (1+ self.sp_boost),5)
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		mine_scale = self.skill_params[1] if self.trait_dmg else 0
+
 		if self.skill == 1:
-			
-			mine_scale = 3.7 if self.mastery == 0 else 3.6 + 0.3 * self.mastery
-			defshred = 0.3 + 0.02 * self.mastery
-			if self.mastery > 1: defshred -= 0.01
-			defshred = 1 - defshred
-			hitdmgmine = np.fmax(final_atk * mine_scale - defense * defshred, final_atk * mine_scale * 0.05) * cdmg
-			minedps = 0
-			if self.trait: 
-				minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
-				
-			if not self.trait:
+			defshred = 1 + self.skill_params[2]
+			hitdmgmine = np.fmax(final_atk * mine_scale - defense * defshred, final_atk * mine_scale * 0.05) * cdmg	
+			if not self.trait_dmg or not self.skill_dmg:
 				defshred = 1
-			elif not self.skilldmg:
-				defshred = 1
-			elif not self.talent1:
-				defshred = 1- defshred
-				defshred *= 5 / sp_cost  #include uptime of the debuff for auto attacks
-				defshred = 1- defshred
+			elif not self.talent_dmg:
+				defshred = 1 + 5 / sp_cost * self.skill_params[2]  #include uptime of the debuff for auto attacks
 			hitdmg = np.fmax(final_atk - defense * defshred, final_atk * 0.05)
-			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
-		
-		
 		if self.skill == 2:
-			mine_scale = 3 if self.mastery == 3 else 2.6 + 0.1 * self.mastery
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgmine = np.fmax(final_atk * mine_scale - defense, final_atk * mine_scale * 0.05) * cdmg
-			minedps = 0
-			if self.trait: minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
 		if self.skill == 3:
-			mine_scale = 3.5 if self.mastery == 3 else 2.8 + 0.2 * self.mastery
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgmine = np.fmax(final_atk * mine_scale * (1-res/100), final_atk * mine_scale * 0.05) * cdmg
-			minedps = 0
-			if self.trait: minedps = hitdmgmine/5 if self.talent1 else hitdmgmine/sp_cost
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + minedps * self.targets
+		minedps = hitdmgmine/5 if self.talent_dmg else hitdmgmine/sp_cost
+		dps = hitdmg/self.atk_interval * self.attack_speed/100 + minedps * self.targets
 		return dps
 
 class Durin(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Durin",pp,[],[],0,6,0)
+
 	def skill_dps(self, defense, res):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
