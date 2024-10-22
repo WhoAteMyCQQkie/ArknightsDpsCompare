@@ -1,8 +1,8 @@
 import math  # fu Kjera
+import numpy as np
+
 import dill
 
-import numpy as np
-import pylab as pl
 from Database.JsonReader import OperatorData
 from damagecalc.utils import PlotParameters
 
@@ -9938,29 +9938,6 @@ class ZuoLe(Operator):
 		
 		return dps
 
-################################################################################################################################################################################
-import numpy as np
-
-
-def levenshtein(word1, word2):
-	m = len(word1)
-	n = len(word2)
-	D = np.zeros((m, n))
-	for i in range(m):
-		D[i][0] = i
-	for j in range(n):
-		D[0][j] = j
-	if word1[0] != word2[0]: D[0][0] = 1
-	for j in range(1,n): #rows
-		if word1[0] != word2[0]: D[0][j] = D[0][j]+1
-		for i in range(1,m): #columns
-			a = D[i-1][j-1] if word1[i]==word2[j] else 2000
-			b = D[i-1][j] + 1
-			c = D[i][j-1] + 1
-			d = D[i-1][j-1] + 1
-			D[i][j] = min(a,b,c,d)
-	return (int(D[m-1][n-1]))
-	
 ################################################################################################################################################################################
 
 #Add the operator with their names and nicknames here
