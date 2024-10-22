@@ -9887,65 +9887,23 @@ class Weedy(Operator):
 		return dps
 
 class Whislash(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 571  #######including trust
-		maxatk = 675
-		self.atk_interval = 1.05   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Whislash Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Whislash P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 52
-				elif self.module_lvl == 2: self.base_atk += 47
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.module == 1: self.trait = self.trait and self.moduledmg
-		
-		if not self.trait: self.name += " blocking"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Whislash",pp,[1,2],[1],2,6,1)
+		if self.module == 1: self.trait_dmg = self.trait_dmg and self.module_dmg
+		if not self.trait_dmg: self.name += " blocking"
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" 
 
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-				
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		talentbuff = 8 if self.pot > 4 else 6
-		
-		if self.trait:
+		atk_scale = 1	
+		if self.trait_dmg:
 			atk_scale = 1.3 if self.module == 1 else 1.2
-			
-		####the actual skills
-		if self.skill == 2:
-			atkbuff += 0.35 if self.mastery == 0 else 0.3 + 0.1 * self.mastery
-			talentscaling = 1.7 + 0.1 * self.mastery
-			aspd += talentbuff * talentscaling
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(3, self.targets)
+		talent_buff = self.talent1_params[0]
+		atkbuff = self.skill_params[1] if self.skill == 2 else 0
+		aspd = talent_buff * self.skill_params[0] if self.skill == 2 else 0.5 * talent_buff * self.skill_params[0]
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		targets = 3 if self.skill == 2 else 1
+		dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100 * min(targets, self.targets)
 		return dps
 
 class Wildmane(Operator):
