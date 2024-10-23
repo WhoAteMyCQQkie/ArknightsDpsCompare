@@ -607,113 +607,54 @@ class April(Operator):
 
 class Archetto(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 517  #######including trust
-		maxatk = 618
-		self.atk_interval = 1.0  #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 27
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Archetto Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Archetto P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 48
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 32
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 24
-				elif self.module_lvl == 2: self.base_atk += 22
-				else: self.base_atk += 17
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.module == 1 and self.module_lvl > 1 and self.talent1 and self.skill != 3: self.name += " +2ndSniper"
-		
-		if self.moduledmg and self.module == 1: self.name += " aerialTarget"
-		if self.moduledmg and self.module == 2: self.name += " GroundEnemy"
-		
+		super().__init__("Archetto",pp,[1,2,3],[2,1],3,1,1)
+		if self.module == 1 and self.module_lvl > 1 and self.talent_dmg and self.skill != 3: self.name += " +2ndSniper"	
+		if self.module_dmg and self.module == 1: self.name += " aerialTarget"
+		if self.module_dmg and self.module == 2: self.name += " GroundEnemy"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 2:
-			aspd += 1 + self.module_lvl
-		if self.moduledmg:
-			if self.module == 1: atk_scale = 1.1
-			if self.module == 2: aspd += 8
-			
+		aspd = 8 if self.module == 2 and self.module_dmg else 0
+		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
+		recovery_interval = max(self.talent1_params) if self.elite > 0 else 10000000
+		if self.module == 1 and self.talent_dmg and self.module_lvl > 1:
+			recovery_interval -= 0.3 if self.module_lvl == 2 else 0.4
+
 		####the actual skills
 		if self.skill == 1:
-			recovery_interval = 2.5
-			if self.module == 1:
-				if self.module_lvl == 2: recovery_interval -= 0.5 if self.talent1 else 0.2
-				if self.module_lvl == 3: recovery_interval -= 0.7 if self.talent1 else 0.3
-			skill_scale = 2 + 0.1 * self.mastery
-			skill_scale2= 1.5 + 0.1 * self.mastery
-			sp_cost = 3 if self.mastery == 3 else 4
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
+			skill_scale2= self.skill_params[1]
+			sp_cost = self.skill_cost
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			aoedmg = np.fmax(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05)
 			
 			#figuring out the chance of the talent to activate during downtime
-			base_cycle_time = (sp_cost+1)/(1+aspd/100)
+			base_cycle_time = (sp_cost+1)/((self.attack_speed+aspd)/100)
 			talents_per_base_cycle = base_cycle_time / recovery_interval
 			failure_rate = 1.8 / (sp_cost + 1)  #1 over sp cost because thats the time the skill would technically be ready, the bonus is for sp lockout. (basis is a video where each attack had 14 frames, but it was 25 frames blocked)
 			talents_per_base_cycle *= 1-failure_rate
 			new_spcost = np.fmax(1,sp_cost - talents_per_base_cycle)
-			hitdps = hitdmg/(self.atk_interval/(1+aspd/100)) * (new_spcost-1)/new_spcost
-			skilldps = skilldmg/(self.atk_interval/(1+aspd/100)) /new_spcost
-			aoedps = aoedmg/(self.atk_interval/(1+aspd/100)) /new_spcost *(min(self.targets,4)-1)
+			hitdps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) * (new_spcost-1)/new_spcost
+			skilldps = skilldmg/(self.atk_interval/((self.attack_speed+aspd)/100)) /new_spcost
+			aoedps = aoedmg/(self.atk_interval/((self.attack_speed+aspd)/100)) /new_spcost *(min(self.targets,4)-1)
 			dps = hitdps + skilldps + aoedps
 				
 		if self.skill == 2:
-			recovery_interval = 2.5
-			if self.module == 1:
-				if self.module_lvl == 2: recovery_interval -= 0.5 if self.talent1 else 0.2
-				if self.module_lvl == 3: recovery_interval -= 0.7 if self.talent1 else 0.3
-			sprecovery = 1/recovery_interval + 1+aspd/100
-			skill_scale = 1.4 if self.mastery == 3 else 1.2 + 0.05 * self.mastery
-			sp_cost = 12 - self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			sprecovery = 1/recovery_interval + (self.attack_speed+aspd)/100
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			targets = min(5, self.targets)
 			totalhits = [5,9,12,14,15]
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + sprecovery/sp_cost * skilldmg * totalhits[targets-1]
+			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) + sprecovery/self.skill_cost * skilldmg * totalhits[targets-1]
 		
 		if self.skill == 3:
-			atkbuff += 0.15 + 0.05 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * 3
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets, 2)
+			dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100 * min(self.targets, 2)
 		return dps
 
 class Arene(Operator):
