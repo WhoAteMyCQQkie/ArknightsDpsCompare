@@ -606,7 +606,7 @@ class April(Operator):
 		return dps
 
 class Archetto(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Archetto",pp,[1,2,3],[2,1],3,1,1)
 		if self.module == 1 and self.module_lvl > 1 and self.talent_dmg and self.skill != 3: self.name += " +2ndSniper"	
 		if self.module_dmg and self.module == 1: self.name += " aerialTarget"
@@ -620,7 +620,6 @@ class Archetto(Operator):
 		if self.module == 1 and self.talent_dmg and self.module_lvl > 1:
 			recovery_interval -= 0.3 if self.module_lvl == 2 else 0.4
 
-		####the actual skills
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			skill_scale2= self.skill_params[1]
@@ -837,61 +836,20 @@ class Astgenne(Operator):
 		return dps
 
 class Aurora(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 802  #######including trust
-		maxatk = 956
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		
-		self.skill = skill if skill in [2] else 2###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Aurora Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Aurora P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.skilldmg = TrTaTaSkMo[3]
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Aurora",pp,[1,2],[1],2,1,1)
+		if self.skill_dmg and self.skill == 2: self.name += " 1/3vsFreeze"
 
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 90
-				elif self.module_lvl == 2: self.base_atk += 75
-				else: self.base_atk += 60
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-  ##### keep the ones that apply
-		if self.skilldmg: self.name += " 1/3vsFreeze"
-
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-
-			
-		####the actual skills
-		if self.skill == 2:
-			self.atk_interval = 1.85
-			atkbuff += 0.6 + 0.05 * self.mastery
-			skill_scale = 3 + 0.1 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			skilldmg =  np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			avgdmg = hitdmg
-			if self.skilldmg: avgdmg = 2/3 * hitdmg + 1/3 * skilldmg
-						
-			dps = avgdmg/(self.atk_interval/(1+aspd/100))
+		if self.skill == 2: self.atk_interval = 1.85
+		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		skill_scale = self.skill_params[3]
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		skilldmg =  np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+		avgdmg = hitdmg
+		if self.skill_dmg and self.skill == 2: avgdmg = 2/3 * hitdmg + 1/3 * skilldmg			
+		dps = avgdmg/self.atk_interval * self.attack_speed/100
 		return dps
 		
 class Bagpipe(Operator):
