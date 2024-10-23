@@ -83,7 +83,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	
 	#error correction: remove illegal inputs
 	for i in range(len(args)-1):
-		if args[i] in ["+",","]:
+		if args[i] in ["+",",","!dps"]:
 			args[i] = "null"
 		elif args[i][0] in ["+",","]:
 			args[i] = args[i][1:]
