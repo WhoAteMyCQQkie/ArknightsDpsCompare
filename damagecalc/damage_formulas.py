@@ -1701,84 +1701,41 @@ class Coldshot(Operator):
 		return dps
 
 class Conviction(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 793  #######including trust
-		maxatk = 951
-		self.atk_interval = 1.5   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		
-		self.skill = skill if skill in [1,2] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Conviction Lv{level} S{self.skill}" #####set op name
-		else: self.name = f"Conviction S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 80
-				elif self.module_lvl == 2: self.base_atk += 70
-				else: self.base_atk += 50
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.moduledmg and self.module == 1: self.name += " vsBlocked"
-		if self.skill == 2 and self.skilldmg: self.name += " SkillSuccess"
-		if self.skill == 2 and not self.skilldmg: self.name += " selfstun"
-		
+	def __init__(self, pp, *args, **kwargs):
+		pp.pot = 6
+		super().__init__("Conviction",pp,[1,2],[1],1,6,1)
+		self.name = self.name.replace(" P6","")
+		if self.module_dmg and self.module == 1: self.name += " vsBlocked"
+		if self.skill == 2 and self.skill_dmg: self.name += " SkillSuccess"
+		if self.skill == 2 and not self.skill_dmg: self.name += " selfstun"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 1:
-			if self.moduledmg: atk_scale = 1.15
-			aspd += 3 if self.module_lvl == 1 else 4
-			
-		####the actual skills
+		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+
 		if self.skill == 1:
-			skill_scale = 1.7 + 0.1 * self.mastery
-			skill_scale2 = 6.8 + 0.4 * self.mastery
-			sp_cost = 4 if self.mastery == 3 else 5
-			
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
+			skill_scale2 = self.skill_params[3]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg1 = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skilldmg2 = np.fmax(final_atk * atk_scale * skill_scale2 - defense, final_atk* atk_scale * skill_scale2 * 0.05)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			skilldmg2 = np.fmax(final_atk * atk_scale * skill_scale2 - defense, final_atk* atk_scale * skill_scale2 * 0.05)	
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg1 * 0.95 + skilldmg2 * 0.05
 			if atks_per_skillactivation > 1:
 				avghit = (0.95 * skilldmg1 + 0.05 * skilldmg2 + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation	
-				
-			dps = avghit/(self.atk_interval/(1+aspd/100))
+			dps = avghit/self.atk_interval * self.attack_speed/100
+
 		if self.skill == 2:
-			skill_scale = 2.6 + 0.3 * self.mastery
-			sp_cost = 12 if self.mastery == 3 else 17 - self.mastery
-			sp_cost += 1.2 #sp lockout
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[1]
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * skill_scale * atk_scale * (1-res/100), final_atk * skill_scale * atk_scale * 0.05) * self.targets
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			if self.skilldmg: 
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+			if self.skill_dmg: 
 				dps += skilldmg / sp_cost
 			else:
 				dps *= (sp_cost -5)/sp_cost
