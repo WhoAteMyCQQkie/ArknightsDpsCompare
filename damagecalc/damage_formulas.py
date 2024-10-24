@@ -6923,83 +6923,69 @@ class Pudding(Operator):
 		return dps
 
 class Qiubai(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 631 #######including trust
-		maxatk = 768
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 26
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Qiubai Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Qiubai P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 55
-				elif self.module_lvl == 2: self.base_atk += 48
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-
-		#if not self.trait: self.name += "w/o trait"   ##### keep the ones that apply
-		if self.talent1:
-			if self.module == 1 and self.moduledmg and self.module_lvl > 1:
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Qiubai",pp,[1,3],[1],3,1,1)
+		if self.skill != 3 and not self.trait_dmg: self.name += " rangedAtk"
+		if self.talent_dmg and self.skill != 3:
+			if self.module == 1 and self.module_dmg and self.module_lvl > 1:
 				self.name += " vsBindANDslow"
 			else: self.name += " vsBind/Slow"
-		#if not self.talent2: self.name += " w/o talent2"
-		if self.skill ==3:
-			if self.skilldmg: self.name += " maxStacks"
-			else: self.name += " noStacks"
-		
+		if self.skill == 3:
+			if not self.talent_dmg and not self.talent2_dmg: self.name += " w/o talent1"
+			else:
+				if self.module == 1 and self.module_lvl > 1:
+					if self.module_dmg and self.talent_dmg: self.name += " vsBindAndSlow"
+					elif self.talent_dmg and not self.module_dmg: self.name += " vsBindOrSlow"
+					elif self.module_dmg and not self.talent_dmg: self.name += " vsSlow+selfAppliedBind"
+					else: self.name += " vsSelfAppliedBind"
+				else:
+					if self.talent_dmg: self.name += " vsBindOrSlow"
+					else: self.name += " vsSelfAppliedBind"
+			if self.skill_dmg: self.name += " maxStacks"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-	
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		if self.module == 1: aspd += 4 + self.module_lvl
-		
+
 		bonus = 0.1 if self.module == 1 else 0
-		extrascale = 0
-		#talent/module buffs
-		if self.talent1:
-			extrascale = 0.4 if self.pot < 5 else 0.43
-			if self.module == 1 and self.module_lvl > 1: extrascale += 0.05
-			if self.module == 1 and self.moduledmg and self.module_lvl > 1:
-				atk_scale = 1.2 if self.module_lvl == 3 else 1.1
-			
+		extrascale = self.talent1_params[0] if self.elite > 0 else 0
+		dmg = 1 + 0.1 * (self.module_lvl-1) if self.module == 1 and self.module_dmg else 1
+		atk_scale = 1 if self.trait_dmg else 0.8
+
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			if not self.talent_dmg: 
+				extrascale = 0
+				dmg = 1
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmg
+			hitdmgarts = np.fmax(final_atk * extrascale * (1-res/100), final_atk * extrascale * 0.05) * dmg
+			skilldmg = np.fmax(final_atk * (skill_scale+extrascale) * (1-res/100), final_atk * (skill_scale+extrascale) * 0.05) * dmg * self.targets
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			dps = (hitdmg+bonusdmg+skilldmg/self.skill_cost)/self.atk_interval * (self.attack_speed)/100
 		####the actual skills
 		if self.skill == 3:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			maxstacks = 6 if self.mastery == 0 else 5 + self.mastery
-			if not self.skilldmg: maxstacks = 0
-			aspd += maxstacks * 13
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmgarts = np.fmax(final_atk * atk_scale *  (1+extrascale) * (1-res/100), final_atk* atk_scale * (1+extrascale) * 0.05)
+			atkbuff = self.skill_params[0]
+			aspd = self.skill_params[1] * self.skill_params[2] if self.skill_dmg else 0
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			try: extrascale *= self.skill_params[3]
+			except: pass
+			atk_cycle = self.atk_interval / (self.attack_speed + aspd) * 100
+			bind_chance = self.talent2_params[0]
+			counting_hits = int(1.5/atk_cycle) + 1
+			chance_to_attack_bind = 1 - (1-bind_chance) ** counting_hits
+			if not self.talent_dmg and not self.talent2_dmg: #talent not active
+				extrascale = 0
+				dmg = 1
+			elif self.module_dmg and not self.talent_dmg: #vs slow + self applied
+				dmg = (dmg - 1) * chance_to_attack_bind + 1
+			elif not self.module_dmg and self.talent_dmg: #vs slow OR bind
+				dmg = 1
+			elif not self.module_dmg and not self.talent_dmg: #only self applied
+				extrascale *= chance_to_attack_bind
+				dmg = 1
+			hitdmgarts = np.fmax(final_atk * (1+extrascale) * (1-res/100), final_atk * (1+extrascale) * 0.05) * dmg
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
-			dps = (hitdmgarts+bonusdmg)/(self.atk_interval/(1+aspd/100)) * min(3, self.targets)
+			dps = (hitdmgarts+bonusdmg)/self.atk_interval * (self.attack_speed+aspd)/100 * min(3, self.targets)
 		return dps
 	
 class Quartz(Operator):
