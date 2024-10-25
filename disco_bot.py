@@ -26,6 +26,7 @@
 # drone/summon(count) prompt for summoners
 # lower limit for axis scale
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
+# stylized plots. for example christmas themed etc.
 
 import os
 from typing import Callable, List
