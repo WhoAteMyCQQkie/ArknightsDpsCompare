@@ -52,7 +52,7 @@ class DiscordSendable:
 	async def send(self, channel: DMChannel):
 		if self.content is None and self.file is None:
 			return
-		if len(self.content) > 1999: #discord does not allow messages this long
+		if not self.content is None and len(self.content) > 1999: #discord does not allow messages this long
 			split_index = self.content.find(',', len(self.content)//2) + 1 #split behind the comma
 			if split_index > 1998 or split_index == -1: split_index = len(self.content)//2
 			first_part = self.content[:split_index]
