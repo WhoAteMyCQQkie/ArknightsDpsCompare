@@ -8278,6 +8278,30 @@ class Thorns(Operator):
 			dps = (hitdmg + bonusdmg)/self.atk_interval * (self.attack_speed + bufffactor * self.skill_params[1])/100 + arts_dot_dps
 		return dps
 
+class TinMan(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("TinMan",pp,[1,2],[],1,6,0) #available skills, available modules, default skill, def pot, def mod
+		if self.skill == 2: self.name += " 1UnitActive"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe	
+	
+	def skill_dps(self, defense, res):
+		dmg_bonus = self.talent2_params[0] if self.elite == 2 else 1
+
+		duration = self.skill_params[0]
+		skill_scale = self.skill_params[2]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_bonus * self.targets
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		
+		if self.skill == 1:
+			sp_cost = self.skill_cost
+			dps = sp_cost/(sp_cost + 1) * hitdmg / self.atk_interval * (self.attack_speed) / 100
+			dps += duration * skilldmg / ((sp_cost + 1) * self.atk_interval/self.attack_speed*100)
+		if self.skill == 2:
+			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
+			dps += skilldmg
+		return dps
+
 class Toddifons(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=80
@@ -9506,10 +9530,10 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 		"narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
-		"tachanka": Tachanka, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns,"toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
+		"tachanka": Tachanka, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns,"tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vanilla": Vanilla, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Conviction","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Rangers","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Saga","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","TerraResearchCommission","Thorns","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vanilla","Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
+		"Rosa","Rosmontis","Saga","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","TerraResearchCommission","Thorns","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vanilla","Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
