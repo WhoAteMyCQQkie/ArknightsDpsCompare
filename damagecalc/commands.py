@@ -1,5 +1,5 @@
 import io
-import itertools
+import signal
 import multiprocessing
 from typing import Callable, List
 import copy
@@ -51,6 +51,18 @@ def calc_command(args: List[str]) -> DiscordSendable:
     
 	return DiscordSendable(return_dict.get('result', 'No result'))
 
+def calc_command_linux(args: List[str]) -> DiscordSendable:
+	def handler(signum, frame):
+		raise TimeoutError("Operation timed out")
+	signal.signal(signal.SIGALRM, handler)
+	signal.alarm(2)
+	try:
+		result = utils.calc_message((' '.join(args)), dict())
+	except TimeoutError:
+		result = "Reasonable computation time exceeded"
+	finally:
+		signal.alarm(0)
+	return DiscordSendable(str(result))#return_dict.get('result', 'No result'))
 
 def dps_command(args: List[str])-> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()

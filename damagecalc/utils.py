@@ -861,3 +861,4 @@ def calc_message(sentence: str, return_dict):
 		return_dict['result'] = "Congrats, you just divided by zero."
 	except subprocess.TimeoutExpired:
 		return_dict['result'] = "The thread did not survive trying to process this request."
+	return return_dict['result']

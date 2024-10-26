@@ -30,6 +30,7 @@
 
 import os
 from typing import Callable, List
+import platform
 
 import discord
 from PIL import Image
@@ -90,7 +91,10 @@ hide,left,tiny,short (for the legend),  color (for colorblind people), text (put
 As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following: **1:Dorothy, 2:Ebenholz, 3:Ceobe, 4:Mudrock, 5:Rosa, 6:Skadi, 7:Schwarz**
 Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desperately want."""))
 	aliases.register('mumu', 'muelsyse')
-	commands.register('calc', cmds.calc_command)
+	if platform.system() == "Linux":
+		commands.register('calc', cmds.calc_command_linux)
+	else:
+		commands.register('calc', cmds.calc_command)
 	commands.register('dps', cmds.dps_command)
 	commands.register('hps', cmds.hps_command)
 	
