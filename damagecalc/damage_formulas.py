@@ -7138,80 +7138,26 @@ class ReedAlter(Operator):
 		return dps
 	
 class Rockrock(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 328  #######including trust
-		maxatk = 380
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Rockrock Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Rockrock P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.trait = TrTaTaSkMo[0]
-		self.talent = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 18
-				elif self.module_lvl == 2: self.base_atk += 15
-				else: self.base_atk += 13
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-
-		else: self.module = 0
-		
-		if not self.talent: self.name += " w/o talent"
-		if self.skilldmg and self.skill == 2: self.name += " overdrive"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Rockrock",pp,[1,2],[1],2,1,1)
+		if not self.talent_dmg and self.elite > 0: self.name += " w/o talent"
+		if self.skill_dmg and self.skill == 2: self.name += " overdrive"
 		elif self.skill == 2: self.name += " w/o overdrive"
-		if not self.trait: self.name += " minDroneDmg"
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		drone_dmg = 1.1
-				
-		if self.talent:
-			atkbuff +=  0.16
-			if self.pot > 4:
-				atkbuff += 0.04
-			if self.module == 1 and self.module_lvl == 3: aspd += 5
-		
-		if not self.trait:
-			drone_dmg = 0.35 if self.module == 1 else 0.2
-		
-		if self.skill == 1:
-			aspd += 60 + 10 * self.mastery
-		else:
-			aspd += 60 + 5 * self.mastery
-			if self.mastery == 3: aspd += 5
-			if self.skilldmg:
-				atkbuff += 0.5
-				if self.trait:
-					drone_dmg *= 1.7 + 0.1 * self.mastery
+		if not self.trait_dmg: self.name += " minDroneDmg"
 
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-		drone_atk = drone_dmg * final_atk
-		
-		dmgperinterval = final_atk + drone_atk
-		
+	def skill_dps(self, defense, res):
+		drone_dmg = 1.1
+		if not self.trait_dmg:
+			drone_dmg = 0.35 if self.module == 1 else 0.2
+		atkbuff = self.talent1_params[0] * self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
+		aspd = 5 if self.module == 1 and self.module_lvl == 3 and self.talent_dmg else 0
+		aspd += self.skill_params[0] if self.skill == 1 else self.skill_params[1]
+		if self.skill_dmg and self.skill == 2: atkbuff += self.skill_params[0]
+		if self.skill == 2 and self.skill_dmg and self.trait_dmg: drone_dmg *= self.skill_params[3]
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		dmgperinterval = final_atk + drone_dmg * final_atk
 		hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
-		dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
+		dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Rosa(Operator):
