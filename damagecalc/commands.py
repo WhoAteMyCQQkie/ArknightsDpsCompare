@@ -49,7 +49,7 @@ def calc_command(args: List[str]) -> DiscordSendable:
 		process.join()
 		return DiscordSendable("Exceeded reasonable computation time.")
     
-	return DiscordSendable(return_dict.get('result', 'No result'))
+	return DiscordSendable(str(return_dict.get('result', 'No result')))
 
 def calc_command_linux(args: List[str]) -> DiscordSendable:
 	def handler(signum, frame):
