@@ -6575,9 +6575,9 @@ class ProjektRed(Operator):
 class Provence(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Provence",pp,[1,2],[1],2,1,1)
-		if self.talent_dmg: self.name += " directFront"
+		if self.talent_dmg and self.elite > 0: self.name += " directFront"
 		if self.skill == 1:
-			if self.skill_dmg: self.name += " vs<20%Hp"
+			if self.skill_dmg: self.name += " vs<1%Hp"
 			else: self.name += " vsFullHp"
 
 	def skill_dps(self, defense, res):
@@ -6586,12 +6586,14 @@ class Provence(Operator):
 		if self.elite > 0:
 			crate = self.talent1_params[1] if self.talent_dmg else self.talent1_params[0]	
 		if self.skill == 1:
-			atkbuff = self.skill_params[1] * 4 if self.skill_dmg else 0
-			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			skill_scale = 1 + self.skill_params[1] * 5 if self.skill_dmg else 1
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			critdmg = np.fmax(final_atk * skill_scale * cdmg - defense, final_atk * skill_scale * cdmg * 0.05)
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-		critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 		avghit =  crate * critdmg + (1-crate) * hitdmg
 		dps = avghit/self.atk_interval * self.attack_speed/100
 		return dps
