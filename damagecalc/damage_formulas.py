@@ -30,6 +30,7 @@ class Operator:
 		self.targets = max(1,params.targets)
 		self.sp_boost = params.sp_boost
 		self.physical = op_data.physical
+		self.ranged = op_data.ranged
 		
 		elite = 2 if params.promotion < 0 else params.promotion
 		elite = max(0,min(max_promotions[rarity-1],elite))
@@ -5740,193 +5741,70 @@ class Mudrock(Operator):
 		return dps
 	
 class Muelsyse(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 447  #######including trust
-		maxatk = 537
-		self.atk_interval = 1   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Muelsyse",pp,[1,2,3],[1],3,1,1)
+		try:
+			self.cloned_op = kwargs["prev_op"]
+		except:
+			self.cloned_op = Ela(pp)
+		clone_name = "Muelsyse(" + self.cloned_op.name.split()[0] + ")"
+		self.name = self.name.replace("Muelsyse", clone_name)
+		if not self.skill == 3: self.trait_dmg = self.trait_dmg and self.talent_dmg
 		
-		self.arts = False
-		self.ranged = True
-		self.summon_atk = 50
-		self.summon_interval = 0.85
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Muelsyse Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Muelsyse P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 25
-				elif self.module_lvl == 2: self.base_atk += 20
-				else: self.base_atk += 15
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " No Mod"
-		else: self.module = 0
-		
-		if not self.skill == 3: self.trait = self.trait and self.talent1
-		
-		self.buffs = buffs
+		if not self.cloned_op.ranged:
+			if not self.talent_dmg: self.name += " no Clones"
+			else:
+				if self.trait_dmg: self.name += " blocked"
+				if self.talent2_dmg: self.name += " maxSteal"
+		else:
+			if self.skill == 3:
+				clones = 5
+				if not self.skill_dmg: clones -= 2
+				if not self.talent_dmg: clones -= 1
+				if self.trait_dmg: self.name += " blocked"
+				self.name += f" {clones}clones"
+			else:
+				if not self.talent_dmg:
+					self.name += " noClones"
+				else:
+					if self.trait_dmg: self.name += " blocked"
+					self.name += " CloneAlwaysAtks"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1.5 if self.trait else 1
-		
-		#talent/module buffs
-		summonatk = self.summon_atk * 0.9 if self.module == 0 or self.module_lvl == 1 else self.summon_atk
-		
-		atkbuff += 0.35 + 0.05 * self.mastery
-		####the actual skills
-		if self.skill == 1:
-			aspd += 35 + 5 * self.mastery
-			
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+		atk_scale = 1.5 if self.trait_dmg else 1
+		copy_factor = 1 if self.module == 1 and self.module_lvl == 3 else 0.5 + 0.2 * self.elite
+
+		atkbuff = self.skill_params[2] if self.skill == 1 else self.skill_params[1]
+		aspd = self.skill_params[3] if self.skill == 1 else 0
+
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-		dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
-		main = 1 if self.talent1 else 0
-		final_summonatk = summonatk * (1+atkbuff) + self.buffs[1]
-		if not self.ranged and self.talent2: final_summonatk += 250
-		summondamage = np.fmax(final_summonatk * (1-res/100), final_summonatk * 0.05) if self.arts else np.fmax(final_summonatk - defense, final_summonatk * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
+
+		main = 1 if self.talent_dmg else 0
+		clone_atk = self.cloned_op.atk * copy_factor * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		if not self.cloned_op.ranged and self.talent2_dmg: clone_atk += 250
+		summondamage = np.fmax(clone_atk * (1-res/100), clone_atk * 0.05) if not self.cloned_op.physical else np.fmax(clone_atk - defense, clone_atk * 0.05)
 		extra_summons = 0
 		extra_summons_skill = 0
-		if self.ranged and self.talent1: 
-			extra_summons += min(4,2.5/(self.summon_interval/(1+aspd/100)))
-			if self.skill != 3: extra_summons_skill =  min(4,2.5/(self.summon_interval/(1+aspd/100)) * 2) if self.skill == 2 else min(4,2.5/(self.summon_interval/(1+(aspd-35-5*self.mastery)/100)))
+		if self.cloned_op.ranged and self.talent_dmg: 
+			extra_summons += min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)))
+			extra_summons_skill =  min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)) * 2) if self.skill == 2 else min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)))
 			extra_summons = (50 * extra_summons + 15 * extra_summons_skill) / 65
 			
-		if self.skill == 3 and self.ranged:
-			extra_summons = 4 if self.skilldmg else 2
-			dps += (main+extra_summons) * summondamage/(self.summon_interval/(1+aspd/100))
-		elif not self.skilldmg:
+		if self.skill == 3 and self.cloned_op.ranged:
+			extra_summons = 4 if self.skill_dmg else 2
+			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100))
+		elif not self.skill_dmg:
 			extra_summons = 0
-		if self.skill == 2 and self.ranged:
-			dps += (main+extra_summons) * summondamage/(self.summon_interval/(1+aspd/100)) * 2
-		elif self.skill != 3 or (self.skill == 3 and not self.ranged):
-			dps += (main+extra_summons) * summondamage/(self.summon_interval/(1+aspd/100))
+		if self.skill == 2 and self.cloned_op.ranged:
+			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)) * 2
+		elif self.skill != 3 or (self.skill == 3 and not self.cloned_op.ranged):
+			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100))
 		return dps
 
-def name_addition(S123,ranged,TrTaTaSkMo):
-	name = ""
-	trait,talent1,talent2,skill,module = TrTaTaSkMo
-	if not ranged:
-		if not talent1: name+= " no clone"
 		else:
 			if trait: name += " blocked"
-			if talent2: name+= " maxSteal"
-	elif S123 == 3:
-		clones = 5
-		if not talent1: clones -= 1
-		if not skill: clones -= 2
-		name += f" {clones}clones"
-		if trait: name += " blocking"
-	elif talent1:
-		if skill: name += " averagedClonecount"
-		else: name += " 1clone"
-	else: name+= " no clones"
-	return name
-	
-class MumuDorothy(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Dorothy(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Dorothy)" + self.name[8:]
-		self.ranged = True
-		self.arts = False
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
-class MumuEbenholz(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(lvl,pp,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Ebenholz(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Ebenholz)" + self.name[8:]
-		self.ranged = True
-		self.arts = True
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
-class MumuCeobe(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Ceobe(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Ceobe)" + self.name[8:]
-		self.ranged = True
-		self.arts = True
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-		
-class MumuMudrock(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Mudrock(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Mudrock)" + self.name[8:]
-		self.ranged = False
-		self.arts = False
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
-class MumuRosa(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Rosa(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Rosa)" + self.name[8:]
-		self.ranged = True
-		self.arts = False
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.base_atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
-class MumuSkadi(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Skadi(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Skadi)" + self.name[8:]
-		self.ranged = False
-		self.arts = False
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
-class MumuSchwarz(Muelsyse):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		super().__init__(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		operator = Schwarz(pp,lvl,pot,skill,mastery,module,module_lvl,targets,TrTaTaSkMo,buffs)
-		self.name = "Muelsyse(Schwarz)" + self.name[8:]
-		self.ranged = True
-		self.arts = False
-		self.summon_interval = operator.atk_interval
-		self.summon_atk = operator.atk
-		S123 = skill if skill in [1,2,3] else 3
-		self.name += name_addition(S123,self.ranged,TrTaTaSkMo)
-
 class Narantuya(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -9392,8 +9270,7 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
 		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "mon3tr": Mon3tr, "kaltsit": Mon3tr, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
-		#"mumu": MumuDorothy, "muelsyse": MumuDorothy, "mumudorothy": MumuDorothy,  "mumu1": MumuDorothy, "mumu2": MumuEbenholz,"mumuebenholz": MumuEbenholz, "mumu3": MumuCeobe,"mumuceobe": MumuCeobe, "mumu4": MumuMudrock,"mumumudrock": MumuMudrock, "mumu5": MumuRosa,"mumurosa": MumuRosa, "mumu6": MumuSkadi,"mumuskadi": MumuSkadi, "mumu7": MumuSchwarz,"mumuschwarz": MumuSchwarz, 
-		"narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
+		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns,"tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
@@ -9401,5 +9278,5 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Conviction","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
-		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Rangers","Ray","ReedAlt","Rockrock",
+		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Rangers","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Saga","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","TerraResearchCommission","Thorns","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vanilla","Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]

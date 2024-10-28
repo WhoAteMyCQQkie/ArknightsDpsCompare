@@ -194,7 +194,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["mody","y"]:
 			pps.modules.add(2)
 			pps.modules.discard(-1)
-		elif args[i] in ["modd","d"]:
+		elif args[i] in ["modd","d","a"]:
 			pps.modules.add(3)
 			pps.modules.discard(-1)
 		elif args[i] in ["d1","d2","d3","modd1","modd2","modd3"]: 
@@ -645,8 +645,8 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
-	if plotnumbers > 19: style = '-.'
-	if plotnumbers > 29: style = ':'
+	if plotnumbers > 19: style = ':'
+	if plotnumbers > 29: style = '-.'
 
 	#Setting the name of the operator
 	op_name = ""

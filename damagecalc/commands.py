@@ -182,13 +182,19 @@ def dps_command(args: List[str])-> DiscordSendable:
 	plot_numbers = 0
 	#getting setting the plot parameters and plotting the units
 	utils.parse_plot_essentials(global_parameters, args)
+	previous_operator = None
+	previous_parameters = None
 	for i in range(len(scopes)-1):
 		if scopes[i] in local_scopes:
 			local_parameters = copy.deepcopy(global_parameters)
 			if (scopes[i]+1) not in scopes:
 				utils.parse_plot_parameters(local_parameters, args[scopes[i]:scopes[i+1]])
 			for parameters in local_parameters.get_plot_parameters():
+				if op_dict[args[scopes[i]]].__name__.startswith("Muel") and previous_operator != None: parameters.input_kwargs["prev_op"] = previous_operator(previous_parameters)
 				if utils.apply_plot(op_dict[args[scopes[i]]],parameters,already_drawn_ops,plot_numbers,short_names):
+					if not op_dict[args[scopes[i]]].__name__.startswith("Muel"): 
+						previous_operator = op_dict[args[scopes[i]]]
+						previous_parameters = parameters
 					plot_numbers += 1
 					if plot_numbers > 40:
 						plt.close()

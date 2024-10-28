@@ -87,9 +87,9 @@ hide,left,tiny,short (for the legend),  color (for colorblind people), text (put
 """))
 	aliases.register('prompt', 'guide')
 	aliases.register('prompts', 'guide')
-	commands.register('muelsyse', cmds.simple("""There are multiple clones available. The cloned operator will be have the same level,pot and module-lvl as Mumu. Lowtrait removes Mumus bonus trait dmg, lowtalent1 removes the main clone, lowtalent2 removes the stolen atk if the cloned op is melee. lowskill will remove 2 clones from skill 3 or completely remove the extra clones for skill 1/2, otherwise it will assume the main clone is always attacking and calculate the damage with the expected average amount of clones during the skill duration.
-As operator input use mumuX or mumuOPERATOR with X:OPERATOR being the following: **1:Dorothy, 2:Ebenholz, 3:Ceobe, 4:Mudrock, 5:Rosa, 6:Skadi, 7:Schwarz**
-Adding new ops is not a big deal, so ask WhoAteMyCQQkie if there is one you desperately want."""))
+	commands.register('muelsyse', cmds.simple("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu. ONLY OPERATORS OF THE NEW SYSTEM CAN BE CLONED!(which may be all of them by the end of the year).
+Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, this number is however not accurate, since i havent figured out how to properly estimate that.
+Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op."""))
 	aliases.register('mumu', 'muelsyse')
 	if platform.system() == "Linux":
 		commands.register('calc', cmds.calc_command_linux)

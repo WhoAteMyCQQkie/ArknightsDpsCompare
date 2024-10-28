@@ -188,13 +188,18 @@ class OperatorData:
 		self.aspd_trust = character_data[key]["favorKeyFrames"][1]["data"]["attackSpeed"]
 
 		#figure out damage type
-		self.physical = True
+		self.physical: bool = True
 		if character_data[key]["profession"] in ["SUPPORT","CASTER","MEDIC"]:
 			self.physical = False
 		if character_data[key]["subProfessionId"] in ["craftsman"]:
 			self.physical = True
 		if character_data[key]["subProfessionId"] in ["artsfghter"]:
 			self.physical = False
+		
+		#figure out if ranged or melee (Yes, this is currently exclusively for Muelsyse clones)
+		self.ranged: bool = True
+		if character_data[key]["position"] == "MELEE":
+			self.ranged = False
 
 		#read skill values
 		skill_ids = [skill_entry["skillId"] for skill_entry in character_data[key]["skills"]]
