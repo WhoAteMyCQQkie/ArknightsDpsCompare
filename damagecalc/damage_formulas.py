@@ -2291,16 +2291,19 @@ class Ela(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 			
 	def skill_dps(self, defense, res):
-		if self.talent2_params[0]>1:
-			cdmg = self.talent2_params[0]
-			crate = self.talent2_params[1]
+		if self.elite > 1:
+			if self.talent2_params[0] > 1:
+				cdmg = self.talent2_params[0]
+				crate = self.talent2_params[1]
+			else:
+				cdmg = self.talent2_params[1]
+				crate = self.talent2_params[0]
+			if self.talent2_dmg:
+				crate = 1.0
 		else:
-			cdmg = self.talent2_params[1]
-			crate = self.talent2_params[0]
-		if self.talent2_dmg:
-			crate = 1.0
-			
-		####the actual skills
+			crate = 0
+			cdmg = 1
+
 		if self.skill == 1:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
@@ -5803,8 +5806,6 @@ class Muelsyse(Operator):
 			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100))
 		return dps
 
-		else:
-			if trait: name += " blocked"
 class Narantuya(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
 		maxlvl=90
@@ -6520,7 +6521,7 @@ class Popukar(Operator):
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[0]
-		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg / self.atk_interval * self.attack_speed / 100 * min(self.targets,2)
 		return dps
