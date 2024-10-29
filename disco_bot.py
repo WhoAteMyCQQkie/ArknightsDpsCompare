@@ -16,6 +16,7 @@
 # narantuya: proper frame counting to get the attack intervals more accurate
 
 #TODO: bigger changes that may be complicated or even unrealistic
+# add spboost to the label of all the skills (affected)
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
