@@ -4503,103 +4503,32 @@ class Lavaalt(Operator):
 		return dps
 
 class Lee(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 709  #######including trust
-		maxatk = 844
-		self.atk_interval = 1  #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 30
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Lee Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Lee P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 74
-				elif self.module_lvl == 2: self.base_atk += 67
-				else: self.base_atk += 55
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 76
-				elif self.module_lvl == 2: self.base_atk += 69
-				else: self.base_atk += 57
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent1:
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Lee",pp,[1,2,3],[1,2],3,1,1)
+		if self.talent_dmg and self.elite > 0:
 			if self.targets == 1: self.name += " blocking(doubled)"
 			else: self.name += " blocking"
-		
-		if self.module == 2 and self.moduledmg: self.name += " 5moduleStacks"
-
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.talent1:
-			moreAspd = 15 if self.pot > 4 else 14
-			if self.module == 2: moreAspd += 3 * (self.module_lvl - 1)
-			if self.targets == 1: moreAspd *= 2
-			aspd += moreAspd
-		
-		if self.module == 2 and self.moduledmg:
-			atkbuff += 0.2
-			
-		####the actual skills
-		if self.skill == 1:
-			atkbuff += 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
+		if self.module == 2 and self.module_dmg: self.name += " 5modStacks"
+		if self.targets > 1: self.name += f" {self.targets}targets"
 		if self.skill == 2:
-			aspd += 30 if self.mastery == 3 else 20
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			
-		if self.skill == 3:
-			atkbuff += 0.37 if self.mastery == 0 else 0.35 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]		
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))	
-		return dps
-	
-	def get_name(self):
-		if self.skill == 2:
-			skillscale = 3 if self.mastery == 3 else 2.6 + 0.1 * self.mastery
-			maxscale = 6 if self.mastery == 3 else 0.15 * 25
-			atk = 0.2 if self.module == 2 and self.moduledmg else 0
-				
-			final_atk = self.base_atk * (1 + self.buffs[0] + atk) + self.buffs[1]
-			nukedmg = final_atk * skillscale * (1+self.buffs[3])
-			maxdmg = final_atk * (skillscale + maxscale) * (1+self.buffs[3])
+			skillscale = self.skill_params[0]
+			maxscale = skillscale + self.skill_params[1] * self.skill_params[2]
+			atkbuff = 0.2 if self.module == 2 and self.module_dmg else 0
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
+			nukedmg = final_atk * skillscale * (1+self.buff_fragile)
+			maxdmg = final_atk * (maxscale) * (1+self.buff_fragile)
 			self.name += f" NukeDmg:{int(nukedmg)}-{int(maxdmg)}"
-		return self.name
+
+	def skill_dps(self, defense, res):
+		aspd = self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
+		if self.targets == 1 and self.talent_dmg: aspd *= 2
+		atkbuff = 0.2 if self.module == 2 and self.module_dmg else 0
+		if self.skill == 2: aspd += self.skill_params[5]
+		else: atkbuff += self.skill_params[0]
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+		return dps
 
 class Lessing(Operator):
 	def __init__(self, pp, *args, **kwargs):
