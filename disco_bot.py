@@ -14,6 +14,7 @@
 # add meteorite s2
 # hoshiguma: if self.hits > 0, then actually calculate the uptime of the dodge buff from modY
 # narantuya: proper frame counting to get the attack intervals more accurate
+# nymph: add the avgNecrosis as option
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add spboost to the label of all the skills (affected)

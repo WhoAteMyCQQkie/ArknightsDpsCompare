@@ -4640,7 +4640,7 @@ class Magallan(Operator):
 		drones = 2 if self.talent_dmg else 1
 		if not self.trait_dmg: drones = 0
 		bonusaspd = 3 if self.module == 2 and self.module_lvl == 3 else 0
-		
+
 		if self.skill == 1:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
@@ -5361,100 +5361,54 @@ class Nian(Operator):
 		return dps
 
 class Nymph(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 640  #######including trust
-		maxatk = 745
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 27
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Nymph Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Nymph P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		stacks = 12 if self.pot > 4 else 10
-		if self.talent2: self.name += f" {stacks}stacks"
-	
-		if self.trait and self.talent1: self.name += " vsFallout(not inlcuding 800FalloutDps)"
-
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Nymph",pp,[1,2,3],[],3,1,0)
+		if self.talent2_dmg and self.elite == 2: self.name += f" {int(self.talent2_params[1])}stacks"
+		if self.trait_dmg and self.talent_dmg: self.name += " vsFallout(not inlcuding 800FalloutDps)"
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		final_atk = 0
-		
-		#talent/module buffs
-		if self.talent2:
-			atkbuff += 0.24 if self.pot > 4 else 0.2
-
+		talent1_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 0
+		atkbuff = self.talent2_params[0] * self.talent2_params[1] if self.elite == 2 and self.talent2_dmg else 0
 			
-		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.8 + 0.1 * self.mastery			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			atkbuff += self.skill_params[0]
+			necrosis_scale = self.skill_params[1]
+			ele_scale = self.skill_params[2]
+			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			eledmg = 0
-			if self.trait and self.talent1:
-				eledmg = final_atk * 0.5 if self.mastery == 3 else final_atk * 0.4
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			if self.trait_dmg and self.talent_dmg:
+				eledmg = final_atk * ele_scale
+			dps = (hitdmg+eledmg)/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 2:
-			sp_cost = 14 - self.mastery
-			if self.mastery > 1: sp_cost += 1
-			
-			atk_scale = 3 if self.mastery == 0 else 3.4 + 0.2 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2
+			atk_scale = self.skill_params[0]
+			talent1_overwrite = self.skill_params[3]
+			necrosis_scale = self.skill_params[1]
+			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05) * self.targets
-			
-			sp_cost = sp_cost+ 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
-			atks_per_skill = int(sp_cost/atkcycle)
-			avghit = (hitdmg * atks_per_skill + skilldmg) / (atks_per_skill + 1)	
-			dps = avghit/(self.atk_interval/(1+aspd/100))
-		
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 + skilldmg/sp_cost
 		
 		if self.skill == 3:
-			atkbuff += 1.7 if self.mastery == 0 else 1.75 + 0.15 * self.mastery
-			aspd += 60 if self.mastery > 1 else 45
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			atkbuff += self.skill_params[0]
+			aspd = self.skill_params[1]
+			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			if self.trait and self.talent1:
+			if self.trait_dmg and self.talent_dmg:
 				hitdmg = final_atk * np.fmax(1,-res)
-			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,2)
 		
 		extra_dmg = 0
-		if self.talent1 and self.trait:
-			dmg_rate = 0.4
+		if self.talent_dmg and self.trait_dmg:
+			dmg_rate = talent1_scale
 			if self.skill == 2:
-				dmg_rate = 0.85 + 0.05 * self.mastery
+				dmg_rate = talent1_overwrite
 			extra_dmg = final_atk * dmg_rate
 		
 		return dps + extra_dmg
-
 
 class Odda(Operator):
 	def __init__(self, pp, *args, **kwargs):
