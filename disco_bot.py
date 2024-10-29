@@ -5,14 +5,12 @@
 # implement various total_dmg and avg_dmg methods for operators, where that doesnt work automatically
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
 
-#TODO: specific Minijobs that really should be done asap
-# qiubai: low dmg showing their dps with their own application rate of the conditionals, instead of just ignoring it
+#TODO: specific Minijobs
 # Mudrock: include the SP gains from the module for S2 damage calculations
 # kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
 # indra: dodge mechanics can make use of the hits prompts
 # add new modules for ifrit, gladiia.
-# muelsyse melee clone. get name is bugged (just compare low mumu to conditionals mumu) #update: mumu is completely broken with the update
-# Horn: the second module somehow overwrites talent 1 with the modified talent 2 parameters. the jsons seem actually correct. wtf?
+# weedy: do some weight calculations for skill 3 and show the true dmg
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # clean up plotting, so that the parts are not scattered around in the code
@@ -20,13 +18,14 @@
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
-# rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
+# rework enemy prompt: still not good as it is (better formatting, showing enemy hp, automate getting the images)
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
 # drone/summon(count) prompt for summoners
 # lower limit for axis scale
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
 # stylized plots. for example christmas themed etc.
+# skill down dps
 
 import os
 from typing import Callable, List
