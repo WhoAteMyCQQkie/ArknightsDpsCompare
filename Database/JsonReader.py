@@ -38,7 +38,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
            'Tuye': 'char_402_tuye','Mulberry': 'char_473_mberry','Honeyberry': 'char_449_glider','Harold': 'char_4114_harold','HibiscusAlter': 'char_1024_hbisc2',
            'Vendela': 'char_494_vendla','Paprika': 'char_4071_peper','Nearl': 'char_148_nearl','Hung': 'char_226_hmau','Bassline': 'char_4109_baslin',
            'ProjektRed': 'char_144_red','WaaiFu': 'char_243_waaifu','Kafka': 'char_214_kafka','MrNothing': 'char_455_nothin','Liskarm': 'char_107_liskam',
-           'Croissant': 'char_201_moeshd','Bison': 'char_325_bison','Vulcan': 'char_163_hpsts','Asbestos': 'char_378_asbest','Shalem': 'char_512_aprot',
+           'Croissant': 'char_201_moeshd','Bison': 'char_325_bison','Vulcan': 'char_163_hpsts','Asbestos': 'char_378_asbest','Shalem': 'char_4025_aprot2',
            'Czerny': 'char_4047_pianst','Blitz': 'char_457_blitz','Heavyrain': 'char_304_zebra','Ashlock': 'char_431_ashlok','Firewhistle': 'char_493_firwhl',
            'Aurora': 'char_422_aurora','Cement': 'char_464_cement','Provence': 'char_145_prove','Melanite': 'char_4006_melnte','Firewatch': 'char_158_milu',
            'Andreana': 'char_218_cuttle','Lunacub': 'char_4014_lunacu','Toddifons': 'char_363_toddi','Erato': 'char_4043_erato','GreyyAlter': 'char_1027_greyy2',

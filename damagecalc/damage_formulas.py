@@ -7210,68 +7210,39 @@ class Schwarz(Operator):
 		return dps
 
 class Shalem(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 618  #######including trust
-		maxatk = 729
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Shalem Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Shalem P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent1 = TrTaTaSkMo[1]
-		
-		if self.talent1: self.name += " (in IS2)"
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Shalem",pp,[1,2],[],2,6,0)
+		if self.talent_dmg: self.name += " (in IS2)"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		if self.talent1:
-			atkbuff += 0.15
-			aspd += 30
-		newres = res * 0.75
-		crate = 0.25 if self.pot > 4 else 0.2
+		print(self.talent1_params)
+		print(self.talent2_params)
+		aspd = self.talent1_params[0] if self.talent_dmg else 0
+		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
+		crate = self.talent2_params[0] if self.elite == 2 else 0
+		newres = res * (1 + self.talent2_params[1]) if self.elite == 2 else res
 
 		####the actual skills
 		if self.skill == 1:
-			self.atk_interval = 1.6 * 0.55 if self.mastery == 3 else 1.6 * 0.65
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			countinghits = int(3 /(self.atk_interval/(1+aspd/100))) + 1
+			atk_interval = self.atk_interval * (1 + self.skill_params[0])
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			countinghits = int( self.talent2_params[2] /(atk_interval/((self.attack_speed+aspd)/100))) + 1
 			nocrit = (1-crate)**countinghits
-			
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			shreddmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit) 
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
-		
+			dps = avgdmg/atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
 		if self.skill == 2:
-			hits = 6
-			atk_scale = 0.65 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			countinghits =  (6 * int(3 /(self.atk_interval/(1+aspd/100))) + 3)/self.targets + 1
+			hits = self.skill_params[1]
+			atk_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			countinghits =  (hits * int(self.talent2_params[2] /(self.atk_interval/((self.attack_speed+aspd)/100))) + 3)/self.targets + 1
 			nocrit = (1-crate)**countinghits
-			
 			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			shreddmg = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit)
-			dps = 6 * avgdmg/(self.atk_interval/(1+aspd/100))
+			dps = 6 * avgdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Sharp(Operator):
