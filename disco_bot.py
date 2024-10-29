@@ -12,6 +12,7 @@
 # add new modules for ifrit, gladiia.
 # weedy: do some weight calculations for skill 3 and show the true dmg
 # add meteorite s2
+# hoshiguma: if self.hits > 0, then actually calculate the uptime of the dodge buff from modY
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # clean up plotting, so that the parts are not scattered around in the code
@@ -27,6 +28,7 @@
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
 # stylized plots. for example christmas themed etc.
 # skill down dps
+# super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
 
 import os
 from typing import Callable, List
