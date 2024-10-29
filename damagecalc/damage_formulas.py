@@ -1618,90 +1618,37 @@ class Click(Operator):
 		return dps
 
 class Coldshot(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 909  #######including trust
-		maxatk = 1063
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Coldshot Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Coldshot P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 75
-				elif self.module_lvl == 2: self.base_atk += 65
-				else: self.base_atk += 53
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if not self.trait: self.name += " outOfAmmo"
-		else: self.name += " w/o TalentBonus" 
-		#if self.trait and self.talent1: self.name += " withTalentBonusDmg!"
-
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
+	def __init__(self, pp, *args,**kwargs):
+		super().__init__("Coldshot",pp,[1,2],[1],2,6,1)
+		if not self.trait_dmg: self.name += " outOfAmmo"
+		elif self.elite > 0:
+			ammo = 4 + 2 * self.elite
+			if self.talent_dmg: self.name += f" TalentOn1/{ammo}Shots"
+			else: self.name += " idealTalentUsage"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		final_atk = 0
-		#talent/module buffs
-		if not self.trait:
-			atk_scale = 1.3 if self.pot < 5 else 1.33
-			if self.module == 1:
-				if self.module_lvl == 2: atk_scale += 0.05
-				if self.module_lvl == 3: atk_scale += 0.08
-		atk_scale *= 1.2 #traitbonus
-		atk_scale2 = 1.2
+		ammo = 4 + 2 * self.elite
+		atk_scale = 1.2
+		talent_scale = self.talent1_params[0] if self.elite > 0 else 1
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		reload_time = 1.6 if self.skill == 1 else 2.4 
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		hitdmg2 = np.fmax(final_atk * atk_scale * talent_scale - defense, final_atk * atk_scale * talent_scale * 0.05)
+		if self.atk_interval/self.attack_speed*100 >= 2: hitdmg = hitdmg2 #if attacks are so slow that the talent actually activates
 		
-		####the actual skills
-		if self.skill == 1:
-			atkbuff += 1 if self.mastery == 3 else 0.6 + 0.15 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			if self.trait:
-				dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			elif self.module == 1:
-				hitdmg2 = np.fmax(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
-				dps = (hitdmg+hitdmg2)/(2*(self.atk_interval/(1+aspd/100))+1.6)
+		if self.trait_dmg: #full clip
+			if self.talent_dmg or self.atk_interval/self.attack_speed*100 >= 2:
+				dps = (hitdmg * (ammo -1) + hitdmg2) / ammo / self.atk_interval * self.attack_speed/100
 			else:
-				dps = hitdmg/((self.atk_interval/(1+aspd/100))+1.6)
-		
-		if self.skill == 2:
-			atkbuff += 1 + 0.15 * self.mastery
-			if self.mastery > 1: atkbuff -= 0.05
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			if self.trait:
-				dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			elif self.module == 1:
-				hitdmg2 = np.fmax(final_atk * atk_scale2 - defense, final_atk * atk_scale2 * 0.05)
-				dps = (hitdmg+hitdmg2)/(2*(self.atk_interval/(1+aspd/100))+1.6)
+				dps = hitdmg2 / 2
+		else:
+			if self.module != 1:
+				dps = hitdmg2/(self.atk_interval/self.attack_speed*100 + reload_time)
 			else:
-				dps = hitdmg/((self.atk_interval/(1+aspd/100))+2.4)
+				if self.atk_interval/self.attack_speed*100 >= 2:
+					dps = hitdmg2 * 2 /(self.atk_interval/self.attack_speed*100 * 2 + reload_time)
+				else:
+					dps = (hitdmg2 + hitdmg) /(self.atk_interval/self.attack_speed*100 * 2 + reload_time)
 		return dps
 
 class Conviction(Operator):
