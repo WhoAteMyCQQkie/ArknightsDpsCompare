@@ -130,9 +130,12 @@ class Operator:
 				if module == available_modules[0]:
 					self.atk += op_data.atk_module[0][module_lvl-1]
 					self.attack_speed += op_data.aspd_module[0][module_lvl-1]
-				else: #maybe todo: 3rd module. especially with kaltsit and phantom now also having 3 mods.
+				elif module == available_modules[1]:
 					self.atk += op_data.atk_module[1][module_lvl-1]
 					self.attack_speed += op_data.aspd_module[1][module_lvl-1]
+				else:
+					self.atk += op_data.atk_module[2][module_lvl-1]
+					self.attack_speed += op_data.aspd_module[2][module_lvl-1]
 		else:
 			module = 0
 		self.module = module
@@ -5835,78 +5838,36 @@ class NearlAlter(Operator):
 		return dps
 
 class Nian(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 513  #######including trust
-		maxatk = 619
-		self.atk_interval = 1.5   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 2: self.base_atk += 24
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Nian Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Nian P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.moduledmg = TrTaTaSkMo[4] and TrTaTaSkMo[2]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 70
-				elif self.module_lvl == 2: self.base_atk += 55
-				else: self.base_atk += 35
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.module == 1 and self.module_lvl > 1 and self.moduledmg: self.name += " 3shieldsBroken"
-		
-		self.buffs = buffs
-		try:
-			self.hits = kwargs['hits']
-		except KeyError:
-			self.hits = 0
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Nian",pp,[1,2,3],[1,2],3,1,1)
+		if self.module == 1 and self.module_lvl > 1 and self.module_dmg: self.name += " 3shieldsBroken"
+		try: self.hits = kwargs['hits']
+		except KeyError: self.hits = 0
 		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
-			
+		if self.module == 1: #module lvl 1 does not come with an atk increase, breaking the automatic system
+			if self.module_lvl > 1: self.atk += 35
+			if self.module_lvl > 2: self.atk += 15
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 1 and self.moduledmg and self.module_lvl > 1:
+		atkbuff = 0
+		if self.module == 1 and self.module_dmg and self.module_lvl > 1:
 			atkbuff += 3 * 0.05 if self.module_lvl == 2 else 3 * 0.07
-			
-		####the actual skills
-		if self.skill == 1:
-			atkbuff += 0.3 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-		
-		if self.skill == 2:
-			atk_scale = 0.7 if self.mastery == 0 else 0.6 + 0.1 * self.mastery
 
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps += hitdmg * self.hits
-		
+		if self.skill == 1:
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+		if self.skill == 2:
+			atk_scale = self.skill_params[2]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			dps = hitdmg * self.hits
 		if self.skill == 3:
-			atkbuff += 1.2 if self.mastery == 3 else 0.8 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[4]
+			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
 class Nymph(Operator):
