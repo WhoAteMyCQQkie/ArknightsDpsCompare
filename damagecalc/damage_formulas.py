@@ -5232,65 +5232,26 @@ class Meteor(Operator):
 		return dps
 
 class Meteorite(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 759  #######including trust
-		maxatk = 950
-		self.atk_interval = 2.8  #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 34
-		
-		self.skill = skill if skill in [1] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Meteorite Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Meteorite P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 52
-				else: self.base_atk += 37
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
-		cdmg = 1.6
-		crate = 0.3
-		newdef = defense
-		if self.module == 2:
-			newdef = np.fmax(0, defense - 100)
-			crate += 0.1 * (self.module_lvl - 1)
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Meteorite",pp,[1],[2],1,1,2)
+		if self.targets > 1: self.name += f" {self.targets}targets"
 
-		skill_scale = 1.7 + 0.15 * self.mastery
-			
-		final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+	def skill_dps(self, defense, res):
+		crate = self.talent1_params[1] if self.elite > 0 else 0
+		newdef = np.fmax(0, defense - 100) if self.module == 2 else defense
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_atk_crit = self.atk * (1 + self.buff_atk + 0.6) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
-		hitcrit = np.fmax(final_atk * cdmg - newdef, final_atk * cdmg * 0.05)
-		skillhitdmg = np.fmax(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05)
-		skillcritdmg = np.fmax(final_atk * cdmg *skill_scale - newdef, final_atk * cdmg * skill_scale * 0.05)
-		sp_cost = 3 if self.mastery == 3 else 4
-		avghit = crate * hitcrit + (1-crate) * hitdmg
-		avgskill = crate * skillcritdmg + (1-crate) * skillhitdmg
-		avgphys = (sp_cost * avghit + avgskill) / (sp_cost + 1) * self.targets	
-		dps = avgphys/(self.atk_interval/(1+aspd/100))
+		hitcrit = np.fmax(final_atk_crit - newdef, final_atk_crit * 0.05)
+		skill_scale = self.skill_params[0]
+		if self.skill == 1:	
+			skillhitdmg = np.fmax(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05)
+			skillcritdmg = np.fmax(final_atk_crit *skill_scale - newdef, final_atk_crit * skill_scale * 0.05)
+			sp_cost = self.skill_cost
+			avghit = crate * hitcrit + (1-crate) * hitdmg
+			avgskill = crate * skillcritdmg + (1-crate) * skillhitdmg
+			avgphys = (sp_cost * avghit + avgskill) / (sp_cost + 1) 
+			dps = avgphys/self.atk_interval * self.attack_speed/100 * self.targets
 		return dps
 
 class Midnight(Operator):

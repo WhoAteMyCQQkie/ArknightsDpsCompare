@@ -11,6 +11,7 @@
 # indra: dodge mechanics can make use of the hits prompts
 # add new modules for ifrit, gladiia.
 # weedy: do some weight calculations for skill 3 and show the true dmg
+# add meteorite s2
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # clean up plotting, so that the parts are not scattered around in the code
