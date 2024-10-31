@@ -5147,67 +5147,30 @@ class MrNothing(Operator):
 		return dps
 		
 class Mudrock(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 687  #######including trust
-		maxatk = 882
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		
-		self.skill = skill if skill in [2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Mudrock Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Mudrock P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = min(3,max(1,targets))
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 80
-				elif self.module_lvl == 2: self.base_atk += 70
-				else: self.base_atk += 55
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		self.buffs = buffs
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		try:
-			self.hits = kwargs['hits']
-		except KeyError:
-			self.hits = 0
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Mudrock",pp,[1,2,3],[1],3,1,1)
+		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
+		try: self.hits = kwargs['hits']
+		except KeyError: self.hits = 0
 		if self.hits > 0 and self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 			
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		if self.skill == 2:
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)	
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
-			if self.hits > 0:
-				atk_scale = 2.1 + 0.2 * self.mastery
-				skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
-				spcost = 5 if self.mastery == 0 else 4
-				skillcycle = spcost / self.hits + 1.2
-				dps += skilldmg / skillcycle * self.targets
-				
-		if self.skill == 3:
-			self.atk_interval = 0.7*1.6
-			atkbuff += 1 + 0.1 * self.mastery
-			if self.mastery == 3: atkbuff += 0.1
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
+		atkbuff = self.skill_params[0] if self.skill == 3 else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		atk_interval = self.atk_interval * 0.7 if self.skill == 3 else self.atk_interval
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		dps = hitdmg/atk_interval * self.attack_speed/100
+		if self.skill == 3: dps *= min(self.targets,3)
+
+		if self.skill == 2 and self.hits > 0:
+			atk_scale = self.skill_params[0]
+			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
+			spcost = self.skill_cost
+			extra_sp = (self.module_lvl-1)/9 if self.module == 1 else 0
+			if self.module_lvl == 2: extra_sp *= (spcost-1)/spcost #these roughly factor in the wasted potential. realistically more gets wasted due to the lockout
+			if self.module_lvl == 3: extra_sp *= (2*spcost-3)/(2*spcost)
+			skillcycle = spcost / (self.hits+extra_sp) + 1.2
+			dps += skilldmg / skillcycle * self.targets
 		return dps
 	
 class Muelsyse(Operator):
