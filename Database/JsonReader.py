@@ -73,7 +73,8 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'SandReckoner': 'char_4140_lasher', 'Narantuya': 'char_4138_narant', 'Papyrus': 'char_4139_papyrs', 'TinMan': 'char_4151_tinman',
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
 		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3', 'Shu': 'char_2025_shu',
-		   'VinaVictoria': 'char_1019_siege2'} 
+		   'VinaVictoria': 'char_1019_siege2','Contrail': 'char_4165_ctrail','Vulpisfoglia':'char_4026_vulpis','LapplandAlter':'char_1038_whitw2','Crownslayer':'char_1502_crosly',
+		   'Philae':'char_4148_philae'} 
 
 # character_table.json: replace kazemarus displaytoken (line 182000ish) with: "displayTokenDict": {"token_10022_kazema_shadow":true},
 #!!! battle_equip_table.json: search for valueStr (3 occurences) and remove the entire entry from the "blackboard" for Shu to work, otherwise remove shu from id_dict
