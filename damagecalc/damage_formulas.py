@@ -4327,7 +4327,7 @@ class LapplandAlter(Operator):
 		hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 		dps = hitdmgarts/self.atk_interval*self.attack_speed/100
 		if self.skill == 3:
-			dps += self.targets * final_atk * self.skill_params[4] * (1-res/100)
+			dps += self.targets * final_atk * self.skill_params[4] * np.fmax((1-res/100),0.05)
 		return dps
 
 class Lava3star(Operator):
