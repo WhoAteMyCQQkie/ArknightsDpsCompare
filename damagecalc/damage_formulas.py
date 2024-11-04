@@ -4492,9 +4492,9 @@ class Logos(Operator):
 			dps = (hitdmg+bonusdmg)/self.atk_interval * self.attack_speed/100 * min(self.targets,self.skill_params[1])
 			if self.module == 3 and self.talent_dmg:
 				ele_gauge = 1000 if self.module_dmg else 2000
-				eledps = dps * 0.08 / min(self.targets,4)
+				eledps = dps * 0.08 / min(self.targets,self.skill_params[1])
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15) * min(self.targets,4)
+				dps += 12000/(fallouttime + 15) * min(self.targets,self.skill_params[1])
 				if self.module_lvl > 1:
 					dps += final_atk * falloutdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,self.skill_params[1]) * bonuschance * 15 / (fallouttime + 15)
 		return dps

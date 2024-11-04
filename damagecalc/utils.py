@@ -128,7 +128,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.skills = {-1}
 		elif arg in ["e0","e1","e2"]:
 			pps.promotions = {-1}
-		elif arg in ["p1","p2","p3","p4","p5","p6"]:
+		elif arg in ["p1","p2","p3","p4","p5","p6","pot1","pot2","pot3","pot4","pot5","pot6"]:
 			pps.pots = {-1}
 		elif arg in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
 			pps.module_lvls = {-1}
@@ -160,8 +160,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["e0","e1","e2"]: 
 			pps.promotions.add(int(args[i][1]))
 			pps.promotions.discard(-1)
-		elif args[i] in ["p1","p2","p3","p4","p5","p6"]: 
-			pps.pots.add(int(args[i][1]))
+		elif args[i] in ["p1","p2","p3","p4","p5","p6","pot1","pot2","pot3","pot4","pot5","pot6"]: 
+			pps.pots.add(int(args[i][-1]))
 			pps.pots.discard(-1)
 		elif args[i] in ["1","2","3"]: 
 			pps.module_lvls.add(int(args[i]))
