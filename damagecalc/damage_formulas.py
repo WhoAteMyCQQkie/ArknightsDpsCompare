@@ -5040,53 +5040,20 @@ class Mousse(Operator):
 		return dps
 
 class MrNothing(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 641  #######including trust
-		maxatk = 765
-		self.atk_interval = 1   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"MrNothing Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"MrNothing P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 55
-				else: self.base_atk += 45
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.skilldmg and self.skill == 2: self.name += " Apsd+Skill"
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("MrNothing",pp,[1,2],[1],2,1,1)
+		if self.elite > 0 and not self.talent_dmg: self.name += " idealTalentUsage"
+		if self.elite == 0: self.talent_dmg = True
+		if not self.talent_dmg: self.skill_dmg = False
+		if self.skill_dmg and self.skill == 2: self.name += " Apsd+Skill"
 
-		if self.skill == 2:
-			atkbuff += 0.4 if self.mastery == 0 else 0.45 + 0.05 * self.mastery
-			if self.skilldmg:
-				aspd += 28 if self.mastery > 1 else 25
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+	def skill_dps(self, defense, res):
+		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		aspd = self.skill_params[3] if self.skill == 2 and self.skill_dmg else 0
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		hitdmg2 = np.fmax(final_atk * self.talent1_params[1] - defense, final_atk * self.talent1_params[1] * 0.05)
+		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 if self.talent_dmg else hitdmg2 / self.talent1_params[0]
 		return dps
 		
 class Mudrock(Operator):
