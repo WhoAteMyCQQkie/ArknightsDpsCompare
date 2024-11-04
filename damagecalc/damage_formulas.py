@@ -6233,91 +6233,31 @@ class Rosmontis(Operator):
 		return dps
 	
 class Saga(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 519  #######including trust
-		maxatk = 615
-		self.atk_interval = 1.05   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [2,3] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Saga Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Saga P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 70
-				elif self.module_lvl == 2: self.base_atk += 62
-				else: self.base_atk += 50
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 55
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 45
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.moduledmg and self.module == 1: self.name += " blocking"
-		if self.module == 1 and self.module_lvl > 1 and self.talent: self.name += " vsLowHp"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Saga",pp,[1,2,3],[2,1],2,1,1)
+		if self.module_dmg and self.module == 1: self.name += " blocking"
+		if self.module == 1 and self.module_lvl > 1 and self.talent_dmg: self.name += " vsLowHp"
+		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		dmg = 0
-		if self.module == 1:
-			if self.moduledmg: atkbuff += 0.08
-			if self.talent:
-				if self.module_lvl == 2: dmg = 0.1
-				if self.module_lvl == 3: dmg = 0.15
-			
-		####the actual skills
+		atkbuff = 0.08 if self.module_dmg and self.module == 1 else 0
+		dmg = self.module_lvl * 0.05 if self.module == 1 and self.module_lvl > 1 else 0
+		if self.skill == 1:
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			skill_scale = 4 if self.mastery == 3 else 3.2 + 0.2 * self.mastery
-			if self.mastery == 2: skill_scale += 0.1
-			sp_cost = 16 - self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,6)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
-			atks_per_skillactivation = sp_cost / atkcycle
-			avghit = skilldmg
-			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation						
-			
-			dps = avghit/(self.atk_interval/(1+aspd/100))
-		
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * min(self.targets,6)
+			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 + skilldmg/sp_cost
 		if self.skill == 3:
 			self.atk_interval = 1.55
-			atkbuff += 1 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk  - defense, final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
 		return dps * (1+dmg)
 
 class Savage(Operator):
