@@ -4304,36 +4304,41 @@ class Lee(Operator):
 
 class Lessing(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Lessing",pp,[1,2,3],[1],2,6,1)
+		super().__init__("Lessing",pp,[1,2,3],[1,2],2,6,1)
 
 		if self.skill == 3 and self.module == 1:
 			self.skill_dmg = self.skill_dmg and self.module_dmg
 			self.module_dmg = self.skill_dmg
+		if self.skill == 3 and self.skill_dmg: self.talent_dmg = False
 		if not self.talent2_dmg and self.elite == 2: self.name += " w/o talent2"
+		if self.module == 2 and self.module_lvl > 1 and not self.talent_dmg and not self.skill == 3: self.name += " vsBlocked"
 		if self.module_dmg and self.module == 1 and not self.skill == 3: self.name += " vsBlocked"
+		if self.module_dmg and self.module == 2: self.name += " afterRevive"
 		elif self.skill == 3 and self.skill_dmg: self.name += " vsBlocked"
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
 		atkbuff = self.talent2_params[0] if self.talent2_dmg else 0
+		aspd = 30 if self.module == 2 and self.module_dmg else 0
+		newdef = defense * (1 - 0.04 * self.module_lvl) if self.module == 2 and self.module_lvl > 1 and self.talent_dmg else defense
 
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - newdef, final_atk* atk_scale * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)	
-			dps = avgphys/self.atk_interval * self.attack_speed/100
+			dps = avgphys/self.atk_interval * (self.attack_speed + aspd)/100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + atkbuff + self.skill_params[0] + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps = 2 * hitdmg/self.atk_interval * self.attack_speed/100
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			dps = 2 * hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		if self.skill == 3:
 			if self.skill_dmg: atk_scale *= self.skill_params[1]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			dps =  hitdmg/self.atk_interval * self.attack_speed/100
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			dps =  hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		return dps
 	
 class Leto(Operator):
