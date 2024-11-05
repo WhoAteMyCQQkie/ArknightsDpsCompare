@@ -701,13 +701,13 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(defen/max_def*max_res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(defen,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 		for res in ress:
 			if res >= 0:
 				if normal_dps == 0: demanded = operator.skill_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				elif normal_dps == 2: demanded = operator.avg_dps(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	
 	############### Increments defense and THEN res ################################
 	elif graph_type == 1: 
@@ -779,7 +779,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 				if normal_dps == 0: demanded = operator.skill_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				elif normal_dps == 2: demanded = operator.avg_dps(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,fixval-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	
 	############### DPS graph with a fixed res value ################################
 	elif graph_type == 4:
@@ -797,7 +797,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 				if normal_dps == 0: demanded = operator.skill_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 				elif normal_dps == 2: demanded = operator.avg_dps(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
 				else: demanded = operator.total_dmg(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2])*(1+buffs[3])
-				plt.text(defen,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+				plt.text(defen,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	
 	############### Graph with images of enemies -> enemy prompt ################################
 	elif graph_type == 5:
@@ -811,7 +811,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i, enemy in enumerate(enemies):
 			demanded = operator.skill_dps(enemy[0],enemy[1])*(1+buffs[3])
-			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+			plt.text(i,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	return True
 
 def calc_message(sentence: str, return_dict):
