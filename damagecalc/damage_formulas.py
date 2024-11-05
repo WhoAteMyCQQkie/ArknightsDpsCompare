@@ -7629,7 +7629,6 @@ class Vulpisfoglia(Operator):
 
 		return dps
 
-
 class W(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
 		maxlvl=90
@@ -7812,7 +7811,7 @@ class Walter(Operator):
 				dps += (hitdmg + bonushitdmg * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100 * (self.targets-1)
 		
 		shadowhit = np.fmax(self.drone_atk * (1-res/100), self.drone_atk * 0.05) * self.shadows
-		dps += shadowhit/4
+		dps += shadowhit/4.25
 		return dps
 	
 	def total_dmg(self, defense, res):

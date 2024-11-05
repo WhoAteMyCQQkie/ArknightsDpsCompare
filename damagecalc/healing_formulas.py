@@ -5,6 +5,49 @@ class Healer(Operator):
 	def skill_hps(self, **kwargs):
 		return("Operator not implemented")
 
+class AmiyaMedic(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("AmiyaMedic",pp,[1,2],[1],2,6,1) #available skills, available modules, default skill, def pot, def mod
+		if self.skill == 2 and not self.skill_dmg: self.name += " noStacks"
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
+		self.res = pp.res
+		if self.elite > 0:
+			try:
+				self.target_hp = max(100,kwargs['hp'])
+			except KeyError:
+				self.target_hp = 2000
+	
+	def skill_hps(self,**kwargs):
+		heal_scale = 0.6 if self.module == 1 else 0.5
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		self.name += ": "
+		if len(self.res) > 1: self.res = self.res[1:]
+		for res in self.res:
+			res = max(0,res)
+			if self.skill == 1:
+				aspd = self.skill_params[0]
+				skill_scale = self.skill_params[1]
+				hitdmg = final_atk * (1-res/100)
+				base_hps = heal_scale * final_atk * (1-res/100) / self.atk_interval * (self.attack_speed) / 100 * (1 + self.buff_fragile)
+				skill_hps = heal_scale * final_atk * (1-res/100) / self.atk_interval * (self.attack_speed + aspd) / 100 * (1 + self.buff_fragile)
+				skill_hps += skill_scale * final_atk / self.atk_interval * (self.attack_speed + aspd) / 100 * (1 + self.buff_fragile) * min(self.targets,13)
+				avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+				self.name += f"{res}res: **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*   "
+			if self.skill == 2:
+				atkbuff = 5 * self.skill_params[1] if self.skill_dmg else 0
+				final_atk_skill = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+				hitdmg = final_atk_skill
+				skill_hps = heal_scale * hitdmg / self.atk_interval * (self.attack_speed) / 100 * min(self.targets,2) * (1 + self.buff_fragile)
+				base_hps = heal_scale * final_atk * (1-res/100) / self.atk_interval * (self.attack_speed) / 100 * (1 + self.buff_fragile)
+				self.name += f"{res}res: **{int(skill_hps)}**/{int(base_hps)}   "
+		if len(self.res) == 1: self.name = self.name.replace(" 0res: "," ")
+		if self.elite > 0:
+			talent_heal = self.target_hp * self.talent1_params[1]
+			avg_talent = (talent_heal * self.skill_duration)/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			if self.skill == 1: self.name += f"and passive **{int(talent_heal)}**/0/*{int(avg_talent)}* per {self.target_hp}hp"
+			if self.skill == 2: self.name += f"and passive **{int(talent_heal)}**/0 per {self.target_hp}hp"
+		return self.name
+
 class Ansel(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Ansel",pp,[1],[],1,6,)
@@ -1203,8 +1246,8 @@ class Whisperain(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"amiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial,"wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
