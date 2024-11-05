@@ -6584,86 +6584,37 @@ class SpecterAlter(Operator):
 		return dps
 
 class Stainless(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 532  #######including trust
-		maxatk = 633
-		self.atk_interval = 1.5   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Stainless Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Stainless P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 45
-				elif self.module_lvl == 2: self.base_atk += 35
-				else: self.base_atk += 25
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.skill == 3 and not self.skilldmg: self.name += " TurretOnly"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Stainless",pp,[1,2,3],[1,2],3,1,1)
+		if self.skill == 3 and not self.skill_dmg: self.name += " TurretOnly"
 		if self.skill != 1 and self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-		try:
-			self.hits = kwargs['hits']
-		except KeyError:
-			self.hits = 0
+		try: self.hits = kwargs['hits']
+		except KeyError: self.hits = 0
 		if self.skill == 3: self.name += f" {round(self.hits,2)}hits/s"
+		self.params = [0,2,2.1,2.2,2.3,2.4,2.5,2.6,2.8,2.85,3][pp.mastery]
+		self.params2 = [0,1,1,1,1.1,1.1,1.1,1.2,1.3,1.4,1.5][pp.mastery]
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 1: aspd += 5
-			
-		####the actual skills
 		if self.skill == 1:
-			skill_scale = 1.7 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			atkbuff += 1.6 if self.mastery == 3 else 1.4 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
 		if self.skill == 3:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			aspd += 40 + 5 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]	
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			if not self.skilldmg: dps = 0
-			turret_scale = 2.6 if self.mastery == 0 else 2.55 + 0.15 * self.mastery
-			turret_aoe = 1.2 + 0.1 * self.mastery
+			dps = hitdmg/self.atk_interval * (self.attack_speed + self.skill_params[1])/100
+			if not self.skill_dmg: dps = 0
+			turret_scale = self.params
+			turret_aoe = self.params2
 			turrethitdmg = np.fmax(final_atk * turret_scale - defense, final_atk * turret_scale * 0.05)
 			turretaoedmg = np.fmax(final_atk * turret_aoe - defense, final_atk * turret_aoe * 0.05)
 			totalturret = turrethitdmg + turretaoedmg * (self.targets - 1)
 			dps += totalturret * self.hits / 5
-			
 		return dps
 
 class Steward(Operator):
