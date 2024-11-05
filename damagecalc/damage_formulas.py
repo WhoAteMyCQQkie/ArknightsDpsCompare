@@ -5583,83 +5583,52 @@ class Pepe(Operator):
 		return dps
 
 class Phantom(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 525  #######including trust
-		maxatk = 648
-		lvl1clone = 429
-		maxclone = 548
-		self.atk_interval = 0.93   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.clone_atk = lvl1clone + (maxclone-lvl1clone) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 2: self.base_atk += 22
-		
-		self.skill = skill if skill in [2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Phantom Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Phantom P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent = TrTaTaSkMo[1] and TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 73
-				elif self.module_lvl == 2: self.base_atk += 62
-				else: self.base_atk += 50
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: 
-					self.base_atk += 75
-					self.clone_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 60
-				else: self.base_atk += 40
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.mastery == 3: self.name += " 10hitAvg"
-		else: self.name += " 9hitAvg"
-		if not self.talent: self.name += " w/o clone"   ##### keep the ones that apply
-		if not self.moduledmg and self.module == 2: self.name += " adjacentAllies"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Phantom",pp,[1,2,3],[1,2,3],2,1,2)
+		if self.skill == 2: self.name += f" {int(self.skill_params[0])}hitAvg"
+		if self.elite == 0: self.talent_dmg = False
+		if not self.talent_dmg and self.elite > 0: self.name += " w/o clone"   ##### keep the ones that apply
+		if not self.module_dmg and self.module == 2: self.name += " adjacentAllies"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
+		if self.module == 2 and self.module_lvl == 3: self.drone_atk += 60
+		if self.skill == 3:
+			mainbuff = 0.1 if self.module == 2 and self.module_dmg else 0
+			atkbuff = 0.1 if self.module == 2 and self.module_lvl > 1 and self.talent_dmg else 0
+			final_atk = self.atk * (1 + atkbuff + mainbuff + self.buff_atk) + self.buff_atk_flat
+			final_atk_drone = self.drone_atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			damage = final_atk * self.skill_params[0] * (1+self.buff_fragile)
+			damage2 = final_atk_drone * self.skill_params[0] * (1+self.buff_fragile)
+			if not self.talent_dmg: self.name += f" initialHit:{int(damage)}"
+			else: self.name += f" initialHits:{int(damage)}/{int(damage2)}"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		selfhit = 0
-		clonehit = 0
-		mainbuff = 0.1 if self.module == 2 and self.moduledmg else 0
-		if self.module == 2:
-			if self.module_lvl > 1 and self.talent: atkbuff += 0.1
-		
-		rate = 0.2 if self.mastery == 3 else 0.16 + 0.01 * self.mastery
-		count = 10 if self.mastery == 3 else 9
-		for i in range(count):
-			atkbuff += rate
-			final_atk = self.base_atk * (1+atkbuff + mainbuff) + self.buffs[1]
-			final_clone = self.clone_atk * (1+atkbuff) + self.buffs[1]
-			selfhit += np.fmax(final_atk - defense, final_atk * 0.05)
-			clonehit += np.fmax(final_clone - defense, final_clone * 0.05)
-						
-		dps = selfhit /(self.atk_interval/(1+aspd/100)) / count
-		if self.talent:
-			dps += clonehit /(self.atk_interval/(1+aspd/100)) / count
+		if self.skill == 2:
+			selfhit = 0
+			clonehit = 0
+			mainbuff = 0.1 if self.module == 2 and self.module_dmg else 0
+			atkbuff = 0.1 if self.module == 2 and self.module_lvl > 1 and self.talent_dmg else 0
+			rate = self.skill_params[1]
+			count = int(self.skill_params[0])
+			for i in range(count):
+				atkbuff += rate
+				final_atk = self.atk * (1 + atkbuff + mainbuff + self.buff_atk) + self.buff_atk_flat
+				final_clone = self.drone_atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+				selfhit += np.fmax(final_atk - defense, final_atk * 0.05)
+				clonehit += np.fmax(final_clone - defense, final_clone * 0.05)			
+			dps = selfhit /self.atk_interval * self.attack_speed/100 / count
+			if self.talent_dmg:
+				dps += clonehit /self.drone_atk_interval * self.attack_speed/100 / count
+		else:
+			mainbuff = 0.1 if self.module == 2 and self.module_dmg else 0
+			atkbuff = 0.1 if self.module == 2 and self.module_lvl > 1 and self.talent_dmg else 0
+			final_atk = self.atk * (1 + atkbuff + mainbuff + self.buff_atk) + self.buff_atk_flat
+			final_clone = self.drone_atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg_clone = np.fmax(final_clone - defense, final_clone * 0.05)	
+			dps = hitdmg /self.atk_interval * self.attack_speed/100
+			if self.talent_dmg:
+				dps += hitdmg_clone /self.drone_atk_interval * self.attack_speed/100
+
 		return dps
 
 class Pinecone(Operator):
