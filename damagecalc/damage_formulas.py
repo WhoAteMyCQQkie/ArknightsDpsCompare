@@ -3995,90 +3995,41 @@ class Kirara(Operator):
 		return dps
 
 class Kjera(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 306  #######including trust
-		maxatk = 354
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Kjera Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Kjera P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		
-		self.trait = TrTaTaSkMo[0]
-		self.talent = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 28
-				elif self.module_lvl == 2: self.base_atk += 23
-				else: self.base_atk += 18
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-
-		else: self.module = 0
-		
-		if not self.talent: self.name += " noGroundTiles"
-		if not self.trait: self.name += " minDroneDmg"
-		
-		self.buffs = buffs
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Kjera",pp,[1,2],[2],2,6,2)
+		if not self.talent_dmg and self.elite > 0: self.name += " noGroundTiles"
+		if not self.trait_dmg: self.name += " minDroneDmg"
 		self.freezeRate = 0 #ill just assume the freezing hit already benefits from the resshred
 		if self.skill == 2:
-			baseChance = 0.2 if self.mastery == 0 else 0.22
+			baseChance = self.skill_params[2]
 			hitchances = [0,0,0]
-			atkInterval = 1.3 / (1 + self.buffs[2] / 100)
+			atkInterval = self.atk_interval / self.attack_speed * 100
 			countingCycles = int(2.5 / atkInterval)
-			for j in range(3):
+			for j in range(3): #TL;DR what is the chance of at least 2 hits of the past counting ones to have applied cold, calced for all 3 individual hits per attack, then averaged
 				totalHits = 3 * countingCycles + j + 1
 				for successes in range (2,totalHits+1):
 					hitchances[j] += (1-baseChance)**(totalHits-successes) * baseChance**successes * math.comb(totalHits, successes)
 			self.freezeRate = sum(hitchances)/3
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		
 		drone_dmg = 1.2 if self.module == 2 else 1.1
-				
-		atkbuff += 0.13 if self.pot > 4 else 0.1
-		if self.talent: atkbuff += 0.06
-		if self.module == 2:
-			if self.module_lvl == 2: atkbuff += 0.05
-			if self.module_lvl == 3: atkbuff += 0.08
+		if not self.trait_dmg: drone_dmg = 0.2
+		atkbuff = 0
+		if self.elite > 0: atkbuff += self.talent1_params[2] if self.talent_dmg else self.talent1_params[0]		
 		
-		if not self.trait:
-			drone_dmg = 0.2
-		
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		drone_atk = drone_dmg * final_atk
+		dmgperinterval = final_atk + drone_atk * self.skill
+
 		if self.skill == 1:
-			atkbuff += 1 if self.mastery == 3 else 0.6 + 0.15 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			drone_atk = drone_dmg * final_atk
-			dmgperinterval = final_atk + drone_atk
 			hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100))
+			dps = hitdmgarts/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			drone_atk = drone_dmg * final_atk
-			dmgperinterval = final_atk + 2 * drone_atk
 			res2 = np.fmax(0,res-15)
 			hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 			hitdmgfreeze = np.fmax(dmgperinterval *(1-res2/100), dmgperinterval * 0.05)
 			damage = hitdmgfreeze * self.freezeRate + hitdmgarts * (1 - self.freezeRate)
-			dps = damage/(self.atk_interval/(1+aspd/100))
-			
+			dps = damage/self.atk_interval * self.attack_speed/100
 		return dps
 	
 class Kroos(Operator):
