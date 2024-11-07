@@ -2125,6 +2125,7 @@ class Dusk(Operator):
 
 class Ebenholz(Operator):
 	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+		super().__init__("Ebenholz",pp,[1,2,3],[1,2,3],3,1,3)
 		maxlvl=90
 		lvl1atk = 1284  #######including trust
 		maxatk = 1550
@@ -3543,112 +3544,103 @@ class Iana(Operator):
 		return dps
 
 class Ifrit(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 832  #######including trust
-		maxatk = 980
-		self.atk_interval = 2.9   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 35
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Ifrit Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Ifrit P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 72
-				elif self.module_lvl == 2: self.base_atk += 64
-				else: self.base_atk += 50
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-
-		if self.moduledmg and self.module == 1: self.name += " maxRange"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Ifrit",pp,[1,2,3],[1,3],3,1,1)
+		if self.module_dmg and self.module == 1: self.name += " maxRange"
+		if self.module == 3:
+			if self.talent_dmg: 
+				self.name += " withAvgBurn"
+				if not self.module_dmg: " vsBoss"
+			else: self.name += " noBurn"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
 		try:
 			self.shreds = kwargs['shreds']
 		except KeyError:
 			self.shreds = [1,0,1,0]
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
+		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
+		resshred = self.talent1_params[0]
+		ele_gauge = 1000 if self.module_dmg else 2000
+		burnres = np.fmax(0,res-20)
 		
-		#talent/module buffs
-		if self.module == 1:
-			aspd += 4 + self.module_lvl
-			if self.moduledmg:
-				atk_scale = 1.1
-
-		resshred = 0.4
-		if self.pot > 2:
-			resshred += 0.04
-		
-		recovery_interval = 5.5 if self.pot == 6 else 6
-		sp_recovered = 2
+		recovery_interval = self.talent2_params[1]
+		sp_recovered = self.talent2_params[0] if self.elite == 2 else 0
 		if self.module == 1:
 			if self.module_lvl == 2: sp_recovered = 3
 			if self.module_lvl == 3: sp_recovered = 2 + 0.3 * 5
 			
 		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.2
-			aspd += 70
-			if self.mastery == 0: aspd -= 3
-			elif self.mastery > 1: aspd += 5 * (self.mastery - 1)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			newres = res * (1-resshred)
+			atkbuff = self.skill_params[1]
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			newres = res * (1+resshred)
 			hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
-			dps = hitdmgarts/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
+			if self.module == 3 and self.talent_dmg and self.module_lvl > 1:
+				time_to_proc = ele_gauge * self.targets / (dps*0.08)
+				newres2 = burnres * (1 + resshred)
+				hitdmgarts = np.fmax(final_atk *(1-newres2/100), final_atk * 0.05)
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				fallout_dps = (hitdmgarts + ele_hit)/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
 		
 		if self.skill == 2:
-			sp_cost = 8 if self.mastery == 0 else 7
-			skill_scale = 1.9 + 0.25 * self.mastery
-			if self.mastery > 1: skill_scale -= 0.15
+			sp_cost = self.skill_cost
+			skill_scale = self.skill_params[0]
 			burn_scale = 0.99
-			newres = res * (1-resshred)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			newres = res * (1+resshred)
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
-			skilldmgarts = np.fmax(final_atk *atk_scale *skill_scale *(1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
-			burndmg = np.fmax(final_atk *burn_scale *(1-newres/100), final_atk * burn_scale * 0.05)
-			
-			sp_cost = sp_cost / (1+sp_recovered/recovery_interval) + 1.2 #talent bonus recovery + sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			skilldmgarts = np.fmax(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
+			burndmg = np.fmax(final_atk * burn_scale *(1-newres/100), final_atk * burn_scale * 0.05)
+			sp_cost = sp_cost / (1+sp_recovered/recovery_interval + self.sp_boost) + 1.2 #talent bonus recovery + sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmgarts + burndmg
 			if atks_per_skillactivation > 1:
 				avghit = (skilldmgarts + burndmg + (atks_per_skillactivation - 1) * hitdmgarts) / atks_per_skillactivation	
-			dps = avghit/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = avghit/self.atk_interval * self.attack_speed/100 * self.targets
+			
+			if self.module == 3 and self.talent_dmg and self.module_lvl > 1:
+				time_to_proc = ele_gauge * self.targets / (dps*0.08)
+				newres2 = burnres * (1 + resshred)
+				hitdmgarts = np.fmax(final_atk *(1-newres2/100), final_atk * 0.05)
+				skilldmgarts = np.fmax(final_atk * skill_scale *(1-newres2/100), final_atk * skill_scale * 0.05)
+				burndmg = np.fmax(final_atk * burn_scale * (1-newres2/100), final_atk * burn_scale * 0.05)
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				avghit = skilldmgarts + burndmg + ele_hit
+				if atks_per_skillactivation > 1:
+					avghit = (skilldmgarts + burndmg + (atks_per_skillactivation - 1) * hitdmgarts + ele_hit) / atks_per_skillactivation	
+				fallout_dps = (avghit + ele_hit)/self.atk_interval * self.attack_speed/100 * self.targets
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
 				
 		if self.skill == 3:
-			atk_scale *= 1.1 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			flatshred = 20 if self.mastery == 3 else 10 + 3 * self.mastery
+			atk_scale *= self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			flatshred = -self.skill_params[2]
 			if self.shreds[2] < 1 and self.shreds[2] > 0:
 				res = res / self.shreds[0]
 			newres = np.fmax(0, res-flatshred)
-			newres = newres * (1-resshred)
+			newres = newres * (1+resshred)
 			if self.shreds[2] < 1 and self.shreds[2] > 0:
 				newres *= self.shreds[2]
 			hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres/100), final_atk * atk_scale * 0.05)
 			dps = hitdmgarts * self.targets
+			
+			if self.module == 3 and self.talent_dmg and self.module_lvl > 1:
+				time_to_proc = ele_gauge * self.targets / (dps*0.08)
+				if self.shreds[2] < 1 and self.shreds[2] > 0:
+					res = res / self.shreds[0]
+				newres2 = np.fmax(0, res-flatshred-20)
+				newres2 = newres2 * (1+resshred)
+				if self.shreds[2] < 1 and self.shreds[2] > 0:
+					newres2 *= self.shreds[2]
+				hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres2/100), final_atk * atk_scale * 0.05)
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				fallout_dps = (hitdmgarts + ele_hit) * self.targets
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
 		return dps
 
 class Indra(Operator):
