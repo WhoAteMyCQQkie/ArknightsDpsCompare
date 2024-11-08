@@ -6652,119 +6652,42 @@ class Tachanka(Operator):
 		return dps
 
 class TexasAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 533  #######including trust
-		maxatk = 659
-		self.atk_interval = 0.93   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 2: self.base_atk += 22
-		
-		self.skill = skill if skill in [1,2,3] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Texalt Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Texalt P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 65
-				elif self.module_lvl == 2: self.base_atk += 53
-				else: self.base_atk += 40
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent2: self.name += " preKill"
-		if self.module == 2 and self.moduledmg: self.name += " alone"
-		elif self.module == 2 and not self.moduledmg: self.name += " adjacentAlly"
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("TexasAlter",pp,[1,2,3],[2],2,1,2)
+		if self.talent2_dmg and self.elite == 2: self.name += " preKill"
+		if self.module == 2 and not self.module_dmg: self.name += " adjacentAlly"
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-				
+		if self.skill != 1:
+			atkbuff = self.talent1_params[0]
+			atkbuff += self.skill_params[0] if self.skill == 2 else 0
+			if self.module == 2 and self.module_dmg: atkbuff += 0.1
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			if self.skill == 2: nukedmg = final_atk * self.skill_params[2] * (1+self.buff_fragile)
+			if self.skill == 3: nukedmg = final_atk * 2 * self.skill_params[4] * (1+self.buff_fragile)
+			self.name += f" InitialAoe:{int(nukedmg)}"
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
+		aspd = self.talent2_params[0] if self.elite == 2 else 0
+		atkbuff = self.talent1_params[0] if self.elite > 0 else 0
+		atkbuff += self.skill_params[0] if self.skill != 3 else 0
+		if self.module == 2 and not self.module_dmg: atkbuff += 0.1
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		
-		#talent/module buffs
-		atkbuff += 0.2
-		if self.module == 2:
-			if self.module_lvl == 2: atkbuff += 0.05
-			if self.module_lvl == 3: atkbuff += 0.08
-
-		if self.talent2:
-			aspd += 8
-			if self.pot > 4: aspd += 2
-			
-		####the actual skills
 		if self.skill == 1:
-			atkbuff += 0.55 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-
-			artsdmg = 320 + 30 * self.mastery
-			if self.mastery == 3: artsdmg -= 10
-			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) + np.fmax(artsdmg *(1-res/100), artsdmg * 0.05)
-		
+			artsdmg = self.skill_params[2]
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 + np.fmax(artsdmg *(1-res/100), artsdmg * 0.05)
 		if self.skill == 2:
-			resshred = 0.2
-			if self.mastery == 1: resshred = 0.25
-			elif self.mastery > 1: resshred = 0.3
-			newres = res *(1-resshred)
-			atkbuff += 0.4 + 0.05 * self.mastery
-
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			newres = res *(1+self.skill_params[1])
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
-			
-			dps = 2*hitdmgarts/(self.atk_interval/(1+aspd/100))
-		
+			dps = 2 * hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 3:
-			skillscale = 1 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			maxtargets = 4 if self.mastery == 3 else 3
-			
+			skillscale = self.skill_params[0]
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgarts = np.fmax(final_atk * skillscale *(1-res/100), final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
-			dps += hitdmgarts * min(self.targets, maxtargets)
-			
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+			dps += hitdmgarts * min(self.targets, self.skill_params[2])
 		return dps
-	
-	def get_name(self):
-		atk = 0.2 #talent
-		if self.module == 2:
-			if self.moduledmg: atk += 0.1
-			if self.module_lvl == 2: atk += 0.05
-			if self.module_lvl == 3: atk += 0.08
-		
-		if self.skill == 2:
-			atk += 0.4 + 0.05 * self.mastery
-			skill_scale = 1.8 + 0.2 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
-			nukedmg = final_atk * skill_scale * (1+self.buffs[3])
-			self.name += f" InitialAoe:{int(nukedmg)}"
-		if self.skill == 3:
-			skill_scale = 1.3 if self.mastery == 0 else 1.2 + 0.15 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + atk) + self.buffs[1]
-			nukedmg = final_atk * 2 * skill_scale * (1+self.buffs[3])
-			self.name += f" InitialAoe:{int(nukedmg)}"
-		return self.name
 	
 class Tequila(Operator):
 	def __init__(self, pp, *args, **kwargs):
