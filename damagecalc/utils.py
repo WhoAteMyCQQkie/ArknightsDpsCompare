@@ -684,8 +684,8 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 		except:
 			pass
 	
-	defences = np.clip(np.linspace(-shreds[1],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
-	resistances = np.clip(np.linspace(-shreds[3],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
+	defences = np.clip(np.linspace(-shreds[1]*shreds[0],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
+	resistances = np.clip(np.linspace(-shreds[3]*shreds[2],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
 	damages = np.zeros(2*accuracy) if graph_type in [1,2] else np.zeros(accuracy)
 	
 	############### Normal DPS graph ################################
