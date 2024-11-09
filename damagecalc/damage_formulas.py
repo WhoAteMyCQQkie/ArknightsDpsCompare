@@ -7153,71 +7153,46 @@ class Virtuosa(Operator):
 		return dps
 	
 class Viviana(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 623  #######including trust
-		maxatk = 746
-		self.atk_interval = 1.25   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 28
-		
-		self.skill = skill if skill in [2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Viviana Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Viviana P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Viviana",pp,[1,2,3],[],3,1,0)
+		if self.talent_dmg and self.elite > 0: self.name += " vsElite"
+		if self.skill_dmg and self.skill == 2: self.name += " afterSteal"
+		if self.skill_dmg and self.skill == 3: self.name += " 2ndActivation"
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-
-		
-		if self.talent1: self.name += " vsElite"
-		
-		if self.skilldmg and self.skill == 2: self.name += " afterSteal"
-		if self.skilldmg and self.skill == 3: self.name += " 2ndActivation"
-
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		dmg_scale = 1.08 if self.pot < 5 else 1.09
-		if self.talent1:
-			dmg_scale = dmg_scale + dmg_scale -1
+		dmg_scale = 1 + self.talent1_params[1] * 2 if self.talent_dmg else 1 + self.talent1_params[1]
+		if self.elite == 0: dmg_scale = 1
 
 		####the actual skills
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2 #sp lockout
+			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale * 2
+			atkcycle = self.atk_interval/(self.attack_speed/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avghit = skilldmg
+			if atks_per_skillactivation > 1:
+				avghit = (skilldmg + int(atks_per_skillactivation) * hitdmgarts) / (int(atks_per_skillactivation)+1)
+			dps = avghit/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			atkbuff += 0.4 if self.mastery == 3 else 0.3 + 0.03 * self.mastery
-			if self.skilldmg:
-				aspd += 40 if self.mastery == 3 else 30 + 3 * self.mastery
+			atkbuff = self.skill_params[0]
+			aspd = self.skill_params[6] if self.skill_dmg else 0
 			crate = 0.2
-			cdmg = 1.5 if self.mastery == 3 else 1.4
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			cdmg = self.skill_params[3]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
 			skilldmg = 2 * np.fmax(final_atk * cdmg * (1-res/100), final_atk * cdmg * 0.05) * dmg_scale
 			avgdmg = crate * skilldmg + (1-crate) * hitdmgarts
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,2)
+			dps = avgdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,2)
 		if self.skill == 3:
-			self.atk_interval = 1.75
-			atkbuff += 1.1 if self.mastery == 3 else 0.75 + 0.1 * self.mastery
-			hits = 3 if self.skilldmg else 2
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			atkbuff = self.skill_params[1]
+			hits = 3 if self.skill_dmg else 2
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
-			dps = hits * hitdmgarts/(self.atk_interval/(1+aspd/100))
-		
+			dps = hits * hitdmgarts/1.75 * self.attack_speed/100
 		return dps
 
 class Vulcan(Operator):
