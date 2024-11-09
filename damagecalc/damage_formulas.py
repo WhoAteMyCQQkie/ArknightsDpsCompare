@@ -2007,120 +2007,51 @@ class Durnar(Operator):
 		return dps
 
 class Dusk(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 881  #######including trust
-		maxatk = 1028
-		self.atk_interval = 2.9   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 34
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Dusk Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Dusk P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 80
-				elif self.module_lvl == 2: self.base_atk += 68
-				else: self.base_atk += 55
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 82
-				elif self.module_lvl == 2: self.base_atk += 68
-				else: self.base_atk += 51
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		stacks = 18 if self.pot > 4 else 15
-		if self.module == 1:
-			if self.module_lvl == 2: stacks += 5
-			if self.module_lvl == 3: stacks += 6
-		if self.talent1: self.name += f" {stacks}stacks"
-		self.stacks = stacks
-		if self.talent2: self.name += " +Freeling"
-		if self.skill == 2 and self.skilldmg: self.name += " vsLowHp"		
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		freeling_atk = 398
-		freeling_interval = 1.9
-		#talent/module buffs
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Dusk",pp,[1,2,3],[1,2],3,1,1)
+		if self.talent_dmg and self.elite > 0: self.name += f" {int(self.talent1_params[1])}stacks"
+		if self.talent2_dmg and self.elite == 2: self.name += " +Freeling"
+		if self.skill == 2 and self.skill_dmg: self.name += " vsLowHp"		
+		if self.targets > 1: self.name += f" {self.targets}targets"
 		if self.module == 2:
-			if self.module_lvl == 2: freeling_atk += 15
-			if self.module_lvl == 3: freeling_atk += 25
-		
+			if self.module_lvl == 2: self.drone_atk += 15
+			if self.module_lvl == 3: self.drone_atk += 25
+
+	def skill_dps(self, defense, res):
 		freedps = 0
-		if self.talent2:
-			final_freeling = freeling_atk * (1+atkbuff) + self.buffs[1]
+		if self.talent2_dmg:
+			final_freeling = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
 			freehit = np.fmax(final_freeling - defense, final_freeling * 0.05)
-			freedps = freehit/(freeling_interval/(1+aspd/100))
+			freedps = freehit/self.drone_atk_interval
 		
-		if self.module == 2: aspd += 4 + self.module_lvl
-		
-		if self.talent1:
-			atkbuff += 0.02 * self.stacks
-			
-		####the actual skills
+		atkbuff = self.talent1_params[0] * self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
+
 		if self.skill == 1:
-			skill_scale = 2.1 if self.mastery == 0 else 2.05 + 0.15 * self.mastery
-			sp_cost = 5 if self.mastery == 3 else 6
-			
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
+			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2 #lockout
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
-			
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
-								
-			dps = avghit/(self.atk_interval/(1+aspd/100)) * self.targets
-		
+				if self.skill_params[1] > 1:
+					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)		
+			dps = avghit/self.atk_interval * self.attack_speed/100 * self.targets	
 		if self.skill == 2:
-			atkbuff += 0.4 + 0.05 * self.mastery
-			if self.skilldmg: atk_scale = 1.25 if self.mastery == 0 else 1.3
-			aspd += 40 + 5 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-
+			atkbuff += self.skill_params[0]
+			atk_scale = self.skill_params[3] if self.skill_dmg else 1
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = hitdmg/self.atk_interval * (self.attack_speed + self.skill_params[1])/100 * self.targets
 		if self.skill == 3:
-			self.atk_interval = 2.9 * 1.4
-			atkbuff += 1 if self.mastery == 0 else 1.05 + 0.05* self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff += self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * self.targets
-		
-		
+			dps = hitdmg/4.06 * self.attack_speed/100 * self.targets
 		return dps+freedps
 
 class Ebenholz(Operator):
