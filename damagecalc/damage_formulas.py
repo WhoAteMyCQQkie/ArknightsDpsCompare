@@ -2360,114 +2360,55 @@ class Eunectes(Operator):
 		return dps
 
 class ExecutorAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 656  #######including trust
-		maxatk = 777
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 26
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"ExecutorAlt Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"ExecutorAlt P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 50
-				else: self.base_atk += 40
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("ExecutorAlter",pp,[1,2,3],[1],3,1,1)
 		self.ammo = 4 + 4 * self.skill
-		if self.talent2: self.ammo += 4
-
-		if not self.talent1:
+		if self.talent2_dmg and self.elite == 2: self.ammo += 4
+		if not self.talent_dmg:
 			self.name += " NoAmmoUsed"
 			self.ammo = 1
 		else:
 			self.name += f" {self.ammo}AmmoUsed"
-		if self.skill == 3: self.name += f" {self.ammo}stacks"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
+		if self.skill == 3: self.name += f" {self.ammo}stacks"	
+		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.skill == 3:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] + self.ammo * self.skill_params[1]) + self.buff_atk_flat
+			dmg = final_atk * self.skill_params[3] * (1 + self.buff_fragile)
+			self.name += f" finalHit:{int(dmg)}"
 
-		
-		#talent/module buffs
-		crate = 0.2
-		critdefignore = 0
-		if self.pot > 4: crate += 0.03
-		if self.module == 1:
-			if self.module_lvl == 2:
-				crate += 0.1
-				critdefignore = 150
-			if self.module_lvl == 3:
-				crate += 0.15
-				critdefignore = 300
-		
-		crate += 0.05 * self.ammo
+	def skill_dps(self, defense, res):
+		crate = self.talent1_params[0] + self.talent1_params[1] * self.ammo if self.elite > 0 else 0
+		try: critdefignore = self.talent1_params[2]
+		except: critdefignore = 0
 		crate = min(crate, 1)
 
-
-			
-		####the actual skills
+		atkbuff = self.skill_params[0]
 		if self.skill == 1:
-			atkbuff += 0.3 if self.mastery == 0 else 0.35 + 0.05 * self.mastery
-			defignore = 280 + 40 * self.mastery
+			defignore = self.skill_params[1]
 			newdef = np.fmax(0, defense - defignore)
 			critdef =np.fmax(0, defense - defignore - critdefignore)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - newdef, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = avgdmg/self.atk_interval * self.attack_speed/100 * self.targets
 		
 		if self.skill == 2:
-			atkbuff += 0.6 if self.mastery == 0 else 0.65 + 0.05 * self.mastery
 			critdef = np.fmax(0, defense - critdefignore)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
+			dps = avgdmg/self.atk_interval * self.attack_speed/100 * self.targets
 		
 		if self.skill == 3:
-			self.atk_interval = 1.8
-			atkbuff += 1.5 + 0.1 * self.mastery
-			scaling = 0.06 if self.mastery == 3 else 0.05
-			atkbuff += self.ammo * scaling 
-			
+			atkbuff += self.ammo * self.skill_params[1]
 			critdef = np.fmax(0, defense - critdefignore)
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/(self.atk_interval/(1+aspd/100)) * self.targets
-		
+			dps = avgdmg/1.8 * self.attack_speed/100 * self.targets
 		return dps
 	
 class Exusiai(Operator):
