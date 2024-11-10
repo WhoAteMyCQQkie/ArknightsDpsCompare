@@ -4268,7 +4268,7 @@ class Logos(Operator):
 		bonuschance = self.talent1_params[0] if self.elite > 0 else 0
 		if self.module == 3: bonuschance += 0.1 * (self.module_lvl - 1)
 		bonusdmg = self.talent1_params[1]
-		falloutdmg = 0.2 * self.module_lvl if self.module_lvl == 3 and self.module_lvl > 1 else 0
+		falloutdmg = 0.2 * self.module_lvl if self.module == 3 and self.module_lvl > 1 else 0
 		newres = np.fmax(0,res-10) if self.elite == 2 else res
 		shreddmg = self.talent2_params[2] if self.elite == 2 else 0
 		
