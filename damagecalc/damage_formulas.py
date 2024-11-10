@@ -2521,84 +2521,43 @@ class Flamebringer(Operator):
 		return dps
 
 class Flametail(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 516  #######including trust
-		maxatk = 611
-		self.atk_interval = 1.05   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Flametail Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Flametail P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 70
-				elif self.module_lvl == 2: self.base_atk += 58
-				else: self.base_atk += 44
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 45
-				elif self.module_lvl == 2: self.base_atk += 40
-				else: self.base_atk += 35
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.moduledmg and self.module == 1: self.name += " blocking"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Flametail",pp,[1,3],[2,1],3,1,1)
+		if self.module_dmg and self.module == 1: self.name += " blocking"
+		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
 		try:
 			self.hits = kwargs['hits']
 		except KeyError:
 			self.hits = 0
 		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
-			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		self.atk_interval = 0.7*1.05
-		#talent/module buffs
-		if self.moduledmg and self.module == 1: atkbuff += 0.08
+		atkbuff = 0.08 if self.module == 1 and self.module_dmg else 0
 		cdmg = 1
 		if self.module == 1 and self.module_lvl > 1: cdmg = 1.2 if self.module_lvl == 3 else 1.15
 		critrate = 0
-		if self.hits > 0:
-			dodgerate = 0.8 * self.hits
-			atkrate = (self.atk_interval/(1+aspd/100))
-			critrate = min(1, dodgerate*atkrate)
-			
-		####the actual skills
+		atk_interval = 1.05 * 0.7 if self.skill == 3 else self.atk_interval
+		dodge = self.talent2_params[0] if self.elite == 2 else 0
 		if self.skill == 3:
-			atkbuff += 0.6 + 0.1 * self.mastery
+			dodge = 1-((1-dodge)*(1-self.skill_params[2]))
+		if self.hits > 0:
+			dodgerate = dodge * self.hits
+			atkrate = 1/atk_interval * self.attack_speed/100
+			critrate = min(1, dodgerate/atkrate)
 			
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+		if self.skill == 1:
+			final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * 2 * min(2, self.targets)
+			avghit = critrate * critdmg + (1 - critrate) * hitdmg
+			dps = avghit/atk_interval * self.attack_speed/100
+		if self.skill == 3:
+			atkbuff += self.skill_params[0]
+			final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * 2 * min(3, self.targets)
 			avghit = critrate * critdmg + (1 - critrate) * hitdmg
-			dps = avghit/(self.atk_interval/(1+aspd/100)) 
+			dps = avghit/atk_interval * self.attack_speed/100
 		return dps
 
 class Flint(Operator):
