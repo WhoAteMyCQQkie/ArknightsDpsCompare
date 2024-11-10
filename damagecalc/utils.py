@@ -674,9 +674,7 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 	if op_name in already_drawn_ops: return False
 	already_drawn_ops.append(op_name)
 	if len(op_name) > 65: #formatting issue for too long names
-		space_position = int(len(op_name)/2)
-		while op_name[space_position] != " ":
-			space_position += 1
+		space_position = op_name.find(" ", int(len(op_name)/2))
 		op_name = op_name[:space_position] + "\n" + op_name[space_position+1:]
 	if short:
 		try:
