@@ -7295,73 +7295,45 @@ class Walter(Operator):
 			return(super().total_dmg(defense,res))
 
 class Warmy(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 553  #######including trust
-		maxatk = 646
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 25
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Warmy Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Warmy P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.skilldmg = TrTaTaSkMo[3]
-
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Warmy",pp,[1,2],[],2,1,0)
 		if self.skill == 1:
-			if not self.trait: self.name += " no Burn"
+			if not self.trait_dmg: self.name += " no Burn"
 			else:
-				if self.skilldmg: self.name += " avgBurn vsNonboss"
+				if self.skill_dmg: self.name += " avgBurn"
 				else: self.name += " avgBurn vsBoss"
-		if self.skill == 2 and self.skilldmg: self.name += " vsBurn (in your dreams)"
-
-		
+		if self.skill == 2 and self.skill_dmg: self.name += " vsBurn"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
-	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		falloutdmg = 7000
+		if self.elite > 0:
+			atkbuff = self.skill_params[0] if self.skill == 2 else 0
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			burn_bonus = final_atk * self.talent1_params[0]
+			self.name += f" extraFalloutDmg:{int(burn_bonus)}"
 
+	def skill_dps(self, defense, res):
+		falloutdmg = 7000
 		####the actual skills
 		if self.skill == 1:
-			aspd += 70 + 10 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			falloutdmg += 3.2 * final_atk if self.pot > 4 else 3 * final_atk
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			if self.elite > 0: falloutdmg += self.talent1_params[0] * final_atk
 			newres = np.fmax(0,res-20)
-			elegauge = 1000 if self.skilldmg else 2000
-			
+			elegauge = 1000 if self.skill_dmg else 2000
 			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmg2 = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
-			dpsNorm = hitdmg1/(self.atk_interval/(1+aspd/100))
-			dpsFallout = hitdmg2/(self.atk_interval/(1+aspd/100))
+			dpsNorm = hitdmg1/self.atk_interval * (self.attack_speed+aspd)/100
+			dpsFallout = hitdmg2/self.atk_interval * (self.attack_speed+aspd)/100
 			timeToFallout = elegauge/(dpsNorm * 0.15)
 			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
-			if not self.trait: dps = dpsNorm
+			if not self.trait_dmg: dps = dpsNorm
 			
 		if self.skill == 2:
-			self.atk_interval = 2.5
-			atkbuff += 1.7 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgele = final_atk * 0.5
-			hitdmg = hitdmgarts + hitdmgele if self.skilldmg else hitdmgarts
-			dps = hitdmg/(self.atk_interval/(1+aspd/100)) * min(self.targets,3)
+			hitdmg = hitdmgarts + hitdmgele if self.skill_dmg else hitdmgarts
+			dps = hitdmg/2.5 * self.attack_speed/100 * min(self.targets,3)
 		return dps
 
 class Weedy(Operator): #TODO add weight prompt and actually calc the dmg for s3
@@ -7577,7 +7549,7 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 		"rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kya": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns,"tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
-		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vanilla": Vanilla, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
+		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vanilla": Vanilla, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
