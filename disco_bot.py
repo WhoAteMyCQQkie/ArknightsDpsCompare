@@ -16,6 +16,7 @@
 # narantuya: proper frame counting to get the attack intervals more accurate
 # nymph: add the avgNecrosis as option
 # double check ifrits res shred interactions with her delta module
+# CE: add a lowtalent prompt for ops outside of her ball range
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # add spboost to the label of all the skills (affected)

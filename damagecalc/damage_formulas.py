@@ -1723,75 +1723,25 @@ class Crownslayer(Operator):
 		return dps
 
 class Dagda(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 504  #######including trust
-		maxatk = 614
-		self.atk_interval = 0.78   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 4: self.base_atk += 24
-		
-		self.skill = skill if skill in [2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Dagda Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Dagda P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 45
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent1: self.name += " maxStacks"
-		else: self.name += " noStacks"
-		if self.moduledmg and self.module == 1: self.name += " >50%hp"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-		
-			
+	def __init__(self, pp, *args,**kwargs):
+		super().__init__("Dagda",pp,[1,2],[1],2,6,1)
+		if self.talent_dmg and self.elite > 0: self.name += " maxStacks"
+		elif self.elite > 0 : self.name += " noStacks"
+		if self.module_dmg and self.module == 1: self.name += " >50%hp"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
+		aspd = 10 if self.module == 1 and self.module_dmg else 0
 		crate = 0.3
-		cdmg = 1.5
-		if self.module == 1: 
-			cdmg += 0.06 * (self.module_lvl -1)
-			if self.moduledmg: aspd += 10
-		if self.talent1: cdmg = 2.4
-			
-		####the actual skills
-		if self.skill == 2:
-
-			crate = 0.6 if self.mastery else 0.5 + 0.03 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
-			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			
-			dps = avgdmg/(self.atk_interval/(1+aspd/100))
+		cdmg = self.talent1_params[2] if self.talent_dmg else self.talent1_params[1]
+		if self.elite == 0: cdmg = 1
+		if self.skill == 2: crate = self.skill_params[1]
+		hits = 2 if self.skill == 2 else 1
+		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+		avgdmg = crate * critdmg + (1-crate) * hitdmg
+		dps = hits * avgdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Degenbrecher(Operator):
