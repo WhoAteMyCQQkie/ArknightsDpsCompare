@@ -7628,82 +7628,35 @@ class Wildmane(Operator):
 		return dps
 
 class YatoAlter(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 530  #######including trust
-		maxatk = 655
-		self.atk_interval = 0.93   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 2: self.base_atk += 22
-		
-		self.skill = skill if skill in [1,2,3] else 1 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Kirito Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Kirito P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		#self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 48
-				elif self.module_lvl == 2: self.base_atk += 43
-				else: self.base_atk += 36
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("YatoAlter",pp,[1,2,3],[1],1,1,1)
 		if self.skill == 2: self.name += " totalDMG"
 		if self.skill == 3: self.name += " dmgPerHit"
-		
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-				
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		extra_arts = 0.2
-		atkbuff += 0.16 if self.pot > 4 else 0.13
-		if self.module == 1:
-			if self.module_lvl == 2: atkbuff += 0.04
-			if self.module_lvl == 3: atkbuff += 0.07
-			
-		####the actual skills
+		extra_arts = self.talent1_params[0]
+		atkbuff = self.talent2_params[0] if self.elite == 2 else 0
+		try: atkbuff += self.talent2_params[2]
+		except: pass
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+
 		if self.skill == 1:
-			aspd += 70 + 10 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			aspd = self.skill_params[0]
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgarts = np.fmax(final_atk * extra_arts * (1-res/100), final_atk * extra_arts * 0.05)
-			dps = (hitdmg+hitdmgarts)/(self.atk_interval/(1+aspd/100)) * 10 / 3
+			dps = (hitdmg+hitdmgarts)/self.atk_interval * (self.attack_speed+aspd)/100 * 10 / 3
 		if self.skill == 2:
-			extra_arts *= 2.1 if self.mastery == 0 else 2.05 + 0.15 * self.mastery
-			atk_scale *= 1.5 if self.mastery == 3 else 1.3 + 0.05 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			extra_arts *= self.skill_params[3]
+			atk_scale = self.skill_params[1]
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			hitdmgarts = np.fmax(final_atk * atk_scale * extra_arts * (1-res/100), final_atk * atk_scale * extra_arts * 0.05)
 			dps = (hitdmg+ hitdmgarts) * self.targets * 16
 		if self.skill == 3:
-			skill_scale = 3 if self.mastery == 3 else 2.6 + 0.1 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[0]
 			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			hitdmgarts = np.fmax(final_atk * skill_scale * extra_arts * (1-res/100), final_atk * skill_scale * extra_arts * 0.05)
-			dps = (hitdmg+ hitdmgarts)*self.targets
+			dps = (hitdmg+ hitdmgarts) * self.targets
 		return dps
 
 class ZuoLe(Operator):
