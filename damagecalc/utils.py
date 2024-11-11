@@ -497,7 +497,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] == "hightalents":
 			pps.conditionals[1] = True
 			pps.conditionals[2] = True
-		elif args[i] in ["conditionals", "conditional","variation","variations"]:
+		elif args[i] in ["conditionals", "conditional","variation","variations","all"]:
 			pps.all_conditionals = True
 		elif args[i].isnumeric():
 			x = int(args[i])

@@ -6317,7 +6317,7 @@ class SwireAlt(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("SwireAlter",pp,[1,2,3],[1,2],3,1,1)
 		if not self.talent_dmg and self.elite > 0: self.name += " noStacks"
-		elif self.elite > 0: self.name += f" {self.talent1_params[3]}Stacks"
+		elif self.elite > 0: self.name += f" {int(self.talent1_params[3])}Stacks"
 		if self.skill_dmg and self.skill == 2: self.name += " 2HitBottles"
 		if not self.skill_dmg and self.skill == 1: self.name += " heals>attacks"
 		if self.module == 2 and self.talent_dmg: self.name += " maxModStacks"
@@ -6752,103 +6752,63 @@ class Vermeil(Operator):
 		return dps
 
 class Vigil(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 458  #######including trust
-		maxatk = 542
-		lvl1wolf = 304
-		maxwolf = 371
-		self.atk_interval = 1   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.wolf_atk = lvl1wolf + (maxwolf-lvl1wolf) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		
-		self.skill = skill if skill in [2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Vigil Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Vigil P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0] and TrTaTaSkMo[2]
-		self.talent1 = TrTaTaSkMo[1]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 30
-				elif self.module_lvl == 2: self.base_atk += 25
-				else: self.base_atk += 20
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if self.talent1:
-			if self.trait: self.name += " vsBlocked"
-			if not self.skilldmg: self.name += " 1wolf"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Vigil",pp,[1,2,3],[1],3,6,1)
+		if self.talent_dmg:
+			if self.trait_dmg: self.name += " vsBlocked"
+			if not self.skill_dmg: self.name += " 1wolf"
 		else:
 			self.name += " noWolves"
-		
-		self.buffs = buffs
-			
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
 		atk_scale = 1
-		
-		#talent/module buffs
 		defignore = 0
 		wolves = 0
-		if self.talent1:
-			wolves = 3 if self.skilldmg  else 1
-			if self.trait:
+		if self.talent_dmg:
+			wolves = 3 if self.skill_dmg  else 1
+			if self.trait_dmg:
 				atk_scale = 1.5
-				defignore = 200 if self.pot > 4 else 175
+				defignore = self.talent2_params[0] if self.elite == 2 else 0
 		newdef = np.fmax(0, defense - defignore)
-		wolfdef = np.fmax(0, defense - 200) if self.pot > 4 else np.fmax(0, defense - 175)
+		wolfdef = np.fmax(0, defense - self.talent2_params[0]) if self.elite == 2 else defense
 		####the actual skills
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		final_wolf  = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 1:
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			hitdmgwolf = np.fmax(final_wolf - wolfdef, final_wolf * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+			if self.talent_dmg: dps += hitdmgwolf/self.drone_atk_interval * self.attack_speed/100 * wolves
+
 		if self.skill == 2:
-			skill_scale = 1.7 + 0.1 * self.mastery
-			sp_cost = 5 if self.mastery == 3 else 6
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			final_wolf  = self.wolf_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[1]
+			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2 #lockout
 			
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			hitdmgwolf = np.fmax(final_wolf - wolfdef, final_wolf * 0.05)
 			hitdmgwolfskill = np.fmax(final_wolf * skill_scale - wolfdef, final_wolf * skill_scale * 0.05)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = 1.25/(1+aspd/100)
+			atkcycle = self.drone_atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = hitdmgwolfskill
 			if atks_per_skillactivation > 1:
 				avghit = (hitdmgwolfskill + (atks_per_skillactivation - 1) * hitdmgwolf) / atks_per_skillactivation						
-			
-			if self.talent1: dps = avghit/(self.atk_interval/(1+aspd/100)) * wolves
-			dps += hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+			if self.talent_dmg: dps += avghit/self.drone_atk_interval * self.attack_speed/100 * wolves
 			
 		if self.skill == 3:
-			skill_scale = 0.5 if self.mastery == 3 else 0.3 + 0.05 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			final_wolf  = self.wolf_atk * (1+atkbuff) + self.buffs[1]
-			
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_wolf  = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			hitdmgwolf = np.fmax(final_wolf - wolfdef, final_wolf * 0.05)
 			hitdmgarts = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * 0.05)
-			hitdps = 3 * hitdmg/(self.atk_interval/(1+aspd/100))
+			hitdps = 3 * hitdmg/self.atk_interval * self.attack_speed/100
 			artdps = 0
-			if self.talent1:
-				hitdps += wolves * hitdmgwolf/(1.25/(1+aspd/100))
-				artdps = wolves * hitdmgarts/(1.25/(1+aspd/100))
-				if self.trait:
-					artdps += 3 * hitdmgarts/(self.atk_interval/(1+aspd/100))
+			if self.talent_dmg:
+				hitdps += wolves * hitdmgwolf/self.drone_atk_interval * self.attack_speed/100
+				artdps = wolves * hitdmgarts/self.drone_atk_interval * self.attack_speed/100
+				if self.trait_dmg:
+					artdps += 3 * hitdmgarts/self.atk_interval * self.attack_speed/100
 			dps = hitdps + artdps
 			
 		return dps

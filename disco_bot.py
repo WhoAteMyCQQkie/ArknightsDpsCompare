@@ -20,6 +20,10 @@
 # dodge mechanic for dagda/flametail s1
 
 #TODO: bigger changes that may be complicated or even unrealistic
+# off skill dps
+# guide image to show things at once
+# combine prompt to combine 2 ops dps
+# add and mul prompts
 # add spboost to the label of all the skills (affected)
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
