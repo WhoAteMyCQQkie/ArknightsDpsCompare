@@ -499,6 +499,9 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.conditionals[2] = True
 		elif args[i] in ["conditionals", "conditional","variation","variations","all"]:
 			pps.all_conditionals = True
+		elif args[i][0] == "c" and len(args[i]) < 4 and len(args[i]) > 1:
+			if args[i][1:].isnumeric():
+				pps.conditionals = int_to_bools(min(31,int(args[i][1:])))
 		elif args[i].isnumeric():
 			x = int(args[i])
 			try:
@@ -596,6 +599,12 @@ def is_float(word: str) -> bool:
 		except ValueError:
 			return False
 
+def bools_to_int(bool_list):
+    return 31 - sum((1 << i) for i, val in enumerate(reversed(bool_list)) if val)
+
+def int_to_bools(n):
+    return [bool((31-n) & (1 << i)) for i in range(4, -1, -1)]
+
 def levenshtein(word1, word2):
 	m = len(word1)
 	n = len(word2)
@@ -639,9 +648,9 @@ def fix_typos(word, args):
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0, short = False):
 	pp = plot_parameters
 	operator = operator_input(pp,pp.level,pp.pot,pp.skill,pp.mastery-7,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
-	return plot_graph(operator,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers, short)
+	return plot_graph(operator,pp,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers, short)
 
-def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = 0, plotnumbers = 0, short = False):
+def plot_graph(operator,pp, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = 0, plotnumbers = 0, short = False):
 	accuracy = 1 + 30 * 6
 	style = '-'
 	if plotnumbers > 9: style = '--'
@@ -681,7 +690,9 @@ def plot_graph(operator, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, 
 			op_name = operator.base_name
 		except:
 			pass
-	
+
+	#op_name = f"(c{bools_to_int(pp.conditionals)})" + op_name
+
 	defences = np.clip(np.linspace(-shreds[1]*shreds[0],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
 	resistances = np.clip(np.linspace(-shreds[3]*shreds[2],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
 	damages = np.zeros(2*accuracy) if graph_type in [1,2] else np.zeros(accuracy)
