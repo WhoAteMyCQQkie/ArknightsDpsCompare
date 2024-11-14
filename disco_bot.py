@@ -21,7 +21,10 @@
 # ray: s1 killshots refunding ammo improves the actual dps
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# off skill dps
+# s123 prompt
+# off skill dps -> add as its own method normal_attack() and it can be used for avg_dmg() but has to be extensively overwritten/implemented for like 70% of operators, including adding conditional stuff
+#               -> add as self.skill == 0. has to be added to all ops, but should usually take only 1 line. makes avg_dmg() quite tricky.
+#				-> design change: move as much code into __init__() as possible, this makes the first option easier, but also doesnt work for every op.
 # guide image to show things at once
 # combine prompt to combine 2 ops dps
 # add and mul prompts
