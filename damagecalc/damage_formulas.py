@@ -1126,83 +1126,35 @@ class Cantabile(Operator):
 		return dps
 
 class Caper(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=70
-		lvl1atk = 557  #######including trust
-		maxatk = 665
-		self.atk_interval = 1.0   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 6
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1,2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Caper Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Caper P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-
-		
-		if not self.trait: self.name += " maxRange"
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Caper",pp,[1,2],[],2,6,0)
+		if not self.trait_dmg: self.name += " maxRange"
 		else: self.name += " minRange"
 
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		crate = 0.25
-		cdmg = 1.6 if self.pot > 4 else 1.5
-			
-		####the actual skills
-		
-		
+		crate = self.talent1_params[0] if self.elite > 0 else 0
+		cdmg = self.talent1_params[1] if self.elite > 0 else 1
 		if self.skill == 1:
-			skill_scale = 2 + 0.1 * self.mastery
-			if self.mastery == 3: skill_scale += 0.05
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			critdmg = np.fmax(final_atk * cdmg* atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale *skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
-			skillcritdmg = np.fmax(final_atk * cdmg* atk_scale *skill_scale - defense, final_atk* cdmg* atk_scale * skill_scale * 0.05)
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			skillcritdmg = np.fmax(final_atk * cdmg *skill_scale - defense, final_atk * cdmg * skill_scale * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
 			skillhitdmg = skillcritdmg * crate + (1-crate) * skillhitdmg
-			sp_cost = 3 if self.mastery == 3 else 4
-			
+			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			
-			interval = 20/13.6 if not self.trait else (self.atk_interval/(1+aspd/100))
+			interval = 20/13.6 if not self.trait_dmg else (self.atk_interval/(self.attack_speed/100)) #source: dr silvergun vid
 			dps = avgphys/interval
-		
 		if self.skill == 2:
-			atkbuff += 0.6 if self.mastery == 3 else 0.4 + 0.05 * self.mastery
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
-			
-			interval = 20/13.6 if not self.trait else (self.atk_interval/(1+aspd/100))
-			dps = 2* hitdmg/interval
+			interval = 20/13.6 if not self.trait_dmg else (self.atk_interval/(self.attack_speed/100))
+			dps = 2 * hitdmg/interval
 		return dps
 
 class Carnelian(Operator):
