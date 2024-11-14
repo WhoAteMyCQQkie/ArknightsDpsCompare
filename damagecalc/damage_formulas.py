@@ -3396,82 +3396,21 @@ class JusticeKnight(Operator):
 		dps = hitdmg/self.atk_interval * self.attack_speed/100 /(1+self.buff_fragile)
 		return dps
 
-class Kafka(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=80
-		lvl1atk = 409  #######including trust
-		maxatk = 525
-		self.atk_interval = 0.93   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		
-		self.skill = skill if skill in [2] else 2 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Kafka Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Kafka P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
+class Kafka(Operator):#TODO: dmg numbers in the label
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Kafka",pp,[1,2],[2],2,1,2)
+		if self.module_dmg and self.module == 2: self.name += " alone"
+		if self.skill == 2: self.skill_duration = self.skill_params[1]
 
-
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,2] else 2 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 60
-				elif self.module_lvl == 2: self.base_atk += 54
-				else: self.base_atk += 45
-				self.name += f" ModY{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-
-		if self.moduledmg and self.module == 2: self.name += " alone"
-		
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.moduledmg and self.module == 2:
-			atkbuff += 0.1
-		
-		atkbuff += 0.15
-		if self.pot > 4: atkbuff += 0.03
-		
-		if self.module == 2:
-			if self.module_lvl == 2: atkbuff += 0.07
-			if self.module_lvl == 3: atkbuff += 0.1
-			
-		####the actual skills
+		if self.skill == 1: return res * 0
+		atkbuff = 0.1 if self.module_dmg and self.module == 2 else 0
+		atkbuff += self.talent1_params[0]
 		if self.skill == 2:
-
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
-
-	def get_name(self):
-		if self.skill == 2:
-			talent = 0.18 if self.pot > 4 else 0.15
-			
-			if self.module == 2:
-				if self.module_lvl == 2: talent += 0.07
-				if self.module_lvl == 3: talent += 0.1
-			skill_scale = 4 if self.mastery == 3 else 3 + 0.3 * self.mastery
-			final_atk = self.base_atk * (1+self.buffs[0] + talent) + self.buffs[1]
-			nukedmg = final_atk * skill_scale * (1+self.buffs[3])
-			self.name += f" InitialHit:{int(nukedmg)}"
-		return self.name
 
 class Kazemaru(Operator):
 	def __init__(self, pp, *args, **kwargs):

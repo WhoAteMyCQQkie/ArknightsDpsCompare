@@ -18,7 +18,8 @@
 # double check ifrits res shred interactions with her delta module
 # CE: add a lowtalent prompt for ops outside of her ball range
 # dodge mechanic for dagda/flametail s1
-# ray: s1 killshots refunding ammo improves the actual dps
+# ray: s1 killshots refunding ammo improves the actual ooa dps
+# kafka: hitdmg numbers in the label
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # s123 prompt
