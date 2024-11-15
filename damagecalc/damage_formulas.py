@@ -6290,93 +6290,67 @@ class Vina(Operator):
 		return dps
 
 class Virtuosa(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 447  #######including trust
-		maxatk = 525
-		self.atk_interval = 1.6   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [1,2,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Virtuosa Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Virtuosa P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0] #vs elite non elite
-		self.talent1 = TrTaTaSkMo[1] 
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3] # skill 1: save up charges for faster reapplication
-										#skill 3: self atk+
-		if not self.skill == 1:
-			if self.trait: self.name += " vsNonBoss"
-			else: self.name += " vsBoss"
-		else: self.name += " ArtsDpsOnly.Add 400-700elementalDps."
-		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
-	
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Virtuosa",pp,[1,2,3],[1],3,1,1)
+		if not self.trait_dmg: self.name += " vsBoss"
+		if self.skill == 3 and self.skill_dmg: self.name += " selfBuff"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		eleThreshold = 1000 if self.trait else 2000
-		eleDamage = 12000
-		eleDuration = 15
-		eleBonus = 0.2 if self.pot < 5 else 0.22
+		ele_gauge = 1000 if self.trait_dmg else 2000
+		necro_scale = self.talent1_params[0]
+		necro_fragile = max(self.talent2_params) if self.elite == 2 else 1
+		ele_fragile = self.talent2_params[0] if self.module == 1 and self.module_lvl > 1 else 1
 			
 		####the actual skills
-		if self.skill == 1: #todo, which will probably be a pain
-			skill_scale = 2.4 + 0.2 * self.mastery
-			sp_cost = 6
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			necro_skill_scale = self.skill_params[1]
+			sp_cost = self.skill_cost / (1 + self.sp_boost) + 1.2
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-
 			skilldmg =np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
-			
-			sp_cost = sp_cost + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(1+aspd/100)
+			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
 			if atks_per_skillactivation > 1:
-				avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation						
-			
-			dps = avghit/(self.atk_interval/(1+aspd/100)) * self.targets
+				if skill_scale > 2.05:
+					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
+				else:
+					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)
+			dps = avghit/(self.atk_interval/(self.attack_speed/100))
+			necro_dps = final_atk * necro_scale * necro_fragile
+			necro_skill_dps = final_atk * necro_skill_scale * necro_fragile / sp_cost
+			time_to_fallout_1 = ele_gauge / (necro_dps + necro_skill_dps) #this is meant as a rough estimate to her saving skill charges against fallout, potentially improving dps
+			time_to_fallout = ele_gauge / (necro_dps + necro_skill_dps/(time_to_fallout_1)*(time_to_fallout_1 + 15))
+			if skill_scale < 2.05: time_to_fallout = time_to_fallout_1
+			dps += 12000 * ele_fragile / (15 + time_to_fallout) / (1 + self.buff_fragile)
+			if self.targets > 1:
+				dps += 12000 * ele_fragile / (15 + ele_gauge/necro_dps) / (1 + self.buff_fragile) * (self.targets -1)
 		
 		if self.skill == 2:
-			aspd += 45 + 5 * self.mastery
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			extraEle = final_atk * 0.25 if self.mastery == 3 else final_atk * 0.2
-			eleThreshold = eleThreshold / (1 + eleBonus)
-			eleApplicationTarget = final_atk * 0.1 + extraEle / (self.atk_interval/(1+aspd/100))
-			eleApplicationBase = final_atk * 0.1
+			aspd = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			extra_ele = final_atk * self.skill_params[1]
+			ele_gauge = ele_gauge / necro_fragile
+			eleApplicationTarget = final_atk * necro_scale + extra_ele / (self.atk_interval/((self.attack_speed+aspd)/100))
+			eleApplicationBase = final_atk * necro_scale
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			artsdps = hitdmgarts/(self.atk_interval/(1+aspd/100))
-			targetEledps = eleDamage / (eleDuration + eleThreshold/eleApplicationTarget)
-			ambientEledps = eleDamage / (eleDuration + eleThreshold/eleApplicationBase)
-			
-			dps = np.fmin(self.targets, 2) * (artsdps + targetEledps)
+			artsdps = hitdmgarts/(self.atk_interval/((self.attack_speed+aspd)/100))
+			targetEledps = 12000 * ele_fragile / (15 + ele_gauge/eleApplicationTarget)
+			ambientEledps = 12000 * ele_fragile / (15 + ele_gauge/eleApplicationBase)
+			dps = np.fmin(self.targets, 2) * (artsdps + targetEledps/(1 + self.buff_fragile))
 			if self.targets > 2:
-				dps += ambientEledps * (self.targets -2)			
+				dps += ambientEledps * (self.targets - 2) / (1 + self.buff_fragile)			
 			
 		if self.skill == 3:
-			eleBonus *= 2.2 + 0.1 * self.mastery
-			atkbuff += 1.4 + 0.15 * self.mastery
-			if self.mastery > 1: atkbuff -= 0.05
-			eleThreshold = eleThreshold / (1 + eleBonus)
-			final_atk = np.fmax(1,-defense) * self.base_atk * (1+atkbuff) + self.buffs[1] #this is so stupid lol, but defense or res HAS to be included
-			eleApplication = final_atk * 0.1
-			applicationDuration = eleThreshold / eleApplication
-			dps = self.targets * eleDamage / (eleDuration + applicationDuration)			
-
+			necro_fragile = self.skill_params[1] * (necro_fragile - 1) + 1
+			atkbuff = self.skill_params[0]
+			atkbuff += self.skill_params[3] if self.skill_dmg else 0
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			necro_dps = final_atk * necro_scale * necro_fragile
+			time_to_fallout = ele_gauge / necro_dps
+			dps = self.targets * 12000 * ele_fragile / (15 + time_to_fallout) * np.fmax(1,-defense) / (1 + self.buff_fragile)	
 		return dps
 	
 class Viviana(Operator):
