@@ -21,6 +21,7 @@
 # dodge mechanic for dagda/flametail s1
 # ray: s1 killshots refunding ammo improves the actual ooa dps
 # kafka: hitdmg numbers in the label
+# double check ebenholz dps, it's just weird to calc
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # s123 prompt

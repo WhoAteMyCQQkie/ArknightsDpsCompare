@@ -1817,143 +1817,65 @@ class Dusk(Operator):
 		return dps+freedps
 
 class Ebenholz(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
+	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Ebenholz",pp,[1,2,3],[1,2,3],3,1,3)
-		maxlvl=90
-		lvl1atk = 1284  #######including trust
-		maxatk = 1550
-		self.atk_interval = 3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 52
-		
-		self.skill = skill if skill in [1,3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Ebenholz Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Ebenholz P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1,2,3] else 3 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 90
-				elif self.module_lvl == 2: self.base_atk += 75
-				else: self.base_atk += 58
-				self.name += f" ModX{self.module_lvl}"
-			elif self.module == 2:
-				if self.module_lvl == 3: self.base_atk += 135
-				elif self.module_lvl == 2: self.base_atk += 112
-				else: self.base_atk += 88
-				self.name += f" ModY{self.module_lvl}"
-			elif self.module == 3:
-				if self.module_lvl == 3: self.base_atk += 124
-				elif self.module_lvl == 2: self.base_atk += 102
-				else: self.base_atk += 76
-				self.name += f" Mod$\\Delta${self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
-		if not self.talent1 and self.module == 2: self.moduledmg = False
-		
-		if self.talent1: self.name += " +Talent1Dmg"
-		
-		if self.module == 3 and self.talent2: self.name += " vsFallout"
-
-		if self.moduledmg and self.module == 2: self.name += " +30aspd(mod,somehow)"
-		if not self.moduledmg and self.module == 3: self.name += " vsBoss"
-		
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs	
+		if not self.talent_dmg and self.module == 2: self.module_dmg = False
+		if self.talent_dmg and self.elite > 0: self.name += " +Talent1Dmg"
+		if self.module == 3 and self.talent2_dmg: self.name += " withAvgNecrosis"
+		if self.module_dmg and self.module == 2: self.name += " +30aspd(mod,somehow)"
+		if not self.module_dmg and self.module == 3: self.name += " vsBoss"
+		if self.targets > 1 and self.elite == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		if self.module == 1:
-			aspd += 2 + self.module_lvl
-		
-		if self.moduledmg and self.module == 2: aspd += 30
-		
-		if self.talent1:
-			atk_scale = 1.35
-			if self.module == 1:
-				if self.module_lvl == 2: atk_scale += 0.05
-				elif self.module_lvl == 3: atk_scale += 0.08
-		
-		bonus_scale = 0
+		aspd = 30 if self.module_dmg and self.module == 2 else 0
+		atk_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 		eledmg = 0
-		if self.targets == 1: bonus_scale = 0.17 if self.pot > 4 else 0.15
-		
-		if self.module == 2 and self.module_lvl > 1:
-			if self.targets == 1:
-				if self.module_lvl == 2: bonus_scale += 0.03
-				elif self.module_lvl == 3: bonus_scale += 0.05
-			else:
-				bonus_scale =  0.25 if self.module_lvl == 2 else 0.36
-		
-		if self.module == 3 and self.module_lvl > 1:
-			if self.targets == 1:
-				bonus_scale = 0.24 if self.module_lvl == 2 else 0.3
-				if self.pot > 4: bonus_scale += 0.02
-			if self.talent2:
-				eledmg = 0.2
+		bonus_scale = self.talent2_params[0] if self.targets == 1 and self.elite == 2 else 0
+		eledmg = self.module_lvl * 0.1 if self.module == 3 and self.module_lvl > 1 and self.talent2_dmg else 0
+		extra_scale = self.talent2_params[3] if self.module == 2 and self.module_lvl > 1 else 0
 			
 		####the actual skills
 		if self.skill == 1:
-			skill_scale = 0.5 if self.mastery == 3 else 0.4 + 0.03 * self.mastery
-			self.atk_interval = 3 * 0.2 if self.mastery == 0 else 3 * 0.17 
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
+			skill_scale = self.skill_params[1]
+			atk_interval = self.atk_interval * self.skill_params[0]
+
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale * skill_scale * (1-res/100), final_atk * atk_scale * skill_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			extradmg = np.fmax(final_atk * extra_scale * (1-res/100), final_atk * extra_scale * 0.05)
+			dps = hitdmg/(atk_interval/((self.attack_speed + aspd)/100))
 			if self.module == 3:
-				ele_gauge = 1000 if self.moduledmg else 2000
-				eledps = hitdmg * 0.08 /(self.atk_interval/(1+aspd/100))
+				ele_gauge = 1000 if self.module_dmg else 2000
+				eledps = dps * 0.08
 				fallouttime = ele_gauge / eledps
 				dps += 12000/(fallouttime + 15)
-				dps += eledmg * final_atk /(self.atk_interval/(1+aspd/100))
+				dps += eledmg * final_atk /(self.atk_interval/((self.attack_speed + aspd)/100)) * 15/(fallouttime + 15)
 			if self.targets == 1:
-				dps += bonusdmg/(self.atk_interval/(1+aspd/100))
+				dps += bonusdmg/(atk_interval/((self.attack_speed + aspd)/100))
 			if self.targets > 1 and self.module == 2:
-				dps += bonusdmg/(self.atk_interval/(1+aspd/100)) * (self.targets -1)
+				dps += extradmg/(atk_interval/((self.attack_speed + aspd)/100)) * (self.targets -1)
 			
 		if self.skill == 3:
-			atkbuff += 0.5 + 0.05 * self.mastery
-			if self.talent1:
-				atk_scale *= 1.4 if self.mastery == 3 else 1.3 + 0.03 * self.mastery
-			aspd += 60 + 10 * self.mastery
-			if self.mastery > 1: aspd -= 10
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			atkbuff = self.skill_params[1]
+			if self.talent_dmg:
+				atk_scale *= self.skill_params[2]
+			aspd += self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus_scale * (1-res/100), final_atk * bonus_scale * 0.05)
+			extradmg = np.fmax(final_atk * extra_scale * (1-res/100), final_atk * extra_scale * 0.05)
 			
-			dps = hitdmg/(self.atk_interval/(1+aspd/100))
+			dps = hitdmg/(self.atk_interval/((self.attack_speed + aspd)/100))
 			if self.module == 3:
-				ele_gauge = 1000 if self.moduledmg else 2000
-				eledps = hitdmg * 0.08 /(self.atk_interval/(1+aspd/100))
+				ele_gauge = 1000 if self.module_dmg else 2000
+				eledps = dps * 0.08
 				fallouttime = ele_gauge / eledps
 				dps += 12000/(fallouttime + 15)
-				dps += eledmg * final_atk /(self.atk_interval/(1+aspd/100))
+				dps += eledmg * final_atk /(self.atk_interval/((self.attack_speed + aspd)/100)) * 15/(fallouttime + 15)
 			if self.targets == 1:
-				dps += bonusdmg/(self.atk_interval/(1+aspd/100))
+				dps += bonusdmg/(self.atk_interval/((self.attack_speed + aspd)/100))
 			if self.targets > 1 and self.module == 2:
-				dps += bonusdmg/(self.atk_interval/(1+aspd/100)) * (self.targets -1)
+				dps += extradmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * (self.targets -1)
 		return dps
 
 class Ela(Operator):
