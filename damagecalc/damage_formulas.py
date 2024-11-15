@@ -1590,72 +1590,39 @@ class Dagda(Operator):
 		return dps
 
 class Degenbrecher(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 545  #######including trust
-		maxatk = 685
-		self.atk_interval = 1.3   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 23
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Degenbrecher Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Degenbrecher P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
-		self.trait = TrTaTaSkMo[0]
-		self.talent1 = TrTaTaSkMo[1]
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 50
-				elif self.module_lvl == 2: self.base_atk += 44
-				else: self.base_atk += 35
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-		else: self.module = 0
-		
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Degenbrecher",pp,[1,3],[1],3,1,1)		
 		if self.skill == 3: self.name += " totalDMG"
-		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		
-		self.buffs = buffs
-			
 	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		newdef = defense * 0.7 if self.pot > 4 else defense * 0.75
+		newdef = defense * (1 - self.talent2_params[0]) if self.elite == 2 else defense
 		dmg = 1.1 if self.module == 1 else 1
-		atk_scale = 1.6
-		if self.pot > 2: atk_scale += 0.05
-		if self.module == 1:
-			atk_scale += 0.05 * (self.module_lvl -1)
+		atk_scale = self.talent1_params[1] if self.elite > 0 else 1
 			
-		####the actual skills
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * 2
+			hitdmg_crit = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05) * 2
+			hitdmg_tremble = np.fmax(final_atk - newdef, final_atk * 0.05) * 2
+			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * dmg * 2
+			skilldmg_crit = np.fmax(final_atk * skill_scale * atk_scale - newdef, final_atk * skill_scale * atk_scale * 0.05) * dmg * 2
+			skilldmg_tremble = np.fmax(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05) * dmg * 2
+			crate = 0 if self.elite == 0 else self.talent1_params[0]
+			relevant_attack_count = int(5/(self.atk_interval / self.attack_speed * 100)) * 2 #tremble lasts 5 seconds
+			chance_that_no_crit_occured = (1-crate) ** relevant_attack_count
+			avghit = hitdmg_crit * crate + hitdmg * (1-crate) * chance_that_no_crit_occured + hitdmg_tremble * (1-crate) * (1 - chance_that_no_crit_occured)
+			avgskill = skilldmg_crit * crate + skilldmg * (1-crate) * chance_that_no_crit_occured + skilldmg_tremble * (1-crate) * (1 - chance_that_no_crit_occured)
+			average = (self.skill_cost * avghit + avgskill * min(self.targets,self.skill_params[1]))/(self.skill_cost + 1)
+			dps = average/self.atk_interval * self.attack_speed/100
+
 		if self.skill == 3:
-			skill_scale = 2.35 if self.mastery == 3 else 2 + 0.1 * self.mastery
-			last_scale = 3 + 0.1 * self.mastery 
-			
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			
+			skill_scale = self.skill_params[2]
+			last_scale = self.skill_params[6] 
 			hitdmg1 = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05) * dmg
 			hitdmg2 = np.fmax(final_atk * atk_scale * last_scale - newdef, final_atk * atk_scale * last_scale * 0.05) * dmg
-			
-			dps = (10 * hitdmg1 + hitdmg2) * min(self.targets,6)
+			dps = (10 * hitdmg1 + hitdmg2) * min(self.targets,self.skill_params[1])
 		return dps
 
 class Diamante(Operator):

@@ -4,6 +4,7 @@
 # implement the missing operators / Update the old operators to the super().__init__ design
 # implement various total_dmg and avg_dmg methods for operators, where that doesnt work automatically
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
+# fragile interaction with necrosis/elemental dmg
 
 #TODO: specific Minijobs
 # Mudrock: include the SP gains from the module for S2 damage calculations
