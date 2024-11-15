@@ -1340,91 +1340,35 @@ class ChenAlter(Operator):
 			return(super().total_dmg(defense,res))
 
 class Chongyue(Operator):
-	def __init__(self, pp, lvl = 0, pot=-1, skill=-1, mastery = 3, module=-1, module_lvl = 3, targets=1, TrTaTaSkMo=[True,True,True,True,True], buffs=[0,0,0],**kwargs):
-		maxlvl=90
-		lvl1atk = 537  #######including trust
-		maxatk = 650
-		self.atk_interval = 0.78   #### in seconds
-		level = lvl if lvl > 0 and lvl < maxlvl else maxlvl
-		self.base_atk = lvl1atk + (maxatk-lvl1atk) * (level-1) / (maxlvl-1)
-		self.pot = pot if pot in range(1,7) else 1
-		if self.pot > 3: self.base_atk += 24
-		
-		self.skill = skill if skill in [3] else 3 ###### check implemented skills
-		self.mastery = mastery if mastery in [0,1,2,3] else 3
-		if level != maxlvl: self.name = f"Chongyue Lv{level} P{self.pot} S{self.skill}" #####set op name
-		else: self.name = f"Chongyue P{self.pot} S{self.skill}"
-		if self.mastery == 0: self.name += "L7"
-		elif self.mastery < 3: self.name += f"M{self.mastery}"
-		self.targets = max(1,targets)
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Chongyue",pp,[1,3],[1],3,1,1)
+		if self.skill == 1 and self.elite > 0 and not self.talent_dmg: self.name += " NoSkillCrit"
+		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets"
 
-
-		self.talent2 = TrTaTaSkMo[2]
-		self.skilldmg = TrTaTaSkMo[3]
-		self.moduledmg = TrTaTaSkMo[4]
-		
-		self.module = module if module in [0,1] else 1 ##### check valid modules
-		self.module_lvl = module_lvl if module_lvl in [1,2,3] else 3		
-		if level >= maxlvl-30:
-			if self.module == 1:
-				if self.module_lvl == 3: self.base_atk += 45
-				elif self.module_lvl == 2: self.base_atk += 35
-				else: self.base_atk += 25
-				self.name += f" ModX{self.module_lvl}"
-			else: self.name += " no Mod"
-
-		else: self.module = 0
-
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		if self.talent2: self.name += " 1KillPerSkill"
-			
-		self.buffs = buffs
-			
-	
 	def skill_dps(self, defense, res):
-		dps = 0
-		atkbuff = self.buffs[0]
-		aspd = self.buffs[2]
-		atk_scale = 1
-		
-		#talent/module buffs
-		crate = 0.23
-		cdmg = 1.65
-		if self.pot > 4:
-			crate = 0.25
-			cdmg = 1.7
-			
-		#self.talent2 = False
-		if self.skill == 3:
-			atk_scale = 2.9 + 0.3 * self.mastery
-			if self.mastery == 0 : atk_scale += 0.1
+		crate = self.talent1_params[0] if self.elite > 0 else 0
+		dmg = self.talent1_params[1] if self.elite > 0 else 1
+		duration = self.talent1_params[2] if self.elite > 0 else 0
 
-			normalhits = 4
-			if self.talent2:
-				if self.module == 1 and self.module_lvl > 1:
-					normalhits = 2
-				else:
-					normalhits = 3
-			
-			#THIS ACTUALLY NEEDS A REWORK
-			#but the crate is around 80% anyway, so im not motivated enough to change it, but talent 2 active should somewhat reduce the crit rate, since you get more skill hits
-			#and skill hits cant activate the talent, but honestly. f this.
-			skillcrate = 1-(1-crate)**6 if aspd < 26 else 1-(1-crate)**8
-			normalcrate = (3*(1-(1-crate)**6)+ 1-(1-crate)**8)/4 if aspd < 26 else 1-(1-crate)**8
-			if False:
-				atk_cycle = self.atk_interval/(1+aspd/100)
-				relevant_hits = int(2.5 / atk_cycle)
-				
-			final_atk = self.base_atk * (1+atkbuff) + self.buffs[1]
-			normalhit = np.fmax(final_atk-defense, final_atk*0.05)
-			normalcrit = normalhit * cdmg
-			skillhit = np.fmax(final_atk*atk_scale-defense, final_atk*atk_scale*0.05)
-			skillcrit = skillhit * cdmg
-			avgnormal = normalcrit*normalcrate+normalhit*(1-normalcrate)
-			avgskill = (skillcrit*skillcrate+skillhit*(1-skillcrate)) * self.targets
-			avgdmg = (2 * avgnormal * normalhits + 2 * avgskill)/(normalhits +1)
-			
-			dps = avgdmg/(self.atk_interval/(1+aspd/100))
+		skill_scale = self.skill_params[0]
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+		if self.skill == 1:
+			if self.talent_dmg and self.elite > 0: skilldmg *= dmg
+			relevant_hits = int(duration/(self.atk_interval /self.attack_speed*100)) + 1
+			crit_chance = 1 - (1-crate) ** relevant_hits
+			hitdmg *= (1-crit_chance) + dmg * crit_chance
+			dps = (hitdmg + skilldmg/self.skill_cost) / self.atk_interval * self.attack_speed/100
+
+		if self.skill == 3:
+			hits = self.skill_cost // 2 + self.skill_cost % 2
+			relevant_hits = int(duration/(self.atk_interval /self.attack_speed*100)) * 2 + 2
+			relevant_hits *= hits/(hits+1) #skill hits cant trigger crit and therefore technically have a lower crit rate than normal attacks, but ehh
+			crit_chance = 1 - (1-crate) ** relevant_hits
+			skilldmg *= self.targets
+			avghit = 2 * (hits * hitdmg + skilldmg) /(hits + 1) * ((1-crit_chance) + dmg * crit_chance)
+			dps = avghit/self.atk_interval * self.attack_speed/100
 		return dps
 
 class CivilightEterna(Operator):
