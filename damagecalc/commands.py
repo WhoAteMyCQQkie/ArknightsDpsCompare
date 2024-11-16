@@ -214,7 +214,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
 	for pos in unparsed_inputs:
-		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind","null"]:
+		if not args[pos] in op_dict.keys() and not pos in scopes[1:-1] and not args[pos] in ["short", "hide", "legend","big", "beeg", "large","repos", "reposition", "bottom", "left", "botleft", "position", "change", "changepos","small","font","tiny","color","colour","colorblind","colourblind","blind","numbers","dmgnumbers","damage","damagenumbers","null"]:
 			error_message += (args[pos]+", ")
 	
 	parsing_error = False

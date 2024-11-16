@@ -549,17 +549,6 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				pps.max_res = min(420,max(5, int(args[i])))
 			except ValueError:
 				break
-		elif args[i] in ["numbers","dmgnumbers","damage","damagenumbers"]:
-			if pps.graph_type == 1:
-				pps.res = np.linspace(0,pps.max_res,9)
-				pps.defen = np.linspace(0,pps.max_def,9)[:-1]
-			elif pps.graph_type == 2:
-				pps.res = np.linspace(0,pps.max_res,9)[:-1]
-				pps.defen = np.linspace(0,pps.max_def,9)
-			elif pps.graph_type == 3:
-				pps.res = np.linspace(0,pps.max_res,13)
-			else:
-				pps.defen = np.linspace(0,pps.max_def,13)
 		elif args[i] == "split":
 				pps.graph_type = 1
 		elif args[i] == "split2":
@@ -605,6 +594,17 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 		else:
 			unused_inputs.add(i)
 		i += 1
+	if any(num_prompt in args for num_prompt in ["numbers","dmgnumbers","damage","damagenumbers"]):
+		if pps.graph_type == 1:
+			pps.res = np.linspace(0,pps.max_res,9)
+			pps.defen = np.linspace(0,pps.max_def,9)[:-1]
+		elif pps.graph_type == 2:
+			pps.res = np.linspace(0,pps.max_res,9)[:-1]
+			pps.defen = np.linspace(0,pps.max_def,9)
+		elif pps.graph_type == 3:
+			pps.res = np.linspace(0,pps.max_res,13)
+		else:
+			pps.defen = np.linspace(0,pps.max_def,13)
 	return unused_inputs
 
 def is_float(word: str) -> bool:
