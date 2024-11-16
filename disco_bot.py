@@ -1,16 +1,13 @@
 # In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). Also Change line 48!
 
 #TODO: Easy but tedious tasks that just take a lot of time
-# implement the missing operators / Update the old operators to the super().__init__ design
+# implement the missing operators
 # implement various total_dmg and avg_dmg methods for operators, where that doesnt work automatically
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
 # fragile interaction with necrosis/elemental dmg
 
 #TODO: specific Minijobs
-# Mudrock: include the SP gains from the module for S2 damage calculations
-# kjera: fix freeze rate, applying cold on a frozen enemy does NOT refresh the duration
 # indra: dodge mechanics can make use of the hits prompts
-# add new modules for ifrit, gladiia.
 # weedy: do some weight calculations for skill 3 and show the true dmg
 # add meteorite s2
 # hoshiguma: if self.hits > 0, then actually calculate the uptime of the dodge buff from modY
@@ -36,9 +33,8 @@
 # clean up plotting, so that the parts are not scattered around in the code
 # add !disclaimer prompt talking about the limits of the bots
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
-# change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
+# add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
-# make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
 # drone/summon(count) prompt for summoners
 # lower limit for axis scale
@@ -105,7 +101,7 @@ If you want to see how the bot works or expand it, it has a public repository: g
 S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 **Prompts, that take parameters:**
 targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
-**Conditional damage prefixes, allowing you to turn off the effects of talents etc.:**
+**Handling conditional damage (turn off talent effects etc.):**
 all (plots all possible conditionals), conditional (further shows prompts to get a specific condition), c0...c31 (as given by "conditional", can add multiple)
 **or alternatively:** lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**
 **All following prompts are global and their position does not matter. Prompts for the graph:** 
