@@ -86,24 +86,25 @@ async def on_ready():
 	commands.register('ops', cmds.simple(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)"))
 	commands.register('hops', cmds.simple(f"These are the currently available healers: \n{', '.join(healers)}"))
 	commands.register('help', cmds.simple("""General use: !dps <opname1> <opname2> ... 
-Spaces are used as delimiters, so make sure to keep operator names in one word. This bot can only handle E2 ops with skill lvl 7+ and the result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would notice a < 5% difference ingame):
+Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
 example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
+**The Bot will also respond to DMs.**
 !guide will show you the available modifiers to the graphs, !ops lists the available operators.
-There are also a handful of healers implemented. !hps <opname> ... works similar to !dps. !hops shows the available healers.
-Errors do happen, so feel free to double check the results. The Bot will also respond to DMs.
+The same works for healers: !hps <opname> ... works similar to !dps. !hops shows the available healers.
+Errors do happen, so feel free to double check the results.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 """))
-	commands.register('guide', cmds.simple("""Any prompt written before the first operator will affect all operators, prompts written after an operator will overwrite the original settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
+	commands.register('guide', cmds.simple("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
-S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1 2 3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
+S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 **Prompts, that take parameters:**
 targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
 **Conditional damage prefixes, allowing you to turn off the effects of talents etc.:**
 lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**, conditional (plots all available variations)
 **Prompts for the graph:** 
-def/res <values> (shows the damage numbers for those def/res values), maxdef/maxres <value>, split/split2, fixdef/fixres <value>
+maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize)
 **Other prompts:** 
-hide,left,tiny,short (for the legend),  color (for colorblind people), text (puts everything after the prompt as title of the graph, ignoring further inputs)
+hide,left,tiny,short (for the legend), color (for colorblind people), text (puts everything after the prompt as title of the graph, ignoring further inputs)
 """))
 	aliases.register('prompt', 'guide')
 	aliases.register('prompts', 'guide')

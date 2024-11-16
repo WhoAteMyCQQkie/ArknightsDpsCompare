@@ -647,7 +647,7 @@ def fix_typos(word, args):
 
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0, short = False):
 	pp = plot_parameters
-	operator = operator_input(pp,pp.level,pp.pot,pp.skill,pp.mastery-7,pp.module,pp.module_lvl,pp.targets,pp.conditionals,pp.buffs,**pp.input_kwargs) #what damageformulas wants
+	operator = operator_input(pp, **pp.input_kwargs)
 	return plot_graph(operator,pp,pp.buffs,pp.defen,pp.res,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.base_buffs,pp.normal_dps, plot_numbers, short)
 
 def plot_graph(operator,pp, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=0, max_def = 3000, max_res = 120, fixval = 40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], basebuffs = [1,0], normal_dps = 0, plotnumbers = 0, short = False):
@@ -659,24 +659,6 @@ def plot_graph(operator,pp, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=
 
 	#Setting the name of the operator
 	op_name = ""
-	if buffs[0] > 0: op_name += f" atk+{int(100*buffs[0])}%"
-	if buffs[0] < 0: op_name += f" atk{int(100*buffs[0])}%"
-	if buffs[1] > 0: op_name += f" atk+{buffs[1]}"
-	if buffs[1] < 0: op_name += f" atk{buffs[1]}"
-	if buffs[2] > 0: op_name += f" aspd+{buffs[2]}"
-	if buffs[2] < 0: op_name += f" aspd{buffs[2]}"
-	if buffs[3] > 0: op_name += f" dmg+{int(100*buffs[3])}%"
-	if buffs[3] < 0: op_name += f" dmg{int(100*buffs[3])}%"
-	if shreds[0] != 1: op_name += f" -{int(100*(1-shreds[0])+0.0001)}%def"
-	if shreds[1] != 0: op_name += f" -{int(shreds[1])}def"
-	if shreds[2] != 1: op_name += f" -{int(100*(1-shreds[2])+0.0001)}%res"
-	if shreds[3] != 0: op_name += f" -{int(shreds[3])}res"
-	if basebuffs[0] != 1: 
-		op_name += f" +{int(100*(basebuffs[0]-1))}%bAtk"
-		operator.base_atk *= basebuffs[0]
-	if basebuffs[1] != 0: 
-		op_name += f" +{int(basebuffs[1])}bAtk"
-		operator.base_atk += basebuffs[1]
 	if normal_dps == 1 and operator.skill_dps(100,100) != operator.total_dmg(100,100): op_name += " totalDMG" #redneck way of checking if the total dmg method is implemented
 	if normal_dps == 2 and operator.skill_dps(100,100) != operator.avg_dps(100,100): op_name += " avgDMG"
 	op_name = operator.get_name() + op_name
@@ -686,10 +668,7 @@ def plot_graph(operator,pp, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=
 		space_position = op_name.find(" ", int(len(op_name)/2))
 		op_name = op_name[:space_position] + "\n" + op_name[space_position+1:]
 	if short:
-		try:
-			op_name = operator.base_name
-		except:
-			pass
+		op_name = operator.base_name
 
 	#op_name = f"(c{bools_to_int(pp.conditionals)})" + op_name
 

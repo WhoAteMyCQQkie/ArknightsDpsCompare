@@ -223,10 +223,10 @@ class Operator:
 		############### Buffs
 		self.buff_name = "" #needed to put the conditionals before the buffs
 		self.atk = self.atk * params.base_buffs[0] + params.base_buffs[1]
-		if params.base_buffs[0] > 1: self.buff_name += f" bAtk+{int(100*(params.base_buffs[0]-1))}%"
-		elif params.base_buffs[0] < 1: self.buff_name += f" bAtk{int(100*(params.base_buffs[0]-1))}%"
-		if params.base_buffs[1] > 1: self.buff_name += f" bAtk+{params.base_buffs[1]}"
-		elif params.base_buffs[1] < 1: self.buff_name += f" bAtk{params.base_buffs[1]}"
+		if params.base_buffs[0] > 1: self.buff_name += f" bAtk+{int(100*(params.base_buffs[0]-0.999999))}%"
+		elif params.base_buffs[0] < 1: self.buff_name += f" bAtk{int(100*(params.base_buffs[0]-1.000001))}%"
+		if params.base_buffs[1] > 0: self.buff_name += f" bAtk+{int(params.base_buffs[1])}"
+		elif params.base_buffs[1] < 0: self.buff_name += f" bAtk{int(params.base_buffs[1])}"
 
 		self.buff_atk = params.buffs[0]
 		if self.buff_atk > 0: self.buff_name += f" atk+{int(100*self.buff_atk)}%"
@@ -237,20 +237,15 @@ class Operator:
 		elif params.buffs[2] < 0: self.buff_name += f" aspd{params.buffs[2]}"
 
 		self.buff_atk_flat = params.buffs[1]
-		if self.buff_atk_flat > 0: self.buff_name += f" atk+{int(100*self.buff_atk_flat)}"
-		elif self.buff_atk_flat < 0: self.buff_name += f" atk{int(100*self.buff_atk_flat)}"
+		if self.buff_atk_flat > 0: self.buff_name += f" atk+{int(self.buff_atk_flat)}"
+		elif self.buff_atk_flat < 0: self.buff_name += f" atk{int(self.buff_atk_flat)}"
 
 		self.buff_fragile = params.buffs[3]
 		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
 		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
 		#TODO
-		#third module
-		#muelsyse
 		#skill = 0
-		
-		#TODO:remove this when all operators are changed to the new format. this is needed for base buffs
-		self.base_atk = 0
 
 	def normal_attack(self,defense,res, extra_buffs = [0,0,0], hits = 1, aoe = 1):
 		final_atk = self.atk * (1 + extra_buffs[0] + self.buff_atk) + extra_buffs[1] + self.buff_atk_flat
@@ -283,20 +278,12 @@ class Operator:
 		return -100
 	
 	def total_dmg(self,defense,res):
-		try:
-			x = self.skill_duration
-		except AttributeError: #aka the operator is not on the json system yet
-			return (self.skill_dps(defense,res))
 		if self.skill_duration < 1:
 			return (self.skill_dps(defense,res))
 		else:
 			return (self.skill_dps(defense,res) * self.skill_duration)
 	
 	def avg_dps(self,defense,res):
-		try:
-			x = self.skill_duration
-		except AttributeError: #aka the operator is not on the json system yet
-			return (self.skill_dps(defense,res))
 		if self.skill_duration < 1:
 			return (self.skill_dps(defense,res))
 		else:
@@ -304,7 +291,7 @@ class Operator:
 			return damage
 	
 	def get_name(self):
-		return self.name
+		return self.name + self.buff_name
 
 
 class NewBlueprint(Operator):
