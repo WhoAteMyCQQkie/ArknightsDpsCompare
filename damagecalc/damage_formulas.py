@@ -3633,6 +3633,10 @@ class Logos(Operator):
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			limit = final_atk *  self.skill_params[1]
 			self.name += f" Death@{int(limit)}HP"
+		try:
+			self.shreds = kwargs['shreds']
+		except KeyError:
+			self.shreds = [1,0,1,0]
 	
 	def skill_dps(self, defense, res):
 		bonuschance = self.talent1_params[0] if self.elite > 0 else 0
@@ -3640,6 +3644,12 @@ class Logos(Operator):
 		bonusdmg = self.talent1_params[1]
 		falloutdmg = 0.2 * self.module_lvl if self.module == 3 and self.module_lvl > 1 else 0
 		newres = np.fmax(0,res-10) if self.elite == 2 else res
+		if self.elite == 2:
+			if self.shreds[2] < 1 and self.shreds[2] > 0:
+				res = res / self.shreds[2]
+			newres = np.fmax(0, res	- 10)
+			if self.shreds[2] < 1 and self.shreds[2] > 0:
+				newres *= self.shreds[2]
 		shreddmg = self.talent2_params[2] if self.elite == 2 else 0
 		
 		if self.skill == 1:
@@ -4687,7 +4697,7 @@ class Phantom(Operator):
 		super().__init__("Phantom",pp,[1,2,3],[1,2,3],2,1,2)
 		if self.skill == 2: self.name += f" {int(self.skill_params[0])}hitAvg"
 		if self.elite == 0: self.talent_dmg = False
-		if not self.talent_dmg and self.elite > 0: self.name += " w/o clone"   ##### keep the ones that apply
+		if self.talent_dmg and self.elite > 0: self.name += " with clone"   ##### keep the ones that apply
 		if not self.module_dmg and self.module == 2: self.name += " adjacentAllies"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		if self.module == 2 and self.module_lvl == 3: self.drone_atk += 60
