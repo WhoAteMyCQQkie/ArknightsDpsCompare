@@ -101,8 +101,8 @@ S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for mo
 targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
 **Conditional damage prefixes, allowing you to turn off the effects of talents etc.:**
 lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**, conditional (plots all available variations)
-**Prompts for the graph:** 
-maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize)
+**All following prompts are global and their position does not matter. Prompts for the graph:** 
+maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize), numbers (shows all the dmg numbers)
 **Other prompts:** 
 hide,left,tiny,short (for the legend), color (for colorblind people), text (puts everything after the prompt as title of the graph, ignoring further inputs)
 """))

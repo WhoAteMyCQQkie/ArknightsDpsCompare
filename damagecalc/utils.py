@@ -318,17 +318,6 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
-		elif args[i] in ["numbers","dmgnumbers","damage","damagenumbers"]:
-			if pps.graph_type == 1:
-				pps.res = np.linspace(0,pps.max_res,9)
-				pps.defen = np.linspace(0,pps.max_def,9)[:-1]
-			elif pps.graph_type == 2:
-				pps.res = np.linspace(0,pps.max_res,9)[:-1]
-				pps.defen = np.linspace(0,pps.max_def,9)
-			elif pps.graph_type == 3:
-				pps.res = np.linspace(0,pps.max_res,13)
-			else:
-				pps.defen = np.linspace(0,pps.max_def,13)
 		elif args[i] in ["shred","shreds","debuff","ignore"]:
 			i+=1
 			pps.shred = [1,0,1,0]
@@ -397,7 +386,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 				i+=1
 			i-=1
 			pps.input_kwargs["shreds"] = pps.shred
-		elif args[i] in ["basebuff","baseatk","base","bbuff","batk"]:
+		elif args[i] in ["basebuff","baseatk","base","bbuff","batk","bb"]:
 			i+=1
 			pps.base_buffs = [1,0]
 			while i < entries:
@@ -536,7 +525,6 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				pps.max_def = min(69420,max(100, int(args[i])))
 			except ValueError:
 				break
-
 		elif args[i] in ["maxres","reslimit","limitres","scaleres","resscale"]:
 			i+=1
 			pps.max_res = 120
@@ -544,7 +532,17 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				pps.max_res = min(420,max(5, int(args[i])))
 			except ValueError:
 				break
-
+		elif args[i] in ["numbers","dmgnumbers","damage","damagenumbers"]:
+			if pps.graph_type == 1:
+				pps.res = np.linspace(0,pps.max_res,9)
+				pps.defen = np.linspace(0,pps.max_def,9)[:-1]
+			elif pps.graph_type == 2:
+				pps.res = np.linspace(0,pps.max_res,9)[:-1]
+				pps.defen = np.linspace(0,pps.max_def,9)
+			elif pps.graph_type == 3:
+				pps.res = np.linspace(0,pps.max_res,13)
+			else:
+				pps.defen = np.linspace(0,pps.max_def,13)
 		elif args[i] == "split":
 				pps.graph_type = 1
 		elif args[i] == "split2":

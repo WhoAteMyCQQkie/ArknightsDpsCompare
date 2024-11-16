@@ -104,8 +104,9 @@ def dps_command(args: List[str])-> DiscordSendable:
 
 	#fix typos in operator names
 	for i in range(len(args)):
-		if utils.fix_typos(args[i], op_dict.keys()) != "":
-			args[i] = utils.fix_typos(args[i], op_dict.keys())
+		if not args[i] in prompts:
+			if utils.fix_typos(args[i], op_dict.keys()) != "":
+				args[i] = utils.fix_typos(args[i], op_dict.keys())
 	
 	#fixing missing spaces
 	entries = len(args)
@@ -180,6 +181,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 
 	
 	plot_numbers = 0
+	###################################################################### The actual potting happens here, complicated by Muelsyse cloning the previous op
 	#getting setting the plot parameters and plotting the units
 	utils.parse_plot_essentials(global_parameters, args)
 	previous_operator = None
