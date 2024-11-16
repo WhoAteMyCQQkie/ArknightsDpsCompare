@@ -38,7 +38,6 @@
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # change high/low into high/low/default for unrealistic conditionals (aka chongyue) -> better: add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
-# rework enemy prompt: still not good as it is (better formatting, showing enemy hp, automate getting the images)
 # make it visible in the plot, where which part of the name comes from. (example: typhons text "all crits" gets turned green, green standing for talent2, so people know its lowtalent2 that removes it)
 # make GIFs for different amounts of targets for example, or different values of fixdef
 # drone/summon(count) prompt for summoners
@@ -47,6 +46,13 @@
 # stylized plots. for example christmas themed etc.
 # skill down dps
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
+# rework enemy prompt: still not good as it is (better formatting, showing enemy hp, automate getting the images)
+#				-> it's possible to make use of https://github.com/Awedtan/HellaAPI?tab=readme-ov-file and since that only searches the datamined stuff, i should be able to replicate that without the api
+#				-> https://awedtan.ca/api/toughstage/h12-4 is an example of how to get stage data INCLUDING the spawning enemies (or stage instead of toughstage)
+#				-> https://awedtan.ca/api/enemy/enemy_1010_demon then has the info, including hp, def, res and even immunities and heatlh regen
+#				-> https://arknights.wiki.gg/wiki/Deconstructed_Distortion (enemy name with spaces replaced by underscore) will then have the image
+#		update: found the files: they are not under "excel" but under "levels": "enemydata" contains what it says, "obt" contains some of the main story levels, "activities" contains the event stuff, both are super spread out though
+
 
 import os
 from typing import Callable, List
@@ -100,7 +106,8 @@ S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for mo
 **Prompts, that take parameters:**
 targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
 **Conditional damage prefixes, allowing you to turn off the effects of talents etc.:**
-lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**, conditional (plots all available variations)
+all (plots all possible conditionals), conditional (further shows prompts to get a specific condition), c0...c31 (as given by "conditional", can add multiple)
+**or alternatively:** lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**
 **All following prompts are global and their position does not matter. Prompts for the graph:** 
 maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize), numbers (shows all the dmg numbers)
 **Other prompts:** 

@@ -63,7 +63,7 @@ class DiscordSendable:
 		await channel.send(content=self.content, file=self.file)
 
 class PlotParameters:
-	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],sp_boost=0,targets=-1,trust=100,conditionals=[True,True,True,True,True],
+	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],sp_boost=0,targets=-1,trust=100,conditionals=[True,True,True,True,True], all_cond = False,
 			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = 0,enemies=[],**kwargs):
 		#Operator Parameters
 		self.pot = pot
@@ -78,6 +78,7 @@ class PlotParameters:
 		self.targets = targets
 		self.trust = trust
 		self.conditionals = copy.deepcopy(conditionals)
+		self.all_conditionals = all_cond
 		self.input_kwargs = kwargs
 		
 
@@ -103,20 +104,18 @@ class PlotParametersSet(PlotParameters):
 		self.masteries = {-1} #self.skill_lvl
 		self.modules = {-1}
 		self.module_lvls = {-1}
+		self.conditionalss = {-1} #0 to 31 are for all possible combinations of 5 bools, using the int_to_bools function
 
 		#stuff that only the global parameters need
+		self.temp_condition = [True,True,True,True,True] #this is to help utilizing the lowtrait etc. this will be chang
 		self.all_conditionals = False
 		self.enemy_key = ""
 
 	def get_plot_parameters(self) -> list[PlotParameters]:
 		output = []
-		if not self.all_conditionals:
-			for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-				output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,self.conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
-		else:
-			for combo in itertools.product([True,False], repeat = 5):
-				for pot,promotion,level,skill,mastery,module,module_lvl in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls):
-					output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,list(combo),self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
+
+		for pot,promotion,level,skill,mastery,module,module_lvl,condition in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls,self.conditionalss):
+			output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,int_to_bools(max(0,condition)),self.all_conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -457,40 +456,58 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["avg","avgdmg","average","averagedmg"]:
 			pps.normal_dps = 2 if pps.normal_dps != 2 else 0
 		elif args[i] in ["l","low"]:
-			pps.conditionals = [False,False,False,False,False]
+			pps.temp_condition = [False,False,False,False,False]
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["h","high"]:
-			pps.conditionals = [True,True,True,True,True]
+			pps.temp_condition = [True,True,True,True,True]
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["low1","l1","lowtrait","traitlow"]:
-			pps.conditionals[0] = False
+			pps.temp_condition[0] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high1","h1","hightrait","traithigh"]:
-			pps.conditionals[0] = True
+			pps.temp_condition[0] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["low2","l2","lowtalent","talentlow","lowtalent1","talent1low"]:
-			pps.conditionals[1] = False
+			pps.temp_condition[1] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high2","h2","hightalent","talenthigh","hightalent1","talent1high"]:
-			pps.conditionals[1] = True
+			pps.temp_condition[1] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["low3","l3","talentlow","lowtalent2","talent2low"]:
-			pps.conditionals[2] = False
+			pps.temp_condition[2] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high3","h3","talenthigh","hightalent2","talent2high"]:
-			pps.conditionals[2] = True
+			pps.temp_condition[2] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["low4","l4","lows","slow","lowskill","skilllow"]:
-			pps.conditionals[3] = False
+			pps.temp_condition[3] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high4","h4","highs","shigh","highskill","skillhigh"]:
-			pps.conditionals[3] = True
+			pps.temp_condition[3] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow"]:
-			pps.conditionals[4] = False
+			pps.temp_condition[4] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high5","h5","highm","mhigh","highmod","modhigh","highmodule","modulehigh"]:
-			pps.conditionals[4] = True
+			pps.temp_condition[4] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] == "lowtalents":
-			pps.conditionals[1] = False
-			pps.conditionals[2] = False
+			pps.temp_condition[1] = False
+			pps.temp_condition[2] = False
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] == "hightalents":
-			pps.conditionals[1] = True
-			pps.conditionals[2] = True
-		elif args[i] in ["conditionals", "conditional","variation","variations","all"]:
+			pps.temp_condition[1] = True
+			pps.temp_condition[2] = True
+			pps.conditionalss = {bools_to_int(pps.temp_condition)}
+		elif args[i] in ["conditionals", "conditional","variation","variations"]:
 			pps.all_conditionals = True
+			pps.conditionalss = set(range(32))
+		elif args[i] in ["all"]:
+			pps.conditionalss = set(range(32))
 		elif args[i][0] == "c" and len(args[i]) < 4 and len(args[i]) > 1:
 			if args[i][1:].isnumeric():
-				pps.conditionals = int_to_bools(min(31,int(args[i][1:])))
+				pps.conditionalss.add(min(31,int(args[i][1:])))
+				pps.conditionalss.discard(-1)
 		elif args[i].isnumeric():
 			x = int(args[i])
 			try:
@@ -667,8 +684,8 @@ def plot_graph(operator,pp, buffs=[0,0,0,0], defens=[-1], ress=[-1], graph_type=
 		op_name = op_name[:space_position] + "\n" + op_name[space_position+1:]
 	if short:
 		op_name = operator.base_name
-
-	#op_name = f"(c{bools_to_int(pp.conditionals)})" + op_name
+	if pp.all_conditionals:
+		op_name = f"(c{bools_to_int(pp.conditionals)})" + op_name
 
 	defences = np.clip(np.linspace(-shreds[1]*shreds[0],(max_def-shreds[1])*shreds[0], accuracy), 0, None)
 	resistances = np.clip(np.linspace(-shreds[3]*shreds[2],(max_res-shreds[3])*shreds[2], accuracy), 0, None)
