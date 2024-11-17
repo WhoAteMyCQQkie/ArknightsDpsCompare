@@ -88,9 +88,9 @@ def dps_command(args: List[str])-> DiscordSendable:
 
 	#some more error correction with wrong spaces
 	for i in range(len(args)-1):
-		if args[i] == "no" or args[i+1] == "alter" or (args[i] in ["la","zuo"] and args[i+1] in ["pluma","le"]):
-			args[i+1] = args[i]+args[i+1]
-			args[i] = "null"
+		if args[i] == "no" or args[i+1] == "alter" or args[i] == "-" or (args[i] in ["la","zuo"] and args[i+1] in ["pluma","le"]):
+			args[i] = args[i]+args[i+1]
+			args[i+1] = "null"
 		if args[i+1].startswith("+"): args[i+1] = args[i+1][1:]
 	
 	#error correction: remove illegal inputs

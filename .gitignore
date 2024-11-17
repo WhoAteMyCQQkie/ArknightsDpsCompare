@@ -2,9 +2,4 @@ __pycache__/
 .pylintrc
 token.txt
 testrun.txt
-arkbotimages/
-Database/battle_equip_table.json
-Database/character_table.json
-Database/skill_table.json
-Database/char_patch_table.json
 Database/CN-gamedata/

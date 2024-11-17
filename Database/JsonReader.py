@@ -76,9 +76,6 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'VinaVictoria': 'char_1019_siege2','Contrail': 'char_4165_ctrail','Vulpisfoglia':'char_4026_vulpis','LapplandAlter':'char_1038_whitw2','Crownslayer':'char_1502_crosly',
 		   'Philae':'char_4148_philae','Figurino':'char_4155_talr','Bobbing':'char_487_bobb', 'Catherine':'char_4162_cathy'} 
 
-# character_table.json: replace kazemarus displaytoken (line 182000ish) with: "displayTokenDict": {"token_10022_kazema_shadow":true},
-#!!! battle_equip_table.json: search for valueStr (3 occurences) and remove the entire entry from the "blackboard" for Shu to work, otherwise remove shu from id_dict
-
 
 def fileHelper():
 	available_ops = ["504", "514", "507", "506", "505", "4025"]
@@ -100,6 +97,28 @@ def fileHelper():
 					f.writelines(str(f"'{character_data[key]['name']}': '{key}',"))
 				except: #unwritable symbols
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
+
+
+if __name__ == "__main__":
+	#These files are like 7MB each, maybe not a good idea to load them each time.
+		with open('CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
+			character_data = json.load(json_file)
+		with open('CN-gamedata/zh_CN/gamedata/excel/skill_table.json',encoding="utf8") as json_file:
+			skill_data = json.load(json_file)
+		with open('CN-gamedata/zh_CN/gamedata/excel/battle_equip_table.json',encoding="utf8") as json_file:
+			module_data = json.load(json_file)
+		with open('CN-gamedata/zh_CN/gamedata/excel/char_patch_table.json',encoding="utf8") as json_file:
+			extra_data = json.load(json_file)
+			amiya_data = extra_data["patchChars"]
+
+		#handling irregularities
+		character_data.update(amiya_data)
+		character_data['char_4016_kazema']["displayTokenDict"] = {"token_10022_kazema_shadow":True}
+
+else:
+	character_data = None
+	skill_data = None
+	module_data = None
 
 class OperatorData:
 	def __init__(self, key):
@@ -136,28 +155,8 @@ class OperatorData:
 		self.drone_atk_e2 = []
 		self.drone_atk_interval = []
 		
-		#These files are like 7MB each, maybe not a good idea to load them each time.
-		if __name__ == "__main__":
-			with open('character_table.json',encoding="utf8") as json_file:
-				character_data = json.load(json_file)
-			with open('skill_table.json',encoding="utf8") as json_file:
-				skill_data = json.load(json_file)
-			with open('battle_equip_table.json',encoding="utf8") as json_file:
-				module_data = json.load(json_file)
-			with open('char_patch_table.json',encoding="utf8") as json_file:
-				extra_data = json.load(json_file)
-				amiya_data = extra_data["patchChars"]
-		else:
-			with open('Database/character_table.json',encoding="utf8") as json_file:
-				character_data = json.load(json_file)
-			with open('Database/skill_table.json',encoding="utf8") as json_file:
-				skill_data = json.load(json_file)
-			with open('Database/battle_equip_table.json',encoding="utf8") as json_file:
-				module_data = json.load(json_file)
-			with open('Database/char_patch_table.json',encoding="utf8") as json_file:
-				extra_data = json.load(json_file)
-				amiya_data = extra_data["patchChars"]
-		character_data.update(amiya_data)
+		
+
 
 		name_id =  key.split('_')[2]
 		
