@@ -21,7 +21,7 @@
 # double check ebenholz dps, it's just weird to calc
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# protect bot against THAT exploit and maybe ban people attempting it
+# protect bot against THAT exploit and maybe ban people attempting it (actually a lot harder than i thought it would be)
 # s123 prompt
 # off skill dps -> add as its own method normal_attack() and it can be used for avg_dmg() but has to be extensively overwritten/implemented for like 70% of operators, including adding conditional stuff
 #               -> add as self.skill == 0. has to be added to all ops, but should usually take only 1 line. makes avg_dmg() quite tricky.

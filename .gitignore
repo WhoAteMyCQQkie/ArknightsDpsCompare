@@ -7,4 +7,4 @@ Database/battle_equip_table.json
 Database/character_table.json
 Database/skill_table.json
 Database/char_patch_table.json
-damagecalc/black_list.py
+Database/CN-gamedata/

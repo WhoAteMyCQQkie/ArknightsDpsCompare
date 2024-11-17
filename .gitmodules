@@ -1,0 +1,3 @@
+[submodule "Database/CN-gamedata"]
+	path = Database/CN-gamedata
+	url = https://github.com/Kengxxiao/ArknightsGameData.git
