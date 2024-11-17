@@ -84,7 +84,7 @@ def fileHelper():
 		if id_dict[key][8].isnumeric():
 			number += id_dict[key][8]
 		available_ops.append(number)
-	with open('character_table.json',encoding="utf8") as json_file:
+	with open('CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
 		character_data = json.load(json_file)
 	with open("dictionary.txt", 'w') as f:
 		for key in character_data.keys():
@@ -407,6 +407,33 @@ class OperatorData:
 					drone_atk2[1] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 					self.drone_atk_e2.append(drone_atk2)
 
+
+class EnemyData:
+	def __init__(self):
+		with open('CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
+			enemy_data_cn = json.load(json_file)
+		
+		#Turning the file into a dict
+		self.enemy_data = dict()
+		for enemy in enemy_data_cn["enemies"]:
+			key = enemy["Key"]
+			name = enemy["Value"][0]["enemyData"]["name"]["m_value"]
+			max_hp = enemy["Value"][0]["enemyData"]["attributes"]["maxHp"]["m_value"]
+			defense = enemy["Value"][0]["enemyData"]["attributes"]["def"]["m_value"]
+			resistance = enemy["Value"][0]["enemyData"]["attributes"]["magicResistance"]["m_value"]
+			self.enemy_data[key] = [name, max_hp, defense, resistance]
+		
+		#Todo: overwrite CN names with EN names where applicable
+		"""
+		with open('enemy_database.json',encoding="utf8") as json_file:
+			enemy_data_en = json.load(json_file)
+		for enemy in enemy_data_en["enemies"]:
+			key = enemy["Key"]
+			self.enemy_data[key][0] = enemy["Value"][0]["enemyData"]["name"]["m_value"] 
+		#"""
+	
+	def get_data(self, key):
+		return (self.enemy_data[key])
 
 
 #"""
