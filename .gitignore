@@ -4,3 +4,4 @@ token.txt
 testrun.txt
 Database/CN-gamedata/
 Database/images/*
+!Database/images/.gitkeep
