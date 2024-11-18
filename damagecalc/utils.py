@@ -3,6 +3,7 @@ from typing import Dict, TypeVar, Generic
 import itertools
 import numpy as np
 import copy
+import os
 
 from discord import DMChannel, File
 import matplotlib.pyplot as plt
@@ -844,3 +845,33 @@ def calc_message(sentence: str, return_dict):
 	except subprocess.TimeoutExpired:
 		return_dict['result'] = "The thread did not survive trying to process this request."
 	return return_dict['result']
+
+
+def get_enemies(stage_name):
+	from Database.JsonReader import StageData, EnemyData
+	stage_data = StageData()
+	enemy_data = EnemyData()
+
+	#step 1 read out all the enemy data
+	enemy_ids = stage_data.get_enemies(stage_name)
+	if len(enemy_ids) == 0: return []
+	enemies = []
+	for enemy_id in enemy_ids:
+		enemies.append(enemy_data.get_data(enemy_id))
+
+	#step 2 get images TODO: handle failed downloads
+	import requests
+	for enemy in enemies:
+		if os.path.exists(f"Database/images/{enemy[0]}.png"): continue
+		url = f"https://prts.wiki/w/%E6%96%87%E4%BB%B6:%E5%A4%B4%E5%83%8F_%E6%95%8C%E4%BA%BA_{enemy[0]}.png"
+		res = requests.get(url, stream = True)
+		pos = str(res.content).find('src="https://media.prts.wiki/')
+		snippet = str(res.content)[pos+29:pos+33]
+		file_name = f"Database/images/{enemy[0]}.png"
+		image_url =  f"https://media.prts.wiki/{snippet}/%E5%A4%B4%E5%83%8F_%E6%95%8C%E4%BA%BA_{enemy[0]}.png"
+		res = requests.get(image_url, stream = True)
+		img_data = res.content
+		with open(file_name, 'wb') as handler:
+			handler.write(img_data)
+	
+	return enemies

@@ -437,10 +437,10 @@ def hps_command(args: List[str]) -> DiscordSendable:
 
 
 def stage_command(args: List[str]) -> DiscordSendable:
-	from Database.JsonReader import StageData, EnemyData
+	from Database.JsonReader import StageData
 	stage_data = StageData()
 	if len(args) == 0:
-		text = "Use !stage <prefix> to get a list of the available stages. You can then use (not yet, it's WIP) the stage name behind <enemy> as prompt for !dps. Here are the available prefixes (the CN ones are annihilations):\n"
+		text = "Use !stage <prefix> to get a list of the available stages. You can then use (not yet, it's WIP) the stage name behind <enemy> as prompt for !dps. Here are the available prefixes:\n"
 		stage_prefixes = list(stage_data.stage_prefixes)
 		stage_prefixes.sort()
 		for entry in stage_prefixes:
