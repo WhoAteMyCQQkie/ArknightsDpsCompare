@@ -441,7 +441,7 @@ def stage_command(args: List[str]) -> DiscordSendable:
 	from Database.JsonReader import StageData
 	stage_data = StageData()
 	if len(args) == 0:
-		text = "Use !stage <prefix> to get a list of the available stages. You can then use (not yet, it's WIP) the stage name behind <enemy> as prompt for !dps. Here are the available prefixes:\n"
+		text = "Use !stage <prefix> to get a list of the available stages. You can then use the stage name behind <enemy> as prompt for !dps. Note that this is VERY slow; the first call may take minutes. Here are the available prefixes:\n"
 		stage_prefixes = list(stage_data.stage_prefixes)
 		stage_prefixes.sort()
 		for entry in stage_prefixes:

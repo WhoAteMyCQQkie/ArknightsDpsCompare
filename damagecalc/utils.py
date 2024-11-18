@@ -783,8 +783,8 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 	
 	############### Graph with images of enemies -> enemy prompt ################################
 	elif graph_type == 5:
-		defences = [i[2] for i in enemies]
-		resistances = [i[3] for i in enemies]
+		defences = [max(0,(i[2]-shreds[1]))*shreds[0] for i in enemies]
+		resistances = [max(0,(i[3]-shreds[3]))*shreds[2] for i in enemies]
 		xaxis = np.arange(len(enemies))
 		damages = np.zeros(len(enemies))
 
@@ -792,7 +792,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
 		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i, enemy in enumerate(enemies):
-			demanded = dps_function(enemy[2],enemy[3]) * fragile
+			demanded = dps_function(max(0,(enemy[2]-shreds[1]))*shreds[0],max(0,(enemy[3]-shreds[3]))*shreds[2]) * fragile
 			plt.text(i,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	return True
 
