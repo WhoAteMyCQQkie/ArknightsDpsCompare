@@ -421,7 +421,7 @@ class EnemyData:
 			max_hp = enemy["Value"][0]["enemyData"]["attributes"]["maxHp"]["m_value"]
 			defense = enemy["Value"][0]["enemyData"]["attributes"]["def"]["m_value"]
 			resistance = enemy["Value"][0]["enemyData"]["attributes"]["magicResistance"]["m_value"]
-			self.enemy_data[key] = [name, max_hp, defense, resistance]
+			self.enemy_data[key] = [name, max_hp, defense, resistance] #TODO: get enemy level, so that bosses have the right HP (eg patriot)
 		
 		#Todo: overwrite CN names with EN names where applicable
 		"""
@@ -446,7 +446,7 @@ class StageData:
 			code = stage_data["stages"][key]["code"]
 			if challenge_mode: code += "-CM"
 			try:
-				path = "Database/CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"]
+				path = "Database/CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"].lower() + ".json"
 				self.stages[code] = path
 			except:
 				pass
@@ -456,15 +456,25 @@ class StageData:
 			self.stage_prefixes.add(key[0:key.find("-")])
 	
 	def get_stages(self, prefix):
-		if not prefix.upper() in self.stage_prefixes:
-			return None
 		stages = list()
+		if not prefix.upper() in self.stage_prefixes: return stages
 		for key in self.stages.keys():
 			if key.startswith(prefix.upper()):
 				stages.append(key)
 		return stages
 
-#"""
+	def get_enemies(self, stage):
+		enemies = set()
+		if not stage.upper() in self.stages.keys(): return enemies
+		path = self.stages[stage.upper()]
+		with open(path,encoding="utf8") as json_file:
+			stage_details = json.load(json_file)
+		for enemy in stage_details["enemyDbRefs"]:
+			enemies.add(enemy["id"])
+		return enemies
+
+
+"""
 if __name__ == "__main__":
 	op_data_dict = {}
 	for key in id_dict.keys():
