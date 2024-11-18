@@ -122,6 +122,7 @@ Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+
 		commands.register('calc', cmds.calc_command)
 	commands.register('dps', cmds.dps_command)
 	commands.register('hps', cmds.hps_command)
+	commands.register('stage', cmds.stage_command)
 	
 	print(f"{len(commands)} command(s) and {len(aliases)} alias(es) registered!")
 

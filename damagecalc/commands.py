@@ -434,3 +434,22 @@ def hps_command(args: List[str]) -> DiscordSendable:
 		healer_message =  error_message + "\n" + healer_message
 	if plot_numbers > 19 : healer_message = healer_message + "Only the first 20 entries are shown."
 	return DiscordSendable(healer_message)
+
+
+def stage_command(args: List[str]) -> DiscordSendable:
+	from Database.JsonReader import StageData, EnemyData
+	stage_data = StageData()
+	if len(args) == 0:
+		text = "Use !stage <prefix> to get a list of the available stages. You can then use (not yet, it's WIP) the stage name behind <enemy> as prompt for !dps. Here are the available prefixes (the CN ones are annihilations):\n"
+		stage_prefixes = list(stage_data.stage_prefixes)
+		stage_prefixes.sort()
+		for entry in stage_prefixes:
+			text += str(entry) + ", "
+		return DiscordSendable(text[:-2])
+	
+	if len(stage_data.get_stages(args[0])) > 0:
+		text = "These are the available stages:\n"
+		for entry in stage_data.get_stages(args[0]):
+			text += str(entry) + ", "
+		return DiscordSendable(text[:-2])
+	return DiscordSendable()

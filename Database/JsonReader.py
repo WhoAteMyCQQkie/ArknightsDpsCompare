@@ -407,10 +407,11 @@ class OperatorData:
 					drone_atk2[1] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 					self.drone_atk_e2.append(drone_atk2)
 
+path_prefix = "" if __name__ == "__main__" else "Database/"
 
 class EnemyData:
 	def __init__(self):
-		with open('CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
 			enemy_data_cn = json.load(json_file)
 		
 		#Turning the file into a dict
@@ -437,16 +438,24 @@ class EnemyData:
 
 class StageData:
 	def __init__(self):
-		with open('CN-gamedata/zh_CN/gamedata/excel/stage_table.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/stage_table.json',encoding="utf8") as json_file:
 			stage_data = json.load(json_file)
 		
+		annihilation_counter = 1
 		self.stages = dict()
 		for key in stage_data["stages"].keys():
 			challenge_mode = stage_data["stages"][key]["difficulty"] == "FOUR_STAR"
 			code = stage_data["stages"][key]["code"]
+			if code.startswith("?"): continue
 			if challenge_mode: code += "-CM"
+			if code[0] not in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+				if stage_data["stages"][key]["apCost"] in [20,25]: 
+					code = f"ANNI-{annihilation_counter}"
+					annihilation_counter += 1
+				else:
+					continue			
 			try:
-				path = "Database/CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"].lower() + ".json"
+				path = path_prefix + "CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"].lower() + ".json"
 				self.stages[code] = path
 			except:
 				pass
