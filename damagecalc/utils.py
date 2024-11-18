@@ -9,6 +9,7 @@ from discord import DMChannel, File
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
+from PIL import Image
 
 enemy_dict = {"13": [[800,50,"01"],[100,40,"02"],[400,50,"03"],[350,50,"04"],[1200,0,"05"],[1500,0,"06"],[900,20,"07"],[1200,20,"08"],[150,40,"09"],[3000,90,"10"],[200,20,"11"],[250,60,"12"],[300,60,"13"],[300,50,"14"]],
 		"zt": [[250,50,"01"],[200,15,"02"],[250,50,"03"],[200,15,"04"],[700,60,"05"],[300,50,"06"],[150,10,"07"],[250,15,"08"],[300,50,"09"],[250,15,"10"],[600,80,"11"],[300,50,"12"],[1000,60,"13"],[600,60,"14"],[350,50,"15"],[900,60,"16"],[550,60,"17"]],
@@ -579,18 +580,16 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 			except ValueError:
 				pass
 		elif args[i] in ["enemy","chapter"]:
-			if args[i+1] in enemy_dict:
-				pps.enemy_key = args[i+1]
+			if len(get_enemies(args[i+1])) > 2:
 				pps.graph_type = 5
-				pps.enemies = enemy_dict[args[i+1]]
-				pps.enemies.sort(key=lambda tup: tup[0], reverse=False)
+				pps.enemies = get_enemies(args[i+1])
+				pps.enemies.sort(key=lambda tup: tup[2], reverse=False)
 				i += 1
 		elif args[i] in ["enemy2","chapter2"]:
-			if args[i+1] in enemy_dict:
-				pps.enemy_key = args[i+1]
+			if len(get_enemies(args[i+1])) > 2:
 				pps.graph_type = 5
-				pps.enemies = enemy_dict[args[i+1]]
-				pps.enemies.sort(key=lambda tup: tup[1], reverse=False)
+				pps.enemies = get_enemies(args[i+1])
+				pps.enemies.sort(key=lambda tup: tup[3], reverse=False)
 				i += 1
 		else:
 			unused_inputs.add(i)
@@ -784,8 +783,8 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 	
 	############### Graph with images of enemies -> enemy prompt ################################
 	elif graph_type == 5:
-		defences = [i[0] for i in enemies]
-		resistances = [i[1] for i in enemies]
+		defences = [i[2] for i in enemies]
+		resistances = [i[3] for i in enemies]
 		xaxis = np.arange(len(enemies))
 		damages = np.zeros(len(enemies))
 
@@ -793,7 +792,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
 		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i, enemy in enumerate(enemies):
-			demanded = dps_function(enemy[0],enemy[1]) * fragile
+			demanded = dps_function(enemy[2],enemy[3]) * fragile
 			plt.text(i,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
 	return True
 
@@ -861,7 +860,7 @@ def get_enemies(stage_name):
 
 	#step 2 get images TODO: handle failed downloads
 	import requests
-	for enemy in enemies:
+	for enemy in enemies[:]:
 		if os.path.exists(f"Database/images/{enemy[0]}.png"): continue
 		url = f"https://prts.wiki/w/%E6%96%87%E4%BB%B6:%E5%A4%B4%E5%83%8F_%E6%95%8C%E4%BA%BA_{enemy[0]}.png"
 		res = requests.get(url, stream = True)
@@ -873,5 +872,12 @@ def get_enemies(stage_name):
 		img_data = res.content
 		with open(file_name, 'wb') as handler:
 			handler.write(img_data)
+		try:
+			with Image.open(file_name) as img:
+				img.verify()
+			continue
+		except (IOError, SyntaxError) as e:
+			os.remove(file_name)
+			enemies.remove(enemy)
 	
 	return enemies

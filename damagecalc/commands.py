@@ -122,7 +122,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 			args[j] = args[j][numberpos:]
 			args.insert(j,temp[:numberpos])
 			entries += 1
-		elif not args[j][0] in "-123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
+		elif False and not args[j][0] in "-123456789" and args[j][-1] in "0123456789%": #missing space like aspd100 gg
 			numberpos = 2
 			wordlen = len(args[j])
 			while args[j][-numberpos] in "-0123456789.%":
@@ -300,11 +300,12 @@ def dps_command(args: List[str])-> DiscordSendable:
 		fig = plt.gcf()
 		axes = [None] * len(enemies)
 		for i,ax in enumerate(axes):
-			ph = len(enemies)
-			img = np.asarray(Image.open('arkbotimages/' + enemy_key + '_' + enemies[i][2] + '.png'))
+			ph = len(enemies)-0.5
+			mim_size = max(ph,12)
+			img = np.asarray(Image.open('Database/images/' + enemies[i][0] + '.png'))
 			#ax = fig.add_axes([1/(len(enemies)+1)*(i+0.67), 0, 0.1, 0.1])
-			if plot_size ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
-			else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/ph ,2.1*(xh-xl)/ph])
+			if plot_size ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
+			else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
 			ax.axison = False
 			ax.imshow(img)
 
