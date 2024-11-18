@@ -43,12 +43,13 @@
 # skill down dps
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
 # rework enemy prompt: still not good as it is (better formatting, showing enemy hp, automate getting the images)
-#				-> it's possible to make use of https://github.com/Awedtan/HellaAPI?tab=readme-ov-file and since that only searches the datamined stuff, i should be able to replicate that without the api
-#				-> https://awedtan.ca/api/toughstage/h12-4 is an example of how to get stage data INCLUDING the spawning enemies (or stage instead of toughstage)
-#				-> https://awedtan.ca/api/enemy/enemy_1010_demon then has the info, including hp, def, res and even immunities and heatlh regen
-#				-> https://arknights.wiki.gg/wiki/Deconstructed_Distortion (enemy name with spaces replaced by underscore) will then have the image
-#		update: found the files: they are not under "excel" but under "levels": "enemydata" contains what it says, "obt" contains some of the main story levels, "activities" contains the event stuff, both are super spread out though
-
+#				-> ookay here is an update: the file stage_table.json has all relevant data. "code" is the stage name, "levelId" gives the path to the file and difficulty says if its CM
+#				   The file listed in levelId (under "levels" not "excel") then contains all enemy IDs that appear in that stage
+#				   The enemy ID can be used to access enemy_data.json, which is already implemented in the last commit (level is ignored, which differentiates between patriot and patriot in h7-4)
+#				   Using the name, one can access for example https://arknights.wiki.gg/wiki/Deconstructed_Distortion (case sensitive it seems, underscore instead of spaces)
+#				   That site contains a link to the image arknights.wiki.gg/image/X/YZ/Deconstructed_Distortion, we don't know x yz
+#				   Sending a request to that site will allow us to download the image
+#				-> make a set of the first 2 symbols of "code" to get all enemies of that event. though that might be too many enemies
 
 import os
 from typing import Callable, List

@@ -435,6 +435,34 @@ class EnemyData:
 	def get_data(self, key):
 		return (self.enemy_data[key])
 
+class StageData:
+	def __init__(self):
+		with open('CN-gamedata/zh_CN/gamedata/excel/stage_table.json',encoding="utf8") as json_file:
+			stage_data = json.load(json_file)
+		
+		self.stages = dict()
+		for key in stage_data["stages"].keys():
+			challenge_mode = stage_data["stages"][key]["difficulty"] == "FOUR_STAR"
+			code = stage_data["stages"][key]["code"]
+			if challenge_mode: code += "-CM"
+			try:
+				path = "Database/CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"]
+				self.stages[code] = path
+			except:
+				pass
+		
+		self.stage_prefixes = set()
+		for key in self.stages.keys():
+			self.stage_prefixes.add(key[0:key.find("-")])
+	
+	def get_stages(self, prefix):
+		if not prefix.upper() in self.stage_prefixes:
+			return None
+		stages = list()
+		for key in self.stages.keys():
+			if key.startswith(prefix.upper()):
+				stages.append(key)
+		return stages
 
 #"""
 if __name__ == "__main__":
