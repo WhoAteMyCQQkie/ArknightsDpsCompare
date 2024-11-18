@@ -793,7 +793,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
 		for i, enemy in enumerate(enemies):
 			demanded = dps_function(max(0,(enemy[2]-shreds[1]))*shreds[0],max(0,(enemy[3]-shreds[3]))*shreds[2]) * fragile
-			plt.text(i,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
+			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
 	return True
 
 def calc_message(sentence: str, return_dict):

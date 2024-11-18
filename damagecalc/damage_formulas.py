@@ -2430,7 +2430,7 @@ class Gnosis(Operator):
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
 			skilldmg1 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
-			skilldmg2 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)*(1+frozenfragile)/(1+self.buff_fragile)
+			skilldmg2 = np.fmax(final_atk * skill_scale * (1-frozenres/100), final_atk * skill_scale * 0.05)*(1+frozenfragile)/(1+self.buff_fragile)
 			skilldmg = skilldmg1 + skilldmg2
 			atkcycle = self.atk_interval/((self.attack_speed)/100)
 			atks_per_skillactivation = sp_cost / atkcycle

@@ -455,7 +455,7 @@ class StageData:
 				else:
 					continue			
 			try:
-				path = path_prefix + "CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"].lower() + ".json"
+				path = path_prefix + "CN-gamedata/zh_CN/gamedata/levels/" + stage_data["stages"][key]["levelId"].lower().replace("""\\""","/") + ".json"
 				self.stages[code] = path
 			except:
 				pass
