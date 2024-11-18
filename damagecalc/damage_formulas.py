@@ -244,6 +244,11 @@ class Operator:
 		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
 		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
+		if params.shred[0] != 1: self.buff_name += f" -{int(100*(1-params.shred[0])+0.0001)}%def" 
+		if params.shred[1] != 0: self.buff_name += f" -{int(params.shred[1])}def"
+		if params.shred[2] != 1: self.buff_name += f" -{int(100*(1-params.shred[2])+0.0001)}%res"
+		if params.shred[3] != 0: self.buff_name += f" -{int(params.shred[3])}res"
+
 		#TODO
 		#skill = 0
 
