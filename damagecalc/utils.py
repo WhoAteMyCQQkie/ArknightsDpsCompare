@@ -1,7 +1,7 @@
 import subprocess
 from typing import Dict, TypeVar, Generic
 import itertools
-import numpy as np
+import math
 import copy
 import os
 
@@ -115,7 +115,7 @@ class PlotParametersSet(PlotParameters):
 
 	def get_plot_parameters(self) -> list[PlotParameters]:
 		output = []
-
+		if math.prod(len(x) for x in [self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls,self.conditionalss]) > 1280: raise ValueError("Too many requests")
 		for pot,promotion,level,skill,mastery,module,module_lvl,condition in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls,self.conditionalss):
 			output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,int_to_bools(max(0,condition)),self.all_conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,**self.input_kwargs))
 		return output

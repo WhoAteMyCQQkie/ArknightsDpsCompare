@@ -4,7 +4,6 @@
 # implement the missing operators
 # implement various total_dmg and avg_dmg methods for operators, where that doesnt work automatically
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
-# fragile interaction with necrosis/elemental dmg
 
 #TODO: specific Minijobs
 # indra: dodge mechanics can make use of the hits prompts
@@ -14,14 +13,12 @@
 # narantuya: proper frame counting to get the attack intervals more accurate
 # nymph: add the avgNecrosis as option
 # double check ifrits res shred interactions with her delta module
-# CE: add a lowtalent prompt for ops outside of her ball range
 # dodge mechanic for dagda/flametail s1
 # ray: s1 killshots refunding ammo improves the actual ooa dps
 # kafka: hitdmg numbers in the label
 # double check ebenholz dps, it's just weird to calc
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# protect bot against THAT exploit and maybe ban people attempting it (actually a lot harder than i thought it would be)
 # s123 prompt
 # off skill dps -> add as its own method normal_attack() and it can be used for avg_dmg() but has to be extensively overwritten/implemented for like 70% of operators, including adding conditional stuff
 #               -> add as self.skill == 0. has to be added to all ops, but should usually take only 1 line. makes avg_dmg() quite tricky.
@@ -29,9 +26,7 @@
 # guide image to show things at once
 # combine prompt to combine 2 ops dps
 # add and mul prompts
-# add spboost to the label of all the skills (affected)
 # clean up plotting, so that the parts are not scattered around in the code
-# add !disclaimer prompt talking about the limits of the bots
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # add plus ultra prompt to show unrealistically high dmg
 # stacks prompt (mlynar, lapluma, gavialter) to increment certain conditionals
@@ -42,14 +37,9 @@
 # stylized plots. for example christmas themed etc.
 # skill down dps
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
-# rework enemy prompt: still not good as it is (better formatting, showing enemy hp, automate getting the images)
-#				-> ookay here is an update: the file stage_table.json has all relevant data. "code" is the stage name, "levelId" gives the path to the file and difficulty says if its CM
-#				   The file listed in levelId (under "levels" not "excel") then contains all enemy IDs that appear in that stage
-#				   The enemy ID can be used to access enemy_data.json, which is already implemented in the last commit (level is ignored, which differentiates between patriot and patriot in h7-4)
-#				   Using the name, one can access for example https://arknights.wiki.gg/wiki/Deconstructed_Distortion (case sensitive it seems, underscore instead of spaces)
-#				   That site contains a link to the image arknights.wiki.gg/image/X/YZ/Deconstructed_Distortion, we don't know x yz
-#				   Sending a request to that site will allow us to download the image
-#				-> make a set of the first 2 symbols of "code" to get all enemies of that event. though that might be too many enemies
+# rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
+#				-> for some reason 14-14 and 14-16 dont work, but 14-15 and 14-17 do. throws no error
+
 
 import os
 from typing import Callable, List

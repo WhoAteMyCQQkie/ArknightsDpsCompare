@@ -167,6 +167,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	scopes = list(set(global_scopes + local_scopes))
 	scopes.sort()
 	scopes.append(len(args))
+	if len(scopes) > 40: return(DiscordSendable())
 
 	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
 	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
