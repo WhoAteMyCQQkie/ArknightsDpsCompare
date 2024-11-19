@@ -1580,7 +1580,7 @@ class Diamante(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			skill_scale = self.skill_params[1] if self.talent_dmg and self.skill_dmg else 0
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			eledmg =  np.fmax(final_atk * 0 * (1-res/100), final_atk * skill_scale)
+			eledmg =  np.fmax(final_atk * 0 * (1-res/100), final_atk * skill_scale) /(1+self.buff_fragile)
 			dps = (hitdmg+eledmg) / self.atk_interval * (self.attack_speed + self.skill_params[0]) / 100 * min(self.targets,2)
 		
 		if self.skill == 1:
@@ -1592,11 +1592,11 @@ class Diamante(Operator):
 			final_atk_necro = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			elemental_health = 2000 if not self.talent_dmg and not self.skill_dmg else 1000
 			time_to_apply_necrosis = elemental_health / (final_atk * ele_application / self.atk_interval * (self.attack_speed) / 100)
-			fallout_dps = 12000 / (time_to_apply_necrosis + 15)
+			fallout_dps = 12000 / (time_to_apply_necrosis + 15) /(1+self.buff_fragile)
 
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmg_necro = np.fmax(final_atk_necro * (1-res/100), final_atk_necro * 0.05)
-			eledmg_necro =  np.fmax(final_atk_necro * 0 * (1-res/100), final_atk_necro * skill_scale)
+			eledmg_necro =  np.fmax(final_atk_necro * 0 * (1-res/100), final_atk_necro * skill_scale) /(1+self.buff_fragile)
 			avg_hitdmg = hitdmg * time_to_apply_necrosis / (time_to_apply_necrosis + 15) + hitdmg_necro * 15 / (time_to_apply_necrosis + 15)
 			avg_eledmg = eledmg_necro * 15 / (time_to_apply_necrosis + 15)
 
@@ -1767,7 +1767,7 @@ class Ebenholz(Operator):
 		atk_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 		eledmg = 0
 		bonus_scale = self.talent2_params[0] if self.targets == 1 and self.elite == 2 else 0
-		eledmg = self.module_lvl * 0.1 if self.module == 3 and self.module_lvl > 1 and self.talent2_dmg else 0
+		eledmg = self.module_lvl * 0.1 /(1+self.buff_fragile) if self.module == 3 and self.module_lvl > 1 and self.talent2_dmg else 0
 		extra_scale = self.talent2_params[3] if self.module == 2 and self.module_lvl > 1 else 0
 			
 		####the actual skills
@@ -1784,7 +1784,7 @@ class Ebenholz(Operator):
 				ele_gauge = 1000 if self.module_dmg else 2000
 				eledps = dps * 0.08
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15)
+				dps += 12000/(fallouttime + 15)/(1+self.buff_fragile)
 				dps += eledmg * final_atk /(self.atk_interval/((self.attack_speed + aspd)/100)) * 15/(fallouttime + 15)
 			if self.targets == 1:
 				dps += bonusdmg/(atk_interval/((self.attack_speed + aspd)/100))
@@ -1806,7 +1806,7 @@ class Ebenholz(Operator):
 				ele_gauge = 1000 if self.module_dmg else 2000
 				eledps = dps * 0.08
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15)
+				dps += 12000/(fallouttime + 15)/(1+self.buff_fragile)
 				dps += eledmg * final_atk /(self.atk_interval/((self.attack_speed + aspd)/100)) * 15/(fallouttime + 15)
 			if self.targets == 1:
 				dps += bonusdmg/(self.atk_interval/((self.attack_speed + aspd)/100))
@@ -2421,7 +2421,7 @@ class Gnosis(Operator):
 		frozenfragile = 2 * coldfragile
 		coldfragile = max(coldfragile, self.buff_fragile)
 		frozenfragile = max(frozenfragile, self.buff_fragile)
-		frozenres = np.fmax(0, res - 20)
+		frozenres = np.fmax(0, res - 15)
 		
 		####the actual skills
 		if self.skill == 1:
@@ -2890,9 +2890,9 @@ class Ifrit(Operator):
 				time_to_proc = ele_gauge * self.targets / (dps*0.08)
 				newres2 = burnres * (1 + resshred)
 				hitdmgarts = np.fmax(final_atk *(1-newres2/100), final_atk * 0.05)
-				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl)/(1+self.buff_fragile) if self.module_lvl > 1 else 0
 				fallout_dps = (hitdmgarts + ele_hit)/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
-				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000/(1+self.buff_fragile))/(time_to_proc+10)
 		
 		if self.skill == 2:
 			sp_cost = self.skill_cost
@@ -2917,12 +2917,12 @@ class Ifrit(Operator):
 				hitdmgarts = np.fmax(final_atk *(1-newres2/100), final_atk * 0.05)
 				skilldmgarts = np.fmax(final_atk * skill_scale *(1-newres2/100), final_atk * skill_scale * 0.05)
 				burndmg = np.fmax(final_atk * burn_scale * (1-newres2/100), final_atk * burn_scale * 0.05)
-				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl)/(1+self.buff_fragile) if self.module_lvl > 1 else 0
 				avghit = skilldmgarts + burndmg + ele_hit
 				if atks_per_skillactivation > 1:
 					avghit = (skilldmgarts + burndmg + (atks_per_skillactivation - 1) * hitdmgarts + ele_hit) / atks_per_skillactivation	
 				fallout_dps = (avghit + ele_hit)/self.atk_interval * self.attack_speed/100 * self.targets
-				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000/(1+self.buff_fragile))/(time_to_proc+10)
 				
 		if self.skill == 3:
 			atk_scale *= self.skill_params[0]
@@ -2946,9 +2946,9 @@ class Ifrit(Operator):
 				if self.shreds[2] < 1 and self.shreds[2] > 0:
 					newres2 *= self.shreds[2]
 				hitdmgarts = np.fmax(final_atk *atk_scale *(1-newres2/100), final_atk * atk_scale * 0.05)
-				ele_hit = final_atk * (0.2*0.1*self.module_lvl) if self.module_lvl > 1 else 0
+				ele_hit = final_atk * (0.2*0.1*self.module_lvl)/(1+self.buff_fragile) if self.module_lvl > 1 else 0
 				fallout_dps = (hitdmgarts + ele_hit) * self.targets
-				dps = (dps * time_to_proc + 10 * fallout_dps + 7000)/(time_to_proc+10)
+				dps = (dps * time_to_proc + 10 * fallout_dps + 7000/(1+self.buff_fragile))/(time_to_proc+10)
 		return dps
 
 class Indra(Operator):
@@ -3647,7 +3647,7 @@ class Logos(Operator):
 		bonuschance = self.talent1_params[0] if self.elite > 0 else 0
 		if self.module == 3: bonuschance += 0.1 * (self.module_lvl - 1)
 		bonusdmg = self.talent1_params[1]
-		falloutdmg = 0.2 * self.module_lvl if self.module == 3 and self.module_lvl > 1 else 0
+		falloutdmg = 0.2 * self.module_lvl /(1+self.buff_fragile) if self.module == 3 and self.module_lvl > 1 else 0
 		newres = np.fmax(0,res-10) if self.elite == 2 else res
 		if self.elite == 2:
 			if self.shreds[2] < 1 and self.shreds[2] > 0:
@@ -3666,7 +3666,7 @@ class Logos(Operator):
 				ele_gauge = 1000 if self.module_dmg else 2000
 				eledps = dps * 0.08
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15)
+				dps += 12000/(fallouttime + 15)/(1+self.buff_fragile)
 				if self.module_lvl > 1:
 					dps += final_atk * falloutdmg /self.atk_interval * self.attack_speed/100 * bonuschance * 15 / (fallouttime + 15)
 		
@@ -3681,7 +3681,7 @@ class Logos(Operator):
 				ele_gauge = 1000 if self.module_dmg else 2000
 				eledps = dps * 0.08 
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15)
+				dps += 12000/(fallouttime + 15)/(1+self.buff_fragile)
 				if self.module_lvl > 1:
 					dps += final_atk * falloutdmg * 2 * bonuschance * 15 / (fallouttime + 15)
 			
@@ -3694,7 +3694,7 @@ class Logos(Operator):
 				ele_gauge = 1000 if self.module_dmg else 2000
 				eledps = dps * 0.08 / min(self.targets,self.skill_params[1])
 				fallouttime = ele_gauge / eledps
-				dps += 12000/(fallouttime + 15) * min(self.targets,self.skill_params[1])
+				dps += 12000/(fallouttime + 15) * min(self.targets,self.skill_params[1]) /(1+self.buff_fragile)
 				if self.module_lvl > 1:
 					dps += final_atk * falloutdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,self.skill_params[1]) * bonuschance * 15 / (fallouttime + 15)
 		return dps
@@ -4471,7 +4471,7 @@ class Nymph(Operator):
 			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			if self.trait_dmg and self.talent_dmg:
-				hitdmg = final_atk * np.fmax(1,-res)
+				hitdmg = final_atk * np.fmax(1,-res) /(1+self.buff_fragile)
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,2)
 		
 		extra_dmg = 0

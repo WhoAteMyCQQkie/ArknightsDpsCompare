@@ -199,6 +199,7 @@ class CivilightEterna(Healer):
 		final_atk = self.atk * (1 + self.buff_atk+atkbuff) + self.buff_atk_flat
 		trait_factor = self.talent1_params[5] * 6 / 8 + 1 * 2 / 8  #it's active for 6 seconds reactivated every 8 seconds
 		base_hps = final_atk * 0.1 * min(self.targets,targets) * trait_factor * min(1, 4 / self.targets) #not all operators benefit from trait factor
+		base_no_balls = final_atk * 0.1 * min(self.targets, targets)
 		dust_heal_scale = self.talent1_params[6] if self.module == 1 and self.module_lvl > 1 else 0
 		dust_heal = dust_heal_scale * final_atk / 12 * 3 / 2 * (1 + self.buff_fragile) * min(self.targets, 4)#12 second for a revolution, 3 orbs, only every second affects ops.
 		base_hps += dust_heal
@@ -208,6 +209,8 @@ class CivilightEterna(Healer):
 			dust_heal *=  min(self.targets, 8) / min(self.targets, 4)
 			skill_hps += dust_heal
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
+			skill_no_balls = final_atk * new_trait * min(self.targets,targets)
+			self.name += f" or **{int(skill_no_balls)}**/{int(base_no_balls)} w/o the balls"
 		if self.skill == 2:
 			skill_hps = final_atk * 0.1 * min(self.targets,targets)
 			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
@@ -218,8 +221,11 @@ class CivilightEterna(Healer):
 			skill_hps = final_atk * new_trait * min(self.targets,targets) * trait_factor
 			dust_heal *= min(self.targets, targets) / min(self.targets, 4)
 			skill_hps += dust_heal
+			skill_no_balls =  final_atk * new_trait * min(self.targets,targets)
 			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+			avg_no_balls = (skill_no_balls * self.skill_duration + base_no_balls * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			self.name += f" or **{int(skill_no_balls)}**/{int(base_no_balls)}/*{int(avg_no_balls)}* w/o the balls"
 		return self.name
 
 class Doc(Healer):
