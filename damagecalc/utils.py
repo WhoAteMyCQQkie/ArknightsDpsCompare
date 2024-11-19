@@ -515,7 +515,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			try:
 				essential_prompt = args[i-1] in ["maxdef","limit","range","scale","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense",
 									 "fixeddefense","setdef","setdefense","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance",
-									 "set","fix","fixed","chapter","chapter2","enemy","enemy2"]
+									 "set","fix","fixed","chapter","chapter2","enemy","enemy2","stage","stage2"]
 			except:
 				essential_prompt = False
 			if x > 3 and x < 90 and not essential_prompt:
@@ -579,13 +579,13 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				i+=1
 			except ValueError:
 				pass
-		elif args[i] in ["enemy","chapter"]:
+		elif args[i] in ["enemy","chapter","stage"]:
 			if len(get_enemies(args[i+1])) > 2:
 				pps.graph_type = 5
 				pps.enemies = get_enemies(args[i+1])
 				pps.enemies.sort(key=lambda tup: tup[2], reverse=False)
 				i += 1
-		elif args[i] in ["enemy2","chapter2"]:
+		elif args[i] in ["enemy2","chapter2","stage2"]:
 			if len(get_enemies(args[i+1])) > 2:
 				pps.graph_type = 5
 				pps.enemies = get_enemies(args[i+1])

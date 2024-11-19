@@ -300,11 +300,11 @@ def dps_command(args: List[str])-> DiscordSendable:
 		fig = plt.gcf()
 		axes = [None] * len(enemies)
 		for i,ax in enumerate(axes):
-			ph = len(enemies)-0.5
+			ph = len(enemies)-1
 			mim_size = max(ph,12)
+			offset = 0.2 if ph < 12 else 0.4
 			img = np.asarray(Image.open('Database/images/' + enemies[i][0] + '.png'))
-			#ax = fig.add_axes([1/(len(enemies)+1)*(i+0.67), 0, 0.1, 0.1])
-			if plot_size ==4: ax = fig.add_axes([0.4*xl+1.174*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
+			if plot_size == 4: ax = fig.add_axes([offset*xl+1.1*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
 			else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
 			ax.axison = False
 			ax.imshow(img)
