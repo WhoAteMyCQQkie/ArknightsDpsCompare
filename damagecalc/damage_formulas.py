@@ -244,6 +244,8 @@ class Operator:
 		if self.buff_fragile > 0: self.buff_name += f" dmg+{int(100*self.buff_fragile)}%"
 		elif self.buff_fragile < 0: self.buff_name += f" dmg{int(100*self.buff_fragile)}%"
 
+		if self.sp_boost > 0: self.buff_name += f" +{self.sp_boost}SP/s"
+
 		if params.shred[0] != 1: self.buff_name += f" -{int(100*(1-params.shred[0])+0.0001)}%def" 
 		if params.shred[1] != 0: self.buff_name += f" -{int(params.shred[1])}def"
 		if params.shred[2] != 1: self.buff_name += f" -{int(100*(1-params.shred[2])+0.0001)}%res"
@@ -983,7 +985,6 @@ class Blemishine(Operator):
 		if self.elite > 0:
 			if self.talent2_dmg: self.name += " vsSleep"
 			else: self.name += " w/o sleep"
-		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = 0
@@ -2332,6 +2333,35 @@ class Frost(Operator):
 			dps += hitdmg_mine/hitrate
 		return dps
 
+class Frostleaf(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Frostleaf",pp,[1,2],[1],1,6,1) #available skills, available modules, default skill, def pot, def mod
+		if not self.trait_dmg: self.name += " rangedAtk"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		atk_scale = 0.8 if not self.trait_dmg else 1
+		atk_interval = self.atk_interval if self.elite < 2 else self.atk_interval + 0.15
+		extra_arts_scale = 0.1 if self.module == 1 else 0
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+		hitdmgarts = np.fmax(final_atk * extra_arts_scale * (1-res/100), final_atk * extra_arts_scale * 0.05)
+
+		if self.skill == 1:
+			skill_scale = self.skill_params[2]
+			skilldmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/(self.attack_speed/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avghit = skilldmg
+			if atks_per_skillactivation > 1:
+				avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)	
+			dps = (avghit+hitdmgarts)/atk_interval * self.attack_speed/100
+		if self.skill == 2:
+			aspd = self.skill_params[1]
+			dps = (hitdmg+hitdmgarts) / atk_interval * (self.attack_speed + aspd) / 100
+		return dps
+
 class Fuze(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Fuze",pp,[1,2],[2],1,6,2)
@@ -2743,7 +2773,6 @@ class Horn(Operator):
 		if self.module_dmg and self.module == 1: self.name += " blockedTarget"
 		if self.module_dmg and self.module == 2: self.name += " rangedAtk"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
-		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"
 			
 	def skill_dps(self, defense, res):
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
@@ -4656,8 +4685,7 @@ class Pepe(Operator):
 		super().__init__("Pepe",pp,[1,2,3],[],3,1,0)
 		self.try_kwargs(4,["stacks","maxstacks","max","nostacks"],**kwargs)
 		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
-		if self.targets > 1: self.name += f" {self.targets}targets"
-		if self.skill == 1 and self.sp_boost > 0: self.name += f" +{self.sp_boost}SP/s"		
+		if self.targets > 1: self.name += f" {self.targets}targets"	
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[0]
@@ -6811,7 +6839,7 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
 		"ebenholz": Ebenholz, "ela": Ela, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "figurino": Figurino, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
-		"franka": Franka, "frost": Frost, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
+		"franka": Franka, "frost": Frost, "frostleaf": Frostleaf, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
 		"jackie": Jackie, "jaye": Jaye, "jessica": Jessica, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, "justiceknight": JusticeKnight,
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
@@ -6823,6 +6851,6 @@ op_dict = {"12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddro
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "utage": Utage, "vanilla": Vanilla, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
-operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
+operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Saga","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","TexasAlter","Tequila","TerraResearchCommission","Thorns","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Utage","Vanilla","Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
