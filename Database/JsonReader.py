@@ -74,11 +74,11 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
 		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3', 'Shu': 'char_2025_shu',
 		   'VinaVictoria': 'char_1019_siege2','Contrail': 'char_4165_ctrail','Vulpisfoglia':'char_4026_vulpis','LapplandAlter':'char_1038_whitw2','Crownslayer':'char_1502_crosly',
-		   'Philae':'char_4148_philae','Figurino':'char_4155_talr','Bobbing':'char_487_bobb', 'Catherine':'char_4162_cathy'} 
+		   'Philae':'char_4148_philae','Figurino':'char_4155_talr','Bobbing':'char_487_bobb', 'Catherine':'char_4162_cathy', 'Raidian': 'char_614_acsupo'} 
 
 
 def fileHelper():
-	available_ops = ["504", "514", "507", "506", "505", "4025"]
+	available_ops = ["504", "514", "507", "506", "505", "4025", "512"]
 	for key in id_dict.keys():
 		number = id_dict[key][5:8]
 		if id_dict[key][8].isnumeric():
