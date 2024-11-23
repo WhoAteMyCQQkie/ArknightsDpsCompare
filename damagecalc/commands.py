@@ -313,6 +313,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	fig = plt.gcf()
 	fig.set_size_inches(2 * plot_size, plot_size)
 	plt.tight_layout()
+	if graph_type == 5: plt.subplots_adjust(bottom=1.7/max(12,len(enemies)))
 	
 	#Generate image and send it to the channel
 	buf = io.BytesIO()
