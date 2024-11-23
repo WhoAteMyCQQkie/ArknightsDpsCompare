@@ -104,7 +104,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mon3tr"]:
+					if name in ["Kaltsit","Phantom","Mon3tr","Rosmontis"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -5255,7 +5255,7 @@ class Rosa(Operator):
 
 class Rosmontis(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Rosmontis",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Rosmontis",pp,[1,2,3],[1,3],3,1,1)
 		self.try_kwargs(4,["pillar","pillarshred","pillardefshred","nopillardefshred","nopillarshred","nopillar"],**kwargs)
 		if self.skill == 3 and self.skill_dmg: self.name += " withPillarDefshred"
 		if self.skill == 3 and self.targets > 1: self.name += " TargetsOverlap"
@@ -5267,6 +5267,7 @@ class Rosmontis(Operator):
 	
 	def skill_dps(self, defense, res):
 		bonushits = 2 if self.module == 1 else 1
+		bonusart = 1 if self.module == 3 else 0
 		defshred = self.talent1_params[0] if self.elite > 0 else 0
 		newdef = np.fmax(0, defense - defshred)
 	
@@ -5275,6 +5276,7 @@ class Rosmontis(Operator):
 			final_atk = self.atk * (1 + self.buff_atk + self.talent2_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk  * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk * 0.5 * 0.05) * bonushits
+			bonushitdmg += np.fmax(final_atk * (1-res/100), final_atk * 0.05) * bonusart
 			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avghit = ((sp_cost + 1) * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1)
@@ -5285,6 +5287,7 @@ class Rosmontis(Operator):
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[1] + self.talent2_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk * 0.5 * 0.05) * bonushits
+			bonushitdmg += np.fmax(final_atk * (1-res/100), final_atk * 0.05) * bonusart
 			dps = (hitdmg+ bonushitdmg)/self.atk_interval * self.attack_speed/100 * self.targets
 		if self.skill == 3:
 			self.atk_interval = 1.05
@@ -5300,6 +5303,7 @@ class Rosmontis(Operator):
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[1] + self.talent2_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk * 0.5 * 0.05) * bonushits
+			bonushitdmg += np.fmax(final_atk * (1-res/100), final_atk * 0.05) * bonusart
 			dps = (hitdmg+ bonushitdmg)/self.atk_interval * self.attack_speed/100 * self.targets * min(self.targets,2)
 		return dps
 	
