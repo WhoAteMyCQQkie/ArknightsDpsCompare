@@ -580,13 +580,13 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 			except ValueError:
 				pass
 		elif args[i] in ["enemy","chapter","stage"]:
-			if len(get_enemies(args[i+1])) > 2:
+			if len(get_enemies(args[i+1])) > 1:
 				pps.graph_type = 5
 				pps.enemies = get_enemies(args[i+1])
 				pps.enemies.sort(key=lambda tup: tup[2], reverse=False)
 				i += 1
 		elif args[i] in ["enemy2","chapter2","stage2"]:
-			if len(get_enemies(args[i+1])) > 2:
+			if len(get_enemies(args[i+1])) > 1:
 				pps.graph_type = 5
 				pps.enemies = get_enemies(args[i+1])
 				pps.enemies.sort(key=lambda tup: tup[3], reverse=False)
