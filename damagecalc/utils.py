@@ -125,7 +125,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 	 #make sure to reset the parameters of the global parameter set
 	previous_arg = " "
 	for arg in args:
-		if arg in ["s1","s2","s3"]:
+		if arg in ["s0","s1","s2","s3"]:
 			pps.skills = {-1}
 		elif arg in ["e0","e1","e2"]:
 			pps.promotions = {-1}
@@ -155,7 +155,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 	while i < entries:
 		if args[i] in ["maxdef","limit","range","scale","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance"]:
 			i += 1
-		elif args[i] in ["s1","s2","s3"]: 
+		elif args[i] in ["s0","s1","s2","s3"]: 
 			pps.skills.add(int(args[i][1]))
 			pps.skills.discard(-1)
 		elif args[i] in ["e0","e1","e2"]: 
