@@ -448,7 +448,7 @@ class StageData:
 			adverse = stage_data["stages"][key]["diffGroup"] == "TOUGH"
 			code = stage_data["stages"][key]["code"]
 			if code.startswith("?"): continue
-			if challenge_mode or adverse: code += "-CM"
+			if challenge_mode or adverse and not (code[0] == "H" and code[1].isnumeric()): code += "-CM"
 			if code[0] not in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ":
 				if stage_data["stages"][key]["apCost"] in [20,25]: 
 					code = f"ANNI-{annihilation_counter}"

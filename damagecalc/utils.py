@@ -129,7 +129,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.skills = {-1}
 		elif arg in ["e0","e1","e2"]:
 			pps.promotions = {-1}
-		elif arg in ["p1","p2","p3","p4","p5","p6","pot1","pot2","pot3","pot4","pot5","pot6"]:
+		elif arg in ["p0","p1","p2","p3","p4","p5","p6","pot0","pot1","pot2","pot3","pot4","pot5","pot6"]:
 			pps.pots = {-1}
 		elif arg in ["modlvl1","modlvl2","modlvl3","modlv1","modlv2","modlv3"]:
 			pps.module_lvls = {-1}
@@ -161,7 +161,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["e0","e1","e2"]: 
 			pps.promotions.add(int(args[i][1]))
 			pps.promotions.discard(-1)
-		elif args[i] in ["p1","p2","p3","p4","p5","p6","pot1","pot2","pot3","pot4","pot5","pot6"]: 
+		elif args[i] in ["p0","p1","p2","p3","p4","p5","p6","pot0","pot1","pot2","pot3","pot4","pot5","pot6"]: 
 			pps.pots.add(int(args[i][-1]))
 			pps.pots.discard(-1)
 		elif args[i] in ["1","2","3"]: 
@@ -218,7 +218,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			if args[i][-1] == "%": args[i] = args[i][:-1]
 			while i < entries and buffcount < 4:
 				try:
-					pps.buffs[buffcount] = int(args[i])
+					pps.buffs[buffcount] = float(args[i])
 					buffcount +=1
 				except ValueError:
 					break
@@ -264,7 +264,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			if args[i][-1] == "%": args[i] = args[i][:-1]
 			while i < entries:
 				try:
-					pps.buffs[3] = int(args[i])
+					pps.buffs[3] = float(args[i])
 				except ValueError:
 					break
 				i+=1
@@ -518,7 +518,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 									 "set","fix","fixed","chapter","chapter2","enemy","enemy2","stage","stage2"]
 			except:
 				essential_prompt = False
-			if x > 3 and x < 90 and not essential_prompt:
+			if x > 3 and x < 91 and not essential_prompt:
 				pps.levels.add(x)
 				pps.levels.discard(-1)
 			else:
