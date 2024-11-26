@@ -1520,7 +1520,7 @@ class Degenbrecher(Operator):
 		atk_scale = self.talent1_params[1] if self.elite > 0 else 1
 			
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * 2
 			hitdmg_crit = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05) * 2
@@ -1532,8 +1532,9 @@ class Degenbrecher(Operator):
 			relevant_attack_count = int(5/(self.atk_interval / self.attack_speed * 100)) * 2 #tremble lasts 5 seconds
 			chance_that_no_crit_occured = (1-crate) ** relevant_attack_count
 			avghit = hitdmg_crit * crate + hitdmg * (1-crate) * chance_that_no_crit_occured + hitdmg_tremble * (1-crate) * (1 - chance_that_no_crit_occured)
-			avgskill = skilldmg_crit * crate + skilldmg * (1-crate) * chance_that_no_crit_occured + skilldmg_tremble * (1-crate) * (1 - chance_that_no_crit_occured)
-			average = (self.skill_cost * avghit + avgskill * min(self.targets,self.skill_params[1]))/(self.skill_cost + 1)
+			avgskill = skilldmg_crit * crate + skilldmg * (1-crate) * chance_that_no_crit_occured + skilldmg_tremble * (1-crate) * (1 - chance_that_no_crit_occured) * min(self.targets,self.skill_params[1])
+			if self.skill == 0: avgskill = avghit
+			average = (self.skill_cost * avghit + avgskill)/(self.skill_cost + 1)
 			dps = average/self.atk_interval * self.attack_speed/100
 
 		if self.skill == 3:
@@ -1551,17 +1552,17 @@ class Diamante(Operator):
 			if self.talent_dmg and self.skill_dmg: self.name += " vsFallout(800dpsNotIncluded)"
 			else: self.name += " noNecrosis"
 			if self.targets > 1: self.name += f" {self.targets}targets"
-		else:
+		elif self.skill == 1:
 			if not self.trait_dmg: self.name += " noNecrosis"
 			elif not self.talent_dmg and not self.skill_dmg: self.name += " avgNecrosis(vsBoss)"
 			elif self.talent_dmg ^ self.skill_dmg: self.name += " avgNecrosis(nonBoss)"
 			else: self.name += " vsFallout(800dpsNotIncluded)"
 	
 	def skill_dps(self, defense, res):
-		if self.skill == 2:
-			atkbuff = self.talent1_params[0] if self.talent_dmg and self.skill_dmg else 0
+		if self.skill in [0,2]:
+			atkbuff = self.talent1_params[0] if self.talent_dmg and self.skill_dmg and self.skill == 2 else 0
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			skill_scale = self.skill_params[1] if self.talent_dmg and self.skill_dmg else 0
+			skill_scale = self.skill_params[1] if self.talent_dmg and self.skill_dmg and self.skill == 2 else 0
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			eledmg =  np.fmax(final_atk * 0 * (1-res/100), final_atk * skill_scale) /(1+self.buff_fragile)
 			dps = (hitdmg+eledmg) / self.atk_interval * (self.attack_speed + self.skill_params[0]) / 100 * min(self.targets,2)
@@ -1601,13 +1602,14 @@ class Dobermann(Operator):
 		if self.module == 2 and self.talent_dmg and self.module_lvl > 1: aspd = 5 * self.module_lvl
 		atk_scale = 1.2 if self.trait_dmg else 1
 
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]			
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
+			if self.skill == 0: avgphys = hitdmg
 			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
@@ -1623,7 +1625,7 @@ class Doc(Operator):
 	def skill_dps(self, defense, res):
 		atk_scale = 1.2 if self.trait_dmg else 1
 		newdef = np.fmax(0, defense-self.talent1_params[1])
-		atk_interval = self.atk_interval + self.skill_params[3]
+		atk_interval = self.atk_interval + self.skill_params[3] * self.skill
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 		dps = hitdmg/atk_interval * self.attack_speed/100
@@ -1632,7 +1634,7 @@ class Doc(Operator):
 class Dorothy(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Dorothy",pp,[1,2,3],[2],3,1,2)
-		if not self.trait_dmg: self.name += " noMines"
+		if not self.trait_dmg or self.skill == 0: self.name += " noMines"
 		else:
 			if not self.talent_dmg: self.name += " 1MinePerSPcost"
 			else: self.name += " 1MinePer5s"
@@ -1645,7 +1647,7 @@ class Dorothy(Operator):
 		cdmg = 1.2 if self.module == 2 else 1
 		sp_cost = max(self.skill_cost / (1+ self.sp_boost),5)
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-		mine_scale = self.skill_params[1] if self.trait_dmg else 0
+		mine_scale = self.skill_params[1] if self.trait_dmg and self.skill > 0 else 0
 
 		if self.skill == 1:
 			defshred = 1 + self.skill_params[2]
@@ -1655,7 +1657,7 @@ class Dorothy(Operator):
 			elif not self.talent_dmg:
 				defshred = 1 + 5 / sp_cost * self.skill_params[2]  #include uptime of the debuff for auto attacks
 			hitdmg = np.fmax(final_atk - defense * defshred, final_atk * 0.05)
-		if self.skill == 2:
+		if self.skill in [0,2]:
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgmine = np.fmax(final_atk * mine_scale - defense, final_atk * mine_scale * 0.05) * cdmg
 		if self.skill == 3:
@@ -1681,8 +1683,8 @@ class Durnar(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
-		final_atk = self.atk * (1 + self.skill_params[0] + self.buff_atk + self.talent1_params[0]) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+		final_atk = self.atk * (1 + self.skill_params[0] * min(self.skill,1) + self.buff_atk + self.talent1_params[0]) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) if self.skill > 0 else np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg / self.atk_interval * self.attack_speed / 100
 		if self.skill == 2: dps *= min(self.targets,3)
 		return dps
@@ -1707,8 +1709,8 @@ class Dusk(Operator):
 		
 		atkbuff = self.talent1_params[0] * self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
 
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = (self.skill_params[0]-1) * self.skill + 1
 			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2 #lockout
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
