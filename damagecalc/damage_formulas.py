@@ -3134,8 +3134,8 @@ class Jessica(Operator):
 		aspd = max(self.talent1_params)
 		aspd += 8 if self.module == 2 and self.module_dmg else 1
 		atkbuff = (self.module_lvl-1) * 0.03 if self.module == 2 and self.module_lvl > 1 else 0
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmg_skill = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
@@ -3157,8 +3157,8 @@ class JessicaAlter(Operator):
 			self.name += f" GrenadeDmg:{int(nukedmg)}"
 
 	def skill_dps(self, defense, res):
-		if self.skill == 1:
-			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
+		if self.skill < 2:
+			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[1] * self.skill) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
@@ -3196,6 +3196,10 @@ class Kafka(Operator):#TODO: dmg numbers in the label
 	def skill_dps(self, defense, res):
 		if self.skill == 1: return res * 0
 		atkbuff = 0.1 if self.module_dmg and self.module == 2 else 0
+		if self.skill == 0:
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		atkbuff += self.talent1_params[0]
 		if self.skill == 2:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -3213,8 +3217,8 @@ class Kazemaru(Operator):
 			self.name += f" SummoningAoe:{int(damage)}"
 
 	def skill_dps(self, defense, res):
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
@@ -3237,10 +3241,11 @@ class Kirara(Operator):
 	
 	def skill_dps(self, defense, res):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]		
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale * (1 - res/100), final_atk * skill_scale * 0.05)
+			if self.skill == 0: skillhitdmg = hitdmg
 			sp_cost = self.skill_cost
 			avghit = ((sp_cost+1) * hitdmg + skillhitdmg) / (sp_cost + 1) * self.targets
 			dps = avghit/self.atk_interval * self.attack_speed/100
@@ -3273,11 +3278,10 @@ class Kjera(Operator):
 		atkbuff = 0
 		if self.elite > 0: atkbuff += self.talent1_params[2] if self.talent_dmg else self.talent1_params[0]		
 		
-		final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0] * min(self.skill, 1)) + self.buff_atk_flat
 		drone_atk = drone_dmg * final_atk
 		dmgperinterval = final_atk + drone_atk * self.skill
-
-		if self.skill == 1:
+		if self.skill < 2:
 			hitdmgarts = np.fmax(dmgperinterval *(1-res/100), dmgperinterval * 0.05)
 			dps = hitdmgarts/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
@@ -3291,6 +3295,7 @@ class Kjera(Operator):
 class Kroos(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Kroos",pp,[1],[],1,6,0)
+		self.name = self.name.replace("S0","S1")
 	
 	def skill_dps(self, defense, res):
 		crate = 0 if self.elite == 0 else self.talent1_params[0]
@@ -3321,7 +3326,7 @@ class KroosAlter(Operator):
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 		atkbuff = self.skill_params[0] if self.skill == 1 else 0
 		atk_interval = self.atk_interval * (1 + self.skill_params[0]) if self.skill == 2 else self.atk_interval
-		hits = 4 if self.skill == 2 and self.skill_dmg else 2
+		hits = 4 if self.skill == 2 and self.skill_dmg else 1 + min(self.skill, 1)
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * atk_scale -defense, final_atk * atk_scale * 0.05)
 		critdmg = np.fmax(final_atk * atk_scale * cdmg -defense, final_atk * atk_scale * cdmg * 0.05)
