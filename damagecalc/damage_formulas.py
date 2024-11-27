@@ -2042,10 +2042,10 @@ class FangAlter(Operator):
 				else:
 					avghit = (skillhit + int(atks_per_skillactivation ) * hitdmg) / (int(atks_per_skillactivation)+1)
 			dps = avghit/self.atk_interval * self.attack_speed/100
-		if self.skill == 2:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill in [0,2]:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * self.skill/2) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,(1+self.skill/2))
 		return dps
 
 class Fartooth(Operator):
@@ -2073,8 +2073,8 @@ class Fartooth(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100))
-		if self.skill == 2:
-			aspd += self.skill_params[0]
+		if self.skill in [0,2]:
+			aspd += self.skill_params[0] * self.skill/2
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100))
@@ -2113,8 +2113,8 @@ class Fiammetta(Operator):
 		elif self.talent_dmg:
 			atkbuff += self.talent1_params[-4] #lets hope this works lol
 
-		if self.skill == 1:
-			atkbuff += self.skill_params[0]
+		if self.skill < 2:
+			atkbuff += self.skill_params[0] * self.skill
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) * self.targets
@@ -2135,8 +2135,8 @@ class Figurino(Operator):
 	
 	def skill_dps(self, defense, res):
 		dmg_scale = self.talent1_params[0] if self.elite > 0 and self.talent_dmg else 1
-		if self.skill == 1:
-			atkbuff = self.skill_params[0]
+		if self.skill < 1:
+			atkbuff = self.skill_params[0] * self.skill
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * dmg_scale
 			dps = hitdmg / self.atk_interval * self.attack_speed / 100
@@ -2158,13 +2158,14 @@ class Firewhistle(Operator):
 		atkbuff = self.talent1_params[0] if self.talent_dmg else 0
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[2]
 			fire_scale = self.skill_params[1] * self.skill_params[0]
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			hitdmgskill = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 			hitdmgarts = np.fmax(final_atk * atk_scale * fire_scale * (1-res/100), final_atk * 0.05)
 			avgdmg = 3/4 * self.targets * hitdmg + 1/4 * hitdmgskill * self.targets + hitdmgarts / 4
+			if self.skill == 0: avgdmg = hitdmg
 			dps = avgdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
 			skill_scale = self.skill_params[1]
@@ -2181,12 +2182,13 @@ class Flamebringer(Operator):
 
 	def skill_dps(self, defense, res):
 		aspd = 30 if self.module == 2 and self.module_dmg else 0
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]	
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			avgphys = (self.skill_cost * hitdmg + skillhitdmg) / (self.skill_cost + 1)
+			if self.skill == 0: avgphys = hitdmg
 			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
@@ -2220,7 +2222,7 @@ class Flametail(Operator):
 			atkrate = 1/atk_interval * self.attack_speed/100
 			critrate = min(1, dodgerate/atkrate)
 			
-		if self.skill == 1:
+		if self.skill < 2:
 			final_atk = self.atk * (1+ self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * 2 * min(2, self.targets)
@@ -2245,12 +2247,13 @@ class Flint(Operator):
 		dmgscale = 1 if self.skill == 1 and not self.talent_dmg else self.talent1_params[0]
 		aspd = 10 if self.module == 1 and self.module_dmg else 0
 		
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]	
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			avgphys = (self.skill_cost * hitdmg + skillhitdmg) / (self.skill_cost + 1)
+			if self.skill == 0: avgphys = hitdmg
 			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
 			aspd += self.skill_params[1]
@@ -2265,12 +2268,12 @@ class Folinic(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
-		if self.elite < 1: return 0 * defense
 		if self.skill == 2:
 			skill_scale = self.skill_params[1]
 			final_atk = self.atk * (1+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100 * self.targets
+		else: return 0 * defense
 		return dps
 
 class Franka(Operator):
@@ -2281,11 +2284,11 @@ class Franka(Operator):
 	def skill_dps(self, defense, res):
 		atk_scale = 1.15 if self.module_dmg and self.module == 1 else 1
 		crate = self.talent1_params[0] if self.elite > 0 else 0
-		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * min(self.skill,1)) + self.buff_atk_flat
 		aspd = self.skill_params[1] if self.skill == 1 else 0
 		crate *= 2.5 if self.skill == 2 else 1
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk *atk_scale * 0.05)
-		critdmg = final_atk *atk_scale
+		critdmg = final_atk * atk_scale
 		avghit = crate * critdmg + (1-crate) * hitdmg	
 		dps = avghit/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
@@ -2293,7 +2296,7 @@ class Franka(Operator):
 class Frost(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Frost",pp,[1,2],[2],2,1,2)
-		if not self.trait_dmg: self.name += " noMines"   ##### keep the ones that apply
+		if not self.trait_dmg or self.skill == 0: self.name += " noMines"   ##### keep the ones that apply
 		else:
 			if not self.talent_dmg: self.name += " 1MinePerSPcost"
 			else: self.name += " 1MinePer5s"
@@ -2304,7 +2307,7 @@ class Frost(Operator):
 		newdef = np.fmax(0, defense - 40 * self.module_lvl) if self.module == 2 and self.module_lvl > 1 else defense
 		hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 		dps = hitdmg/self.atk_interval * self.attack_speed/100
-		if self.trait_dmg:
+		if self.trait_dmg and self.skill > 0:
 			critdmg = 1.2 if self.module == 2 else 1
 			mine_scale = self.skill_params[1] if self.skill == 1 else self.skill_params[4]
 			hitdmg_mine = np.fmax(final_atk * mine_scale - newdef, final_atk * mine_scale * 0.05) * critdmg
@@ -2318,7 +2321,6 @@ class Frostleaf(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Frostleaf",pp,[1,2],[1],1,6,1) #available skills, available modules, default skill, def pot, def mod
 		if not self.trait_dmg: self.name += " rangedAtk"
-		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 0.8 if not self.trait_dmg else 1
@@ -2338,8 +2340,8 @@ class Frostleaf(Operator):
 			if atks_per_skillactivation > 1:
 				avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)	
 			dps = (avghit+hitdmgarts)/atk_interval * self.attack_speed/100
-		if self.skill == 2:
-			aspd = self.skill_params[1]
+		if self.skill in [0,2]:
+			aspd = self.skill_params[1] * self.skill/2
 			dps = (hitdmg+hitdmgarts) / atk_interval * (self.attack_speed + aspd) / 100
 		return dps
 
