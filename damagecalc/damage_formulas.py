@@ -2378,7 +2378,7 @@ class GavialAlter(Operator):
 		atkbuff = self.talent1_params[0]
 		if self.talent_dmg and self.elite > 0: atkbuff += self.talent1_params[2] * min(self.targets,block)
 		
-		atkbuff += self.skill_params[0]
+		atkbuff += self.skill_params[0] * min(self.skill,1)
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		aspd = self.skill_params[1] if self.skill == 3 else 0
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
@@ -2397,15 +2397,15 @@ class Gladiia(Operator):
 		atk_scale = min(self.talent2_params) if self.elite == 2 and self.talent2_dmg else 1
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
-			avghit = skilldmg
-			if atks_per_skillactivation > 1:
+			avghit = skilldmg if self.skill == 1 else hitdmg
+			if atks_per_skillactivation > 1 and self.skill == 1:
 				if self.skill_params[2] > 1:
 					avghit = (skilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
 				else:
@@ -2440,7 +2440,7 @@ class Gnosis(Operator):
 		frozenres = np.fmax(0, res - 15)
 		
 		####the actual skills
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			sp_cost = self.skill_cost/(1+ self.sp_boost) + 1.2 #sp lockout
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
@@ -2448,6 +2448,7 @@ class Gnosis(Operator):
 			skilldmg1 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
 			skilldmg2 = np.fmax(final_atk * skill_scale * (1-frozenres/100), final_atk * skill_scale * 0.05)*(1+frozenfragile)/(1+self.buff_fragile)
 			skilldmg = skilldmg1 + skilldmg2
+			if self.skill == 0: skilldmg = hitdmg
 			atkcycle = self.atk_interval/((self.attack_speed)/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
@@ -2479,8 +2480,7 @@ class Goldenglow(Operator):
 		drones = 2
 		if not self.trait_dmg:
 			drone_dmg = 0.35 if self.module == 1 else 0.2
-		
-		atkbuff = self.skill_params[0]
+		atkbuff = self.skill_params[0] * min(self.skill,1)
 		if self.skill == 1:
 			aspd += self.skill_params[1]
 		if self.skill == 3:
@@ -2489,6 +2489,7 @@ class Goldenglow(Operator):
 		drone_atk = drone_dmg * final_atk
 		drone_explosion = final_atk * drone_explosion * self.targets
 		dmgperinterval = final_atk*(3-drones) + drones * drone_atk * (1-explosion_prob) + drones * drone_explosion * explosion_prob
+		if self.skill == 0: dmgperinterval = final_atk + drone_atk
 		hitdmgarts = np.fmax(dmgperinterval *(1-newres/100), dmgperinterval * 0.05)
 		dps = hitdmgarts/self.atk_interval*(self.attack_speed+aspd)/100
 		return dps
@@ -2538,13 +2539,13 @@ class GreyThroat(Operator):
 					avghit = (avgskill + int(atks_per_skillactivation) * avgnorm) / (int(atks_per_skillactivation) + 1)					
 			dps = avghit/self.atk_interval * (self.attack_speed+aspd)/100
 			
-		if self.skill == 2:
-			atkbuff = self.skill_params[0]
+		if self.skill in [0,2]:
+			atkbuff = self.skill_params[0] * self.skill/2
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk  * 0.05)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk  * cdmg * 0.05)
 			avgnorm = crate * critdmg + (1-crate) * hitdmg
-			dps = 3 * avgnorm/self.atk_interval * (self.attack_speed+aspd)/100
+			dps = (1 + self.skill) * avgnorm/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class Harmonie(Operator):
