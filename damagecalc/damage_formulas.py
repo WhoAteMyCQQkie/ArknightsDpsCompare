@@ -4406,15 +4406,15 @@ class Narantuya(Operator):
 			returndmg = np.fmax(final_atk * return_scale - defense, final_atk * return_scale * 0.05) * self.targets
 			interval = 1.15 if self.trait_dmg else 2
 			dps = (hitdmg+returndmg) / interval
-		if self.skill == 3:
-			skill_scale = self.skill_params[0]
-			aoe_scale = self.skill_params[1]
+		if self.skill in [0,3]:
+			skill_scale = self.skill_params[0] if self.skill == 3 else 1
+			aoe_scale = self.skill_params[1] if self.skill == 3 else 0
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat + stealbuff
-			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * max(self.skill,1)
 			aoedmg = np.fmax(final_atk * aoe_scale - defense, final_atk * aoe_scale * 0.05)
 			if not self.trait_dmg: aoedmg = 0
 			interval = 20/13.6 if not self.trait_dmg else (self.atk_interval/(self.attack_speed/100))
-			dps = 3 * hitdmg/interval + min(self.targets,3) * aoedmg/interval
+			dps = hitdmg/interval + min(self.targets,3) * aoedmg/interval
 		return dps
 
 class NearlAlter(Operator):
@@ -4428,7 +4428,7 @@ class NearlAlter(Operator):
 		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
 		aspd = 30 if self.module == 2 and self.module_dmg else 0
 		def_shred = self.talent2_params[0] if self.elite == 2 else 0
-		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * min(self.skill,1)) + self.buff_atk_flat
 		if self.skill == 1: aspd += self.skill_params[1]
 		hitdmg = np.fmax(final_atk * atk_scale - defense * (1 - def_shred), final_atk * atk_scale * 0.05)
 		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
@@ -4460,8 +4460,8 @@ class Nian(Operator):
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
 			dps = hitdmg * self.hits
-		if self.skill == 3:
-			atkbuff += self.skill_params[4]
+		if self.skill in [0,3]:
+			atkbuff += self.skill_params[4] if self.skill == 3 else 0
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -4499,14 +4499,14 @@ class Nymph(Operator):
 			skilldmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05) * self.targets
 			dps = hitdmg/self.atk_interval * self.attack_speed/100 + skilldmg/sp_cost
 		
-		if self.skill == 3:
-			atkbuff += self.skill_params[0]
-			aspd = self.skill_params[1]
+		if self.skill in [0,3]:
+			atkbuff += self.skill_params[0] if self.skill == 3 else 0
+			aspd = self.skill_params[1] if self.skill == 3 else 0
 			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			if self.trait_dmg and self.talent_dmg:
+			if self.trait_dmg and self.talent_dmg and self.skill == 3:
 				hitdmg = final_atk * np.fmax(1,-res) /(1+self.buff_fragile)
-			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,2)
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,1+self.skill/3)
 		
 		extra_dmg = 0
 		if self.talent_dmg and self.trait_dmg:
@@ -4525,8 +4525,8 @@ class Odda(Operator):
 
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			splashhitdmg = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
