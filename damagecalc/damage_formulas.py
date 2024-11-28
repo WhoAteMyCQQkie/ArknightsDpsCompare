@@ -3807,8 +3807,10 @@ class Magallan(Operator):
 		if self.module == 2 and self.module_lvl == 3:
 			if self.skill == 2: self.drone_atk += 40
 			if self.skill == 3: self.drone_atk += 50
+		if self.skill == 0: self.name = "MagallanNotYetImplemented"
 
 	def skill_dps(self, defense, res):
+		if self.skill == 0: return res * 0
 		drones = 2 if self.talent_dmg else 1
 		if not self.trait_dmg: drones = 0
 		bonusaspd = 3 if self.module == 2 and self.module_lvl == 3 else 0
@@ -3839,15 +3841,15 @@ class Manticore(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 
 	def skill_dps(self, defense, res):
-		if self.skill == 2: self.atk_interval = 5.2
+		atk_interval = 5.2 if self.skill == 2 else self.atk_interval
 		atkbuff_talent = self.talent1_params[1] if self.elite > 0 else 0
 		if self.module == 1 and self.module_lvl > 1: atkbuff_talent += 0.05 * (self.module_lvl -1)
 		if self.elite > 0:
-			if self.atk_interval/self.attack_speed*100 < self.talent1_params[0]: atkbuff_talent = 0
+			if atk_interval/self.attack_speed * 100 < self.talent1_params[0]: atkbuff_talent = 0
 		atkbuff = self.skill_params[1] if self.skill == 2 else 0
 		final_atk = self.atk * (1 + atkbuff + atkbuff_talent + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-		dps = hitdmg/self.atk_interval * self.attack_speed/100 * self.targets
+		dps = hitdmg/atk_interval * self.attack_speed/100 * self.targets
 		return dps
 
 class Marcille(Operator):
@@ -3867,8 +3869,8 @@ class Marcille(Operator):
 		atkbuff = self.talent1_params[5] if self.talent_dmg else 0
 		aspd = self.talent2_params[1] if self.talent2_dmg else 0
 
-		if self.skill == 1:
-			atkbuff += self.skill_params[3]
+		if self.skill < 2:
+			atkbuff += self.skill_params[3] if self.skill == 1 else 0
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * self.targets
@@ -3911,8 +3913,8 @@ class May(Operator):
 		atkbuff = min(self.talent1_params)
 		aspd = max(self.talent1_params)
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			hitdmg_skill = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
@@ -3930,7 +3932,7 @@ class Melantha(Operator):
 		super().__init__("Melantha",pp,[1],[],1,6,0)
 		
 	def skill_dps(self, defense, res):
-		final_atk = self.atk * (1 + self.buff_atk + self.talent1_params[0] + self.skill_params[0]) + self.buff_atk_flat
+		final_atk = self.atk * (1 + self.buff_atk + self.talent1_params[0] + self.skill_params[0]*self.skill) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
@@ -3945,10 +3947,10 @@ class Meteor(Operator):
 		atk_scale = 1.1 if self.module == 1 and self.talent_dmg else 1
 		talentscale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 			
-		if self.skill == 1:
+		if self.skill < 2:
 			sp_cost = self.skill_cost 
-			skill_scale = self.skill_params[0]
-			defshred = self.skill_params[1]
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
+			defshred = self.skill_params[1] if self.skill == 1 else 0
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmglow = np.fmax(final_atk * atk_scale * talentscale - defense, final_atk * atk_scale * talentscale * 0.05)
 			hitdmg = np.fmax(final_atk * atk_scale * talentscale - defense * (1+defshred), final_atk * atk_scale * talentscale * 0.05)
@@ -3972,8 +3974,8 @@ class Meteorite(Operator):
 		final_atk_crit = self.atk * (1 + self.buff_atk + 0.6) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 		hitcrit = np.fmax(final_atk_crit - newdef, final_atk_crit * 0.05)
-		skill_scale = self.skill_params[0]
-		if self.skill == 1:	
+		skill_scale = self.skill_params[0] if self.skill > 0 else 1
+		if self.skill < 2:	
 			skillhitdmg = np.fmax(final_atk * skill_scale - newdef, final_atk * skill_scale * 0.05)
 			skillcritdmg = np.fmax(final_atk_crit *skill_scale - newdef, final_atk_crit * skill_scale * 0.05)
 			sp_cost = self.skill_cost
@@ -3992,9 +3994,13 @@ class Midnight(Operator):
 		atk_scale = 1 if self.trait_dmg else 0.8
 		crate = self.talent1_params[0] if self.elite > 0 else 0
 		cdmg = self.talent1_params[1]
-		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-		critdmg = np.fmax(final_atk * cdmg * atk_scale * (1-res/100), final_atk * cdmg * atk_scale * 0.05)
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * self.skill) + self.buff_atk_flat
+		if self.skill == 1:
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * cdmg * atk_scale * (1-res/100), final_atk * cdmg * atk_scale * 0.05)
+		else:
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * cdmg * atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
 		avghit = crate * critdmg + (1-crate) * hitdmg
 		dps = avghit / self.atk_interval * self.attack_speed / 100
 		return dps
@@ -4009,11 +4015,11 @@ class Minimalist(Operator):
 		if not self.trait_dmg: drone_dmg = 0.2
 		crate = self.talent1_params[0] if self.elite > 0 else 0
 		cdmg = self.talent1_params[1]
-		if self.skill == 1:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill < 2:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * self.skill) + self.buff_atk_flat
 			dmgperinterval = final_atk + drone_dmg * final_atk
 			hitdmgarts = np.fmax(dmgperinterval * (1-res/100), dmgperinterval * 0.05) * (1 + crate*(cdmg-1))
-			dps = hitdmgarts/self.atk_interval * (self.attack_speed + self.skill_params[1]) / 100
+			dps = hitdmgarts/self.atk_interval * (self.attack_speed + self.skill_params[1] * self.skill) / 100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			skill_scale = self.skill_params[0]
@@ -4044,9 +4050,9 @@ class Mizuki(Operator):
 		bonustargets = self.talent1_params[1] if self.elite > 0 else 0
 		atkbuff = self.talent2_params[1] if self.talent2_dmg else 0
 
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
-			talent_scale = self.skill_params[1]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
+			talent_scale = self.skill_params[1] if self.skill == 1 else 1
 			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2 #sp lockout
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
@@ -4104,7 +4110,7 @@ class Mlynar(Operator):
 		stacks = 40
 		if not self.trait_dmg: stacks -= 10
 		atkbuff += stacks * 0.05
-		
+		if self.skill == 0: dps = res * 0
 		if self.skill == 1:
 			atk_scale *= self.skill_params[0]
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -4151,7 +4157,7 @@ class Mon3tr(Operator):
 		atkbuff = 0.25 * (self.module_lvl - 1) if self.module == 3 else 0
 			
 		####the actual skills
-		if self.skill == 1:
+		if self.skill < 2:
 			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
@@ -4180,7 +4186,7 @@ class Morgan(Operator):
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 0
 		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
-		skill_scale = max(self.skill_params[:2])
+		skill_scale = max(self.skill_params[:2]) if self.skill > 0 else 1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(skill_scale * final_atk * atk_scale - defense, skill_scale * final_atk * atk_scale * 0.05)
 		dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -4197,7 +4203,7 @@ class Mostima(Operator):
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			dps = np.fmax(final_atk  * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 		if self.skill != 2:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]*min(self.skill,1)) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmg / self.atk_interval * self.attack_speed / 100
 		return dps * self.targets
@@ -4228,12 +4234,12 @@ class Mountain(Operator):
 			avgskill = avgskill * min(self.targets,2)
 			avgdmg = (hits * avghit + avgskill) / (hits + 1)
 			dps = avgdmg/(self.atk_interval/((self.attack_speed + aspd)/100))
-		if self.skill == 2:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill in [0,2]:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]*self.skill/2) + self.buff_atk_flat
 			normalhitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			crithitdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
 			avgdmg = normalhitdmg * (1-crate) + crithitdmg * crate
-			dps = avgdmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * min(self.targets , 2)
+			dps = avgdmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * min(self.targets , (1+self.skill/2))
 		if self.skill == 3:
 			atk_interval = self.atk_interval * 1.7
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
@@ -4251,9 +4257,9 @@ class Mousse(Operator):
 	
 	def skill_dps(self, defense, res):
 		crate = self.talent1_params[0]
-		atkbuff = self.skill_params[0]
+		atkbuff = self.skill_params[0] * min(self.skill,1)
 		####the actual skills
-		if self.skill == 1:
+		if self.skill < 2:
 			sp_cost = self.skill_cost
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
@@ -4347,7 +4353,7 @@ class Muelsyse(Operator):
 		atk_scale = 1.5 if self.trait_dmg else 1
 		copy_factor = 1 if self.module == 1 and self.module_lvl == 3 else 0.5 + 0.2 * self.elite
 
-		atkbuff = self.skill_params[2] if self.skill == 1 else self.skill_params[1]
+		atkbuff = self.skill_params[2] if self.skill == 1 else self.skill_params[1] * min(self.skill,1)
 		aspd = self.skill_params[3] if self.skill == 1 else 0
 
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -4363,13 +4369,12 @@ class Muelsyse(Operator):
 		if self.cloned_op.ranged and self.talent_dmg: 
 			extra_summons += min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)))
 			extra_summons_skill =  min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)) * 2) if self.skill == 2 else min(4,2.5/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)))
+			if self.skill == 0: extra_summons_skill = extra_summons
 			extra_summons = (50 * extra_summons + 15 * extra_summons_skill) / 65
 			
 		if self.skill == 3 and self.cloned_op.ranged:
 			extra_summons = 4 if self.skill_dmg else 2
 			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100))
-		elif not self.skill_dmg:
-			extra_summons = 0
 		if self.skill == 2 and self.cloned_op.ranged:
 			dps += (main+extra_summons) * summondamage/(self.cloned_op.atk_interval/((self.attack_speed + aspd)/100)) * 2
 		elif self.skill != 3 or (self.skill == 3 and not self.cloned_op.ranged):
