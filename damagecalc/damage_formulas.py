@@ -3600,26 +3600,24 @@ class Ling(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Ling",pp,[1,2,3],[2],3,1,2)
 		if self.module == 2 and self.module_lvl ==3:
-			if self.skill == 3: self.drone_atk += 60
+			if self.skill in [0,3]: self.drone_atk += 60
 			if self.skill == 2: self.drone_atk += 35
 			if self.skill == 1: self.drone_atk += 45
 		if not self.trait_dmg: self.name += " noDragons"  
 		elif not self.talent_dmg: self.name += " 1Dragon"
 		else: self.name += " 2Dragons"
-		if self.skill == 3 and self.trait_dmg:
+		if self.skill in [0,3] and self.trait_dmg:
 			if self.skill_dmg: self.name += "(Chonker)"
 			else: self.name += "(small)"			
 		if not self.talent2_dmg and self.elite == 2: self.name += " noTalent2Stacks"
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets"
-		if self.skill == 0: self.name = "LingNotYetImplemented"			
+		if self.skill == 0: self.name = self.name.replace("S0","S0(S3)")			
 	
 	def skill_dps(self, defense, res):
 		talentbuff = self.talent2_params[0] * self.talent2_params[2] if self.talent2_dmg else 0
 		dragons = 2 if self.talent_dmg else 1
 		if not self.trait_dmg: dragons = 0
-		if self.skill == 0: return res * 0
 
-		####the actual skills
 		if self.skill == 1:
 			atkbuff = self.skill_params[0]
 			aspd = self.skill_params[1]
@@ -3641,8 +3639,8 @@ class Ling(Operator):
 			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
 			dpsskill = (skilldmg + dragons * skilldmgdrag) * min(self.targets,2) / sp_cost			
 			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgdrag/(self.drone_atk_interval/(self.attack_speed/100)) * dragons + dpsskill
-		if self.skill == 3:
-			atkbuff = self.skill_params[0]
+		if self.skill in [0,3]:
+			atkbuff = self.skill_params[0] * self.skill/3
 			final_atk = self.atk * (1 + atkbuff + talentbuff + self.buff_atk) + self.buff_atk_flat
 			chonkerbuff = 0.8 if self.skill_dmg else 0
 			final_dragon = self.drone_atk * (1+atkbuff + self.buff_atk + chonkerbuff) + self.buff_atk_flat
@@ -3654,6 +3652,10 @@ class Ling(Operator):
 			
 			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgdrag/(dragoninterval/(self.attack_speed/100)) * dragons + skilldmg * 2 * dragons * self.targets
 		return dps
+	
+	def avg_dps(self, defense, res):
+		if self.skill == 3: return super().avg_dps(defense, res)
+		else: return self.skill_dps(defense,res)
 
 class Logos(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -3812,11 +3814,10 @@ class Magallan(Operator):
 		if self.targets > 1 and self.trait_dmg and self.skill != 1: self.name += f" {self.targets}targets"
 		if self.module == 2 and self.module_lvl == 3:
 			if self.skill == 2: self.drone_atk += 40
-			if self.skill == 3: self.drone_atk += 50
-		if self.skill == 0: self.name = "MagallanNotYetImplemented"
+			if self.skill in [0,3]: self.drone_atk += 50
+		if self.skill == 0: self.name = self.name.replace("S0","S0(S3)")
 
 	def skill_dps(self, defense, res):
-		if self.skill == 0: return res * 0
 		drones = 2 if self.talent_dmg else 1
 		if not self.trait_dmg: drones = 0
 		bonusaspd = 3 if self.module == 2 and self.module_lvl == 3 else 0
@@ -3833,9 +3834,9 @@ class Magallan(Operator):
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgdrone = np.fmax(final_drone * (1-res/100), final_drone * 0.05)
 			dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100 + hitdmgdrone/self.drone_atk_interval* (self.attack_speed+aspd+bonusaspd)/100 * drones * self.targets
-		if self.skill == 3:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
-			final_drone = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill in [0,3]:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]*self.skill/3) + self.buff_atk_flat
+			final_drone = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]*self.skill/3) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100 + hitdmgdrone/self.drone_atk_interval* (self.attack_speed+bonusaspd)/100 * drones * self.targets
