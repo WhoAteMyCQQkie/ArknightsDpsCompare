@@ -5835,12 +5835,15 @@ class Tachanka(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Tachanka",pp,[1,2],[1],2,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 1 and not self.skill_dmg: " outsideBurnZone"
+		if self.skill == 1: self.skill_duration = 6
 		if self.skill == 1 and self.targets > 1: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
 		dmg_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-
+		if self.skill == 0:
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = 2 * hitdmg / self.atk_interval * self.attack_speed /100
 		if self.skill == 1:
 			skill_scale = self.skill_params[1]
 			newdef = np.fmax(0,defense - self.skill_params[2]) if self.skill_dmg else defense
@@ -5861,7 +5864,7 @@ class TexasAlter(Operator):
 		if self.talent2_dmg and self.elite == 2: self.name += " preKill"
 		if self.module == 2 and not self.module_dmg: self.name += " adjacentAlly"
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets" ######when op has aoe
-		if self.skill != 1:
+		if self.skill > 1:
 			atkbuff = self.talent1_params[0]
 			atkbuff += self.skill_params[0] if self.skill == 2 else 0
 			if self.module == 2 and self.module_dmg: atkbuff += 0.1
@@ -5871,15 +5874,16 @@ class TexasAlter(Operator):
 			self.name += f" InitialAoe:{int(nukedmg)}"
 
 	def skill_dps(self, defense, res):
-		aspd = self.talent2_params[0] if self.elite == 2 else 0
+		aspd = self.talent2_params[0] if self.elite == 2 and self.talent2_dmg else 0
 		atkbuff = self.talent1_params[0] if self.elite > 0 else 0
 		atkbuff += self.skill_params[0] if self.skill != 3 else 0
+		if self.skill == 0: atkbuff = 0
 		if self.module == 2 and not self.module_dmg: atkbuff += 0.1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		
-		if self.skill == 1:
+		if self.skill < 2:
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			artsdmg = self.skill_params[2]
+			artsdmg = self.skill_params[2] if self.skill == 1 else 0
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 + np.fmax(artsdmg *(1-res/100), artsdmg * 0.05)
 		if self.skill == 2:
 			newres = res *(1+self.skill_params[1])
@@ -5901,10 +5905,19 @@ class Tequila(Operator):
 		else: self.name += " 40stacks"
 		if self.skill == 2 and not self.skill_dmg: self.name += " NotCharged"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.hits > 0: self.name += f" {round(self.hits,2)}hits/s"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = 2 if self.trait_dmg else 1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 0:
+			if self.hits == 0 or self.elite == 0: return res * 0
+			else:
+				dps = self.hits * np.fmax(final_atk * self.talent1_params[0] *(1-res/100), final_atk * self.talent1_params[0] * 0.05)
 		if self.skill == 1:
 			atk_scale = self.skill_params[1]
 			aspd = self.skill_params[0]
@@ -5954,9 +5967,9 @@ class Thorns(Operator):
 		stacks = self.talent1_params[3] if self.module == 1 and self.module_lvl > 1 else 1
 		arts_dot_dps = np.fmax(arts_dot *(1-res/100) , arts_dot * 0.05) * stacks
 		
-		if self.skill == 1:
+		if self.skill < 2:
 			atk_scale = 1 if self.trait_dmg else 0.8
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * self.skill) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmg + bonusdmg)/self.atk_interval * self.attack_speed/100 + arts_dot_dps
@@ -5995,6 +6008,7 @@ class TinMan(Operator):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_bonus * self.targets
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		if self.skill == 0: return hitdmg/self.atk_interval * self.attack_speed/100
 		
 		if self.skill == 1:
 			sp_cost = self.skill_cost
@@ -6015,20 +6029,21 @@ class Toddifons(Operator):
 	def skill_dps(self, defense, res):
 		atk_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 		if self.module == 1 and self.module_dmg: atk_scale *= 1.15
-			
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		if self.skill == 0:
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			newdef = defense * (1 + self.skill_params[1])
 			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - newdef, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
-			self.atk_interval = 3.12
 			skill_scale = self.skill_params[1]
 			skill_scale2 = self.skill_params[2]
 			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			hitdmg2 = np.fmax(final_atk * skill_scale2 * atk_scale - defense, final_atk * skill_scale2 * atk_scale * 0.05) * self.targets
-			dps = (hitdmg+hitdmg2)/self.atk_interval * self.attack_speed/100
+			dps = (hitdmg+hitdmg2)/3.12 * self.attack_speed/100
 		return dps
 
 class Tomimi(Operator):
@@ -6037,9 +6052,12 @@ class Tomimi(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 				
 	def skill_dps(self, defense, res):
-		atkbuff = self.talent1_params[0]
+		atkbuff = self.talent1_params[0] if self.skill > 0 else 0
 		final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		if self.skill == 0:
+			hitdmg = np.fmax(final_atk * (1 - res/100), final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			dps = hitdmg/self.atk_interval * (self.attack_speed + self.skill_params[0]) / 100
 		if self.skill == 2:
@@ -6061,24 +6079,17 @@ class Totter(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 				
 	def skill_dps(self, defense, res):
-		atkbuff = 0
-		atk_scale = 1
-		#talent/module buffs
-		if self.talent_dmg:
-			atkbuff += self.talent1_params[0]
-
-		if self.module == 1 and self.module_dmg:
-			atk_scale = 1.1
+		atkbuff = self.talent1_params[0] if self.talent_dmg  else 0
+		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 			
-		####the actual skills
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05) * min(self.targets,2)
+			if self.skill == 0: skillhitdmg = hitdmg
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
-			
 			dps = avgphys/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
 			aspd = self.skill_params[0]
@@ -6102,9 +6113,7 @@ class Typhon(Operator):
 				elif self.skill == 2:
 					if self.targets == 1: self.name += " 1/2Crits"
 					else: self.name += " allCrits"
-				elif self.skill == 1:
-					self.name += " allCrits"
-		
+				else: self.name += " allCrits"
 		if self.module_dmg and self.module == 1: self.name += " vsHeavy"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 				
@@ -6113,9 +6122,9 @@ class Typhon(Operator):
 		crit_scale = self.talent2_params[0] if self.talent2_dmg and self.elite == 2 else 1
 		def_ignore = 0 if self.elite == 0 else 5 * self.talent1_params[1]
 
-		if self.skill == 1:
-			atkbuff = self.skill_params[0]
-			aspd = self.skill_params[1]
+		if self.skill < 2:
+			atkbuff = self.skill_params[0] * self.skill
+			aspd = self.skill_params[1] * self.skill
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat	
 			hitdmg = np.fmax(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)		
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
@@ -6164,8 +6173,8 @@ class Ulpianus(Operator):
 	def skill_dps(self, defense, res):
 		bonus_base = self.talent2_params[0] * self.talent2_params[2] if self.talent2_dmg and self.elite == 2 else 0
 			
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			sp_cost = self.skill_cost
 			final_atk = (self.atk + bonus_base) * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
@@ -6193,7 +6202,7 @@ class Ulpianus(Operator):
 class Utage(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Utage",pp,[1,2],[1],2,6,1)
-		if self.skill == 2:
+		if self.skill != 1:
 			if self.talent_dmg: self.name += " lowHP"
 			else: self.name += " fullHP"
 
@@ -6201,6 +6210,10 @@ class Utage(Operator):
 		if self.skill == 1: return 0 * res
 		aspd = self.talent1_params[0] if self.talent_dmg else 0
 		atkbuff = 0.01 + 0.01 * self.module_lvl if self.module == 1 and self.module_lvl > 1 and self.talent_dmg else 0
+		if self.skill == 0:
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)

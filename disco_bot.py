@@ -17,6 +17,7 @@
 # ray: s1 killshots refunding ammo improves the actual ooa dps
 # kafka: hitdmg numbers in the label
 # double check ebenholz dps, it's just weird to calc
+# skill 0 for tequila and mlynar
 
 #TODO: bigger changes that may be complicated or even unrealistic
 # s123 prompt
