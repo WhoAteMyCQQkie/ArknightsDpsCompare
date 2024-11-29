@@ -5320,7 +5320,7 @@ class Saga(Operator):
 	def skill_dps(self, defense, res):
 		atkbuff = 0.08 if self.module_dmg and self.module == 1 else 0
 		dmg = self.module_lvl * 0.05 if self.module == 1 and self.module_lvl > 1 else 0
-		if self.skill == 1:
+		if self.skill < 2:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -5350,12 +5350,11 @@ class Savage(Operator):
 		atk_scale = 1.1 if self.module == 1 and self.module_dmg else 1
 		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
 		targets = 3 if self.elite == 2 else 2
-
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			hitdmg_skill = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmg_skill = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
 			avghit = (hitdmg * self.skill_cost + hitdmg_skill)/(self.skill_cost + 1)
 			dps = avghit / self.atk_interval * self.attack_speed/100 * min(self.targets, targets)
 		return dps
@@ -5388,7 +5387,7 @@ class Scene(Operator):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 		dps =  hitdmg/self.atk_interval * self.attack_speed/100
-		final_atk_drone = self.drone_atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		final_atk_drone = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] * min(self.skill,1)) + self.buff_atk_flat
 		hitdmgdrone = np.fmax(final_atk_drone - defense , final_atk_drone * 0.05)
 		dps += hitdmgdrone/self.drone_atk_interval * self.attack_speed/100 * drones
 		return dps
@@ -5424,7 +5423,7 @@ class Schwarz(Operator):
 			atk_scale = 1.05
 
 		####the actual skills
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			crate2 = self.skill_params[1]
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat		
@@ -5438,7 +5437,7 @@ class Schwarz(Operator):
 			avgskill = crate2 * skillcrit + (1-crate2) * skilldmg
 			
 			sp_cost = self.skill_cost
-			avgphys = (sp_cost * avghit + avgskill) / (sp_cost + 1)
+			avgphys = (sp_cost * avghit + avgskill) / (sp_cost + 1) if self.skill == 1 else avghit
 			dps = avgphys/(self.atk_interval/(self.attack_speed/100))
 		if self.skill == 2:
 			crate = self.skill_params[1]
@@ -5471,6 +5470,10 @@ class Shalem(Operator):
 		newres = res * (1 + self.talent2_params[1]) if self.elite == 2 else res
 
 		####the actual skills
+		if self.skill == 0:
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk -defense , final_atk * 0.05)
+			dps = hitdmg / self.atk_interval * self.attack_speed /100
 		if self.skill == 1:
 			atk_interval = self.atk_interval * (1 + self.skill_params[0])
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -5498,7 +5501,8 @@ class Sharp(Operator):
 	
 	def skill_dps(self, defense, res):
 		final_atk = self.atk * (1 + self.buff_atk + self.talent1_params[0]) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk * self.skill_params[1] - defense, final_atk * self.skill_params[1] * 0.05)
+		skill_scale = self.skill_params[1] if self.skill == 1 else 1
+		hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 		dps =  hitdmg / self.atk_interval * (self.attack_speed) / 100
 		return dps
 
@@ -5513,7 +5517,7 @@ class Siege(Operator):
 		atkbuff += self.talent1_params[0]
 		if self.module == 1 and self.module_lvl > 1: atkbuff += 0.02 + 0.02 * self.module_lvl	
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
-		if self.skill == 1:
+		if self.skill < 2:
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
@@ -5559,14 +5563,14 @@ class SilverAsh(Operator):
 		bonus = 0.1 if self.module == 1 else 0
 		
 		####the actual skills
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]		
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat		
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk* atk_scale * skill_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			sp_cost = self.skill_cost
-			avgphys = (sp_cost * hitdmg + 2* skillhitdmg) / (sp_cost + 1)
+			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			dps = avgphys/(self.atk_interval/(self.attack_speed/100)) + bonusdmg/(self.atk_interval/(self.attack_speed/100))
 		if self.skill == 2:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -5591,7 +5595,7 @@ class Skadi(Operator):
 		if self.skill == 2: self.skill_duration = self.skill_params[1]	
 	
 	def skill_dps(self, defense, res):
-		atkbuff = self.talent1_params[0] + self.skill_params[0]
+		atkbuff = self.talent1_params[0] + self.skill_params[0] * min(self.skill,1)
 		aspd = 0 if self.skill != 1 else self.skill_params[1]
 		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
 		if self.module == 2 and self.module_dmg: aspd += 30
@@ -5627,7 +5631,7 @@ class Specter(Operator):
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1.1 if self.module_dmg and self.module == 1 else 1
-		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] * min(self.skill,1)) + self.buff_atk_flat
 		dmgbuff = 1 if self.module_lvl < 2 else 1.03
 		if self.module_lvl == 3: dmgbuff = 1.05
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)*(dmgbuff)
@@ -5646,7 +5650,7 @@ class SpecterAlter(Operator):
 		if self.targets > 1 and (self.skill == 3 or not self.trait_dmg): self.name += f" {self.targets}targets" ######when op has aoe
 
 	def skill_dps(self, defense, res):
-		atkbuff = self.skill_params[0] if self.trait_dmg else 0
+		atkbuff = self.skill_params[0] * min(self.skill,1) if self.trait_dmg else 0
 		if not self.trait_dmg and self.module == 1: atkbuff += 0.15
 		
 		if not self.trait_dmg:
@@ -5655,7 +5659,7 @@ class SpecterAlter(Operator):
 			hitdmg = np.fmax(final_atk * doll_scale * (1-res/100), final_atk * doll_scale * 0.05)
 			return hitdmg
 			
-		if self.skill == 1:
+		if self.skill < 2:
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -5664,22 +5668,21 @@ class SpecterAlter(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * (self.attack_speed+self.skill_params[1])/100
 		if self.skill == 3:
-			self.atk_interval = 2.2
 			dmgbonus = 1 + self.skill_params[2]
 			if not self.skill_dmg: dmgbonus = 1
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk  - defense, final_atk * 0.05) * dmgbonus
-			dps = dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
+			dps = dps = hitdmg/2.2 * self.attack_speed/100 * min(self.targets,2)
 		return dps
 
 class Stainless(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Stainless",pp,[1,2,3],[1,2],3,1,1)
-		if self.skill == 3 and not self.skill_dmg: self.name += " TurretOnly"
+		if self.skill in [0,3] and not self.skill_dmg: self.name += " TurretOnly"
 		if self.skill != 1 and self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		try: self.hits = kwargs['hits']
 		except KeyError: self.hits = 0
-		if self.skill == 3: self.name += f" {round(self.hits,2)}hits/s"
+		if self.skill in [0,3]: self.name += f" {round(self.hits,2)}hits/s"
 		self.params = [0,2,2.1,2.2,2.3,2.4,2.5,2.6,2.8,2.85,3][pp.mastery]
 		self.params2 = [0,1,1,1,1.1,1.1,1.1,1.2,1.3,1.4,1.5][pp.mastery]
 	
@@ -5693,10 +5696,10 @@ class Stainless(Operator):
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
-		if self.skill == 3:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+		if self.skill in [0,3]:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]*self.skill/3) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/self.atk_interval * (self.attack_speed + self.skill_params[1])/100
+			dps = hitdmg/self.atk_interval * (self.attack_speed + self.skill_params[1]*self.skill/3)/100
 			if not self.skill_dmg: dps = 0
 			turret_scale = self.params
 			turret_aoe = self.params2
@@ -5729,8 +5732,8 @@ class Stormeye(Operator):
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		critdmg = np.fmax(2 * final_atk - defense, 2 * final_atk * 0.05)
 		avgdmg = critchance * critdmg + (1-critchance) * hitdmg
-		dps = 2 * avgdmg / self.atk_interval * (self.attack_speed) / 100
-		return dps * min(2, self.targets)
+		dps = (1+self.skill) * avgdmg / self.atk_interval * (self.attack_speed) / 100
+		return dps * min(1+self.skill, self.targets)
 
 class Surtr(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -5764,9 +5767,9 @@ class Surtr(Operator):
 			dps = one_target_dmg/(self.atk_interval/(self.attack_speed/100))
 			if self.targets > 1:
 				dps = 2 * two_target_dmg/(self.atk_interval/(self.attack_speed/100))
-		if self.skill == 3:
-			atkbuff += self.skill_params[0]
-			maxtargets = self.skill_params[6]
+		if self.skill in [0,3]:
+			atkbuff += self.skill_params[0] * self.skill/3
+			maxtargets = self.skill_params[6] if self.skill == 3 else 1
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			dps = hitdmgarts/(self.atk_interval/(self.attack_speed/100)) * min(self.targets,maxtargets)
@@ -5774,11 +5777,12 @@ class Surtr(Operator):
 
 class Suzuran(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Suzuran", pp, [1,2],[1,2],2,1,1)
+		super().__init__("Suzuran", pp, [1,2,3],[1,2],2,1,1)
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
-		atkbuff = self.skill_params[0]
+		if self.skill == 3: return res * 0
+		atkbuff = self.skill_params[0] if self.skill > 0 else 0
 		try: atkbuff += self.talent1_params[1]
 		except: pass
 		aspd = self.skill_params[1] if self.skill == 1 else 0
@@ -5788,7 +5792,6 @@ class Suzuran(Operator):
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 		dps = hitdmg / self.atk_interval * (self.attack_speed + aspd)/100
 		if self.skill == 2 and self.targets > 1: dps *= min(self.targets, self.skill_params[1])
-			
 		return dps*(1+fragile)/(1+self.buff_fragile)
 
 class SwireAlt(Operator):
@@ -5824,8 +5827,8 @@ class SwireAlt(Operator):
 			if self.skill_dmg: skilldmg *= 2
 			dps = hitdmg/(self.atk_interval/(self.attack_speed/100))
 			dps = dps * (3/atkcycle-1) /(3/atkcycle) + skilldmg / 3
-		if self.skill == 3:
-			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * 2
+		if self.skill in [0,3]:
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * (1 + self.skill/3)
 		return dps
 
 class Tachanka(Operator):
