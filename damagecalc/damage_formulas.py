@@ -5011,7 +5011,7 @@ class Qiubai(Operator):
 		dmg = 1 + 0.1 * (self.module_lvl-1) if self.module == 1 and self.module_dmg else 1
 		atk_scale = 1 if self.trait_dmg else 0.8
 
-		if self.skill == 1:
+		if self.skill  < 2:
 			skill_scale = self.skill_params[0]
 			if not self.talent_dmg: 
 				extrascale = 0
@@ -5021,7 +5021,9 @@ class Qiubai(Operator):
 			hitdmgarts = np.fmax(final_atk * extrascale * (1-res/100), final_atk * extrascale * 0.05) * dmg
 			skilldmg = np.fmax(final_atk * (skill_scale+extrascale) * (1-res/100), final_atk * (skill_scale+extrascale) * 0.05) * dmg * self.targets
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
-			dps = (hitdmg+bonusdmg+skilldmg/self.skill_cost)/self.atk_interval * (self.attack_speed)/100
+			avghit = (hitdmg + hitdmgarts + bonusdmg) * self.skill_cost + skilldmg + bonusdmg * self.targets
+			avghit = avghit/(self.skill_cost+1) if self.skill == 1 else hitdmg + hitdmgarts + bonusdmg
+			dps = avghit/self.atk_interval * (self.attack_speed)/100
 		####the actual skills
 		if self.skill == 3:
 			atkbuff = self.skill_params[0]
@@ -5055,8 +5057,8 @@ class Quartz(Operator):
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[1]
-		if self.skill == 1:
-			atkbuff += self.skill_params[0]
+		if self.skill < 2:
+			atkbuff += self.skill_params[0] * self.skill
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -5080,8 +5082,8 @@ class Raidian(Operator):
 		atkbuff = self.skill_params[0] if self.skill in [1,3] else 0
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-		if self.skill == 1:
-			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * min(self.targets,2)
+		if self.skill < 2:
+			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * min(self.targets,1+self.skill)
 		if self.skill == 2:
 			dps = hitdmg / (self.atk_interval+self.skill_params[0]) * (self.attack_speed + aspd) / 100 * min(self.targets,3)
 		if self.skill == 3:
@@ -5125,8 +5127,8 @@ class Ray(Operator):
 				dps = hitdmg/(self.atk_interval * self.attack_speed/100 + 1.6)
 				if self.module == 1: dps = 2*hitdmg/(2 * self.atk_interval * self.attack_speed/100 + 1.6)
 			dps += skilldmg /(self.skill_cost/(1+self.sp_boost)+1.2)
-		if self.skill == 2:
-			atkbuff += self.skill_params[0]
+		if self.skill in [0,2]:
+			atkbuff += self.skill_params[0] * self.skill / 2
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk *atk_scale - defense, final_atk* atk_scale * 0.05) * dmg_scale
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
@@ -5165,9 +5167,9 @@ class ReedAlter(Operator):
 	def skill_dps(self, defense, res):
 		dmg_scale = self.talent1_params[2] if (self.talent_dmg and self.elite > 1) or self.skill == 3 else 1
 		
-		if self.skill == 1:
-			atkbuff = self.skill_params[0]
-			aspd = self.skill_params[1]
+		if self.skill < 2:
+			atkbuff = self.skill_params[0] * self.skill
+			aspd = self.skill_params[1] * self.skill
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 0.05) * dmg_scale
 			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100
@@ -5202,7 +5204,7 @@ class Rockrock(Operator):
 			drone_dmg = 0.35 if self.module == 1 else 0.2
 		atkbuff = self.talent1_params[0] * self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
 		aspd = 5 if self.module == 1 and self.module_lvl == 3 and self.talent_dmg else 0
-		aspd += self.skill_params[0] if self.skill == 1 else self.skill_params[1]
+		aspd += self.skill_params[1] if self.skill == 2 else self.skill_params[0] * self.skill
 		if self.skill_dmg and self.skill == 2: atkbuff += self.skill_params[0]
 		if self.skill == 2 and self.skill_dmg and self.trait_dmg: drone_dmg *= self.skill_params[3]
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -5234,8 +5236,8 @@ class Rosa(Operator):
 				if self.module_lvl == 3: additional_scale = 0.6
 		newdef = defense * (1-defshred)
 
-		if self.skill == 1:
-			atkbuff += self.skill_params[0]
+		if self.skill < 2:
+			atkbuff += self.skill_params[0] * self.skill
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 			extradmg = np.fmax(final_atk * atk_scale * additional_scale - newdef, final_atk * atk_scale * additional_scale * 0.05)
@@ -5273,7 +5275,7 @@ class Rosmontis(Operator):
 		defshred = self.talent1_params[0] if self.elite > 0 else 0
 		newdef = np.fmax(0, defense - defshred)
 	
-		if self.skill == 1:
+		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk + self.talent2_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk  * 0.05)
@@ -5282,17 +5284,16 @@ class Rosmontis(Operator):
 			skillhitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avghit = ((sp_cost + 1) * (hitdmg + bonushitdmg) + skillhitdmg) / (sp_cost + 1)
+			if self.skill == 0: avghit = hitdmg + bonushitdmg
 			dps = avghit/self.atk_interval * self.attack_speed/100 * self.targets
 		if self.skill == 2:
-			self.atk_interval = 3.15
 			bonushits += 2
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[1] + self.talent2_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk * 0.5 * 0.05) * bonushits
 			bonushitdmg += np.fmax(final_atk * (1-res/100), final_atk * 0.05) * bonusart
-			dps = (hitdmg+ bonushitdmg)/self.atk_interval * self.attack_speed/100 * self.targets
+			dps = (hitdmg+ bonushitdmg)/3.15 * self.attack_speed/100 * self.targets
 		if self.skill == 3:
-			self.atk_interval = 1.05
 			if self.skill_dmg:
 				if self.shreds[0] < 1 and self.shreds[0] > 0:
 					defense = defense / self.shreds[0]
@@ -5306,7 +5307,7 @@ class Rosmontis(Operator):
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - newdef, final_atk * 0.5 * 0.05) * bonushits
 			bonushitdmg += np.fmax(final_atk * (1-res/100), final_atk * 0.05) * bonusart
-			dps = (hitdmg+ bonushitdmg)/self.atk_interval * self.attack_speed/100 * self.targets * min(self.targets,2)
+			dps = (hitdmg+ bonushitdmg)/1.05 * self.attack_speed/100 * self.targets * min(self.targets,2)
 		return dps
 	
 class Saga(Operator):
