@@ -71,7 +71,7 @@ class Operator:
 			if skill > 0: 
 				self.name += f" S{skill}"
 			else:
-				self.name += " NA"
+				self.name += " S0"
 			self.skill = skill
 
 		skill_lvl = params.mastery if params.mastery > 0 and params.mastery < max_skill_lvls[elite] else max_skill_lvls[elite]
@@ -291,11 +291,17 @@ class Operator:
 			return (self.skill_dps(defense,res) * self.skill_duration)
 	
 	def avg_dps(self,defense,res):
-		if self.skill_duration < 1:
+		if self.skill_duration < 1 or self.skill == 0:
 			return (self.skill_dps(defense,res))
 		else:
-			damage = (self.total_dmg(defense,res) + self.normal_attack(defense,res) * self.skill_cost/(1+self.sp_boost))/(self.skill_duration+self.skill_cost/(1+self.sp_boost))
-			return damage
+			tmp = self.skill
+			skill_dps = self.skill_dps(defense,res)
+			self.skill = 0
+			offskill_dps = self.skill_dps(defense,res)
+			self.skill = tmp
+			cycle_dmg = skill_dps * self.skill_duration + offskill_dps * self.skill_cost/(1+self.sp_boost)
+			dps = cycle_dmg / (self.skill_duration+self.skill_cost/(1+self.sp_boost))
+			return dps
 	
 	def get_name(self):
 		return self.name + self.buff_name
