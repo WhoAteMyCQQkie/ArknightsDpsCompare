@@ -6556,8 +6556,8 @@ class W(Operator):
 		hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
 		if self.talent2_dmg: hitdmg *= stundmg
 		
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] * self.skill
 			sp_cost = self.skill_cost / (1 + self.sp_boost) + 1.2 #sp lockout
 			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05) * stundmg
 			dps = (hitdmg/(self.atk_interval/(self.attack_speed/100)) + skilldmg / sp_cost) * self.targets
@@ -6587,12 +6587,12 @@ class Walter(Operator):
 		super().__init__("Wisadel",pp,[1,2,3],[1],3,1,1)
 		self.shadows = 0
 		if self.elite == 2:
-			if self.skill == 3:
+			if self.skill in [0,3]:
 				if self.talent2_dmg:
 					self.shadows = 3
 				else:
-					self.shadows = 2
-				if self.skill_params[1] == 1:
+					self.shadows = min(self.skill +1,2)
+				if self.skill_params[1] == 1 and self.skill == 3:
 					self.shadows -= 1
 			else:
 				self.shadows = 1 if self.talent2_dmg else 0
@@ -6608,7 +6608,13 @@ class Walter(Operator):
 		explosionscale = 0 if self.elite == 0 else self.talent1_params[2]
 		prob = 1 - 0.85 ** bonushits
 	
-		####the actual skills
+		if self.skill == 0:
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg_main = np.fmax(final_atk * maintargetscale - defense, final_atk * maintargetscale * 0.05)
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
+			avghit = hitdmg_main + hitdmg + explosiondmg * prob
+			dps = avghit / self.atk_interval * self.attack_speed/100 * self.targets
 		if self.skill == 1:
 			prob2 = 1 - 0.85 ** (bonushits+2)
 			skill_scale = self.skill_params[0]
@@ -6686,7 +6692,10 @@ class Warmy(Operator):
 
 	def skill_dps(self, defense, res):
 		falloutdmg = 7000
-		####the actual skills
+		if self.skill == 0:
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			aspd = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
@@ -6723,8 +6732,8 @@ class Weedy(Operator): #TODO add weight prompt and actually calc the dmg for s3
 			if self.module_lvl == 2: atkbuff += 0.15
 			if self.module_lvl == 3: atkbuff += 0.2
 
-		if self.skill == 1:
-			skill_scale = self.skill_params[0]
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			sp_cost = self.skill_cost/(1+ self.sp_boost) + 1.2
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
@@ -6761,7 +6770,7 @@ class Whislash(Operator):
 			atk_scale = 1.3 if self.module == 1 else 1.2
 		talent_buff = self.talent1_params[0]
 		atkbuff = self.skill_params[1] if self.skill == 2 else 0
-		aspd = talent_buff * self.skill_params[0] if self.skill == 2 else 0.5 * talent_buff * self.skill_params[0]
+		aspd = talent_buff * self.skill_params[0] if self.skill == 2 else 0.5 * talent_buff * self.skill_params[0] * self.skill
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 		targets = 3 if self.skill == 2 else 1
@@ -6783,22 +6792,24 @@ class Wildmane(Operator):
 class YatoAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("YatoAlter",pp,[1,2,3],[1],1,1,1)
+		if self.skill == 0 and self.elite == 2 and not self.talent2_dmg: self.name += " after10s"
 		if self.skill == 2: self.name += " totalDMG"
 		if self.skill == 3: self.name += " dmgPerHit"
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
 
 	def skill_dps(self, defense, res):
 		extra_arts = self.talent1_params[0]
-		atkbuff = self.talent2_params[0] if self.elite == 2 else 0
+		atkbuff = self.talent2_params[0] if self.elite == 2 and (self.skill != 0 or self.talent2_dmg) else 0
 		try: atkbuff += self.talent2_params[2]
 		except: pass
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 
-		if self.skill == 1:
+		if self.skill < 2:
 			aspd = self.skill_params[0]
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgarts = np.fmax(final_atk * extra_arts * (1-res/100), final_atk * extra_arts * 0.05)
-			dps = (hitdmg+hitdmgarts)/self.atk_interval * (self.attack_speed+aspd)/100 * 10 / 3
+			dps = (hitdmg+hitdmgarts)/self.atk_interval * (self.attack_speed+aspd*self.skill)/100 
+			if self.skill == 1: dps *= 10 / 3 
 		if self.skill == 2:
 			extra_arts *= self.skill_params[3]
 			atk_scale = self.skill_params[1]
@@ -6830,6 +6841,10 @@ class ZuoLe(Operator):
 		if self.elite == 2:
 			sp_recovery += self.talent2_params[2] / self.atk_interval * (self.attack_speed+aspd)/100 if self.talent_dmg and self.talent2_dmg else self.talent2_params[0] / self.atk_interval * (self.attack_speed+aspd)/100
 
+		if self.skill == 0:
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		if self.skill == 1:
 			atk_scale = self.skill_params[0]
 			hits = 3 if self.talent_dmg and self.talent2_dmg else 1
