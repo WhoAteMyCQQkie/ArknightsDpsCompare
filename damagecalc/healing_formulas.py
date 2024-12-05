@@ -2,6 +2,10 @@ from damagecalc.damage_formulas import Operator
 from damagecalc.utils import PlotParameters
 
 class Healer(Operator):
+	def __init__(self, name, params: PlotParameters, available_skills, module_overwrite = [], default_skill = 3, default_pot = 1, default_mod = 1):
+		if params.skill == 0:  params.skill = -1
+		super().__init__(name,params,available_skills,module_overwrite,default_skill,default_pot,default_mod)
+
 	def skill_hps(self, **kwargs):
 		return("Operator not implemented")
 
@@ -50,7 +54,7 @@ class AmiyaMedic(Operator):
 
 class Ansel(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Ansel",pp,[1],[],1,6,)
+		super().__init__("Ansel",pp,[1],[],1,6,1)
 	
 	def skill_hps(self, **kwargs):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
@@ -693,7 +697,7 @@ class Paprika(Healer):
 
 class Papyrus(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Papyrus",pp,[1,2],[],2,1,0)
+		super().__init__("Papyrus",pp,[1,2],[],2,6,0)
 	
 	def skill_hps(self, **kwargs):
 		targets = min(self.targets,4)
@@ -1148,6 +1152,25 @@ class SwireAlter(Healer):
 		self.name += f": **{int(skill_hps)}**/0/*{int(skill_hps/3)}*"
 		return self.name
 
+class ThornsAlter(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("ThornsAlter",pp,[1,2],[],1,1,0)
+	
+	def skill_hps(self, **kwargs):
+		atkbuff = self.talent1_params[2]
+		aspd = self.talent2_params[0] if self.elite > 2 else 0
+		extra_duration = self.talent1_params[0]
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		base_hps = 0
+		heal_scale = self.skill_params[0] if self.skill == 1 else self.skill_params[9]
+		duration = self.skill_params[1] if self.skill == 1 else self.skill_params[8]
+		sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2
+		if self.skill == 1: sp_cost += sp_cost % (self.atk_interval/(self.attack_speed+aspd)*100) #thorns doesnt hold charges
+		skill_hps = final_atk * heal_scale * min(self.targets,9)
+		avg_hps = skill_hps * (duration + extra_duration)/sp_cost
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Tsukinogi(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Tsukinogi",pp,[1,2],[1],1,1,1)
@@ -1287,6 +1310,6 @@ class Whisperain(Healer):
 
 healer_dict = {"amiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
-			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
+			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "thorns": ThornsAlter, "thornsalter": ThornsAlter, "lobster": ThornsAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain}
 
-healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
+healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain"]
