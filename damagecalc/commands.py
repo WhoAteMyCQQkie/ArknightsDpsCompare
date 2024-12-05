@@ -135,7 +135,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	
 	#fix typos in prompts
 	for i in range(len(args)):
-		if args[i] not in op_dict.keys() and args[i] not in prompts and len(args[i]) > 3:
+		if args[i] not in op_dict.keys() and args[i] not in prompts and len(args[i]) > 3 and not args[i].isnumeric():
 			for prompt in prompts:
 				if utils.levenshtein(args[i],prompt) == 1:
 					args[i] = prompt
