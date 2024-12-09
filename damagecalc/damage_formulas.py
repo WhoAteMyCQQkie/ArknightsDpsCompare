@@ -1091,6 +1091,9 @@ class Cantabile(Operator):
 		if self.elite > 0:
 			if self.talent_dmg: self.name += " melee"
 			else: self.name += " ranged"
+		if self.skill == 2:
+			aspd = self.talent1_params[0] if not self.talent_dmg else 0
+			self.skill_duration = self.skill_params[3] * self.atk_interval / (self.attack_speed + aspd) * 100
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
@@ -3168,6 +3171,7 @@ class JessicaAlter(Operator):
 			final_atk = self.atk * (1+ self.buff_atk + skillbuff) + self.buff_atk_flat
 			nukedmg = final_atk * 2.5 * (1+self.buff_fragile)
 			self.name += f" GrenadeDmg:{int(nukedmg)}"
+			self.skill_duration = 1.8 * 20 / self.attack_speed * 100
 
 	def skill_dps(self, defense, res):
 		if self.skill < 2:
@@ -3180,10 +3184,9 @@ class JessicaAlter(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 3:
-			self.atk_interval = 1.8
 			final_atk = final_atk = self.atk * (1+ self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
-			dps = hitdmg/self.atk_interval * self.attack_speed/100
+			dps = hitdmg/ 1.8 * self.attack_speed/100
 		return dps
 
 class JusticeKnight(Operator):
@@ -4181,11 +4184,7 @@ class Mon3tr(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Mon3tr",pp,[1,2,3],[1,2,3],3,1,2)
 		if not self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " NotInKalRange"
-		if self.skill == 3:
-			if self.skill_dmg:
-				self.name += " skillStart"
-			else:
-				self.name += " skillEnd"
+		if self.skill == 3: self.name += " averaged"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 		if self.module in [2,3]:
 			self.attack_speed -= 4 + self.module_lvl #because we want mon3trs attack speed
@@ -4197,23 +4196,17 @@ class Mon3tr(Operator):
 			if self.module_lvl == 3: aspd = 20
 		atkbuff = 0.25 * (self.module_lvl - 1) if self.module == 3 else 0
 			
-		####the actual skills
 		if self.skill < 2:
 			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
-		
 		if self.skill == 2:
 			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1] + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
-		
 		if self.skill == 3:
-			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
-			final_atk_start = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] + atkbuff) + self.buff_atk_flat
-			dps_max = final_atk_start/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
-			dps_min = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
-			dps = dps_max if self.skill_dmg else dps_min
+			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] * 0.5 + atkbuff) + self.buff_atk_flat
+			dps = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
 		return dps
 
 class Morgan(Operator):
