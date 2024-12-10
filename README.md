@@ -1,24 +1,65 @@
-This repository contains a Discord bot that will create graphs comparing different operators dps depending on enemy defense and resistance.
-It is currently active on the discord server of DragonGJY (www.youtube.com/@DragonGJY) in the operation-room channel.
-The bot was never really meant to become a professional thing and grew past expectations, resulting in some spaghetti code, that is neither optimized nor well written. Viewers discretion is advised.
+# Discord Bot for Comparing Operators' DPS
 
-1. How to use:
-The bot requires a token.txt containing the discord token in the same directory as the discoBot.py file.
-Change "valid_channels" (just below the imports in discoBot.py) to the channels the bot will respond in.
-Note: The !calc command does not work under Windows.
-You can then type !help in those channels to get a quick explanation on how to use the bot there. The tl;dr being: write !dps opname1 opname2 ...
+This repository contains a Discord bot that creates graphs comparing different operators' DPS depending on enemy defense and resistance.  
+It is currently active on the Discord server of **DragonGJY** ([YouTube Channel](https://www.youtube.com/@DragonGJY)) in the **operation-room** channel.
 
-2. How to contribute:
-The easiest way to contribute is to add to the damageformulas.py or healingformulas.py. There you can just copy the examples of the other operators and change them to fit the newly added operator.
-Then you can scroll all the way down and add them to the dictionary and operator list.
-You can then execute the file to check for syntax errors and optionally add the operator to the "test_ops" dictionary to check the graph without having to start the main script.
+---
 
-3. Miscellaneous:
-For the scuffed enemy prompt to work you need a directory "arkbotimages" containing the image files for the enemies (example format zwillingstürme: zt_01.png -> zt_17.png).
-Here, this is part of the .gitignore, because I just took those images from the wiki and I'm not sure about copyright etc. + it needs a rework anyway.
+## 1. How to Use
 
-4. Disclaimer:
-The bot just calculates the dps based on the damage per hit and the attack interval. It does not take extra frames for animations into account and for the sp lockout of skills like horn s1 it just assumes a duration of 1.2 seconds. For example Exusiais skill 3 just multiplies the damage by 5, even though each shot takes some time.
-Likewise, Gladiias calculations ignore the potentially very long animations, favoring her dps numbers. For the total damage, the dps is multiplied with the skill duration, regardless of whether the duration aligns with the attack interval or not,
-so you may get the damage of 17.42 attacks. Lastly, for necrosis delta modules, the average uptime with the current dps is assumed. This may also be unrealistic, since logos may not even trigger the fallout against very high res enemies.
-Tl;dr the numbers are not 100% accurate and the user has to do some thinking on their own. The bot is best used to compare operators to themselves (masteries, module levels, etc.).
+To use the bot, follow these steps:
+
+1. The bot requires a `token.txt` file containing the Discord bot token. This file should be in the same directory as the `discoBot.py` file.
+2. Modify the `valid_channels` variable (located just below the imports in `discoBot.py`) to specify the channels where the bot will respond.
+3. You can then type `!help` in those channels to get a quick explanation on how to use the bot.
+
+---
+
+## 2. Disclaimer
+
+The bot was originally not designed to be as complex as it is now, resulting in some spaghetti-ish code. Viewer discretion is advised.
+
+- The bot only calculates DPS based on damage per hit and attack interval. 
+- It does **not** account for animation frames and sp lockout is always assumed to be 1.2 seconds (example: Horn S1).
+- For example, Exusiai's S3 multiplies the damage by 5, even though each shot takes some time.
+- The total damage is calculated by multiplying DPS by the skill duration, regardless of whether the duration aligns with the attack interval or not. Therefore, you may get the damage of something like 17.42 attacks.
+
+**TL;DR**: The numbers are not 100% accurate, and users should use them with some discretion. The bot is best used for comparing operators against themselves (considering skill masteries, module levels, etc.).
+
+---
+
+## 3. How to Contribute
+
+The easiest way to contribute is by adding to the `damageformulas.py` or `healingformulas.py` files.  
+Here's how to do it:
+
+1. Copy the code of existing operators or the blueprint class.
+2. Modify the copied class to fit the new operator. For the contents (including the order) of the talent and skill parameters you can check [Aceship](https://aceship.github.io/AN-EN-Tags/akhrchars.html).
+3. Add the new operator to the dictionary and list at the end of the file.
+
+---
+
+## 4. Miscellaneous
+
+- If you want the `!stage` command (and the enemy/stage prompt for the DPS calculation) to work, you will need to pull the submodule from [Kengxxiao](https://github.com/Kengxxiao) which contains the game data.
+
+---
+
+## 5. How to Maintain
+
+Currently, the bot is still being worked on, so just pull updates occasionally. However, it's possible that development may cease at some point in the future, so here is a guide on how to maintain it:
+
+1. Whenever the game updates, the repository of Kengxxiao will (hopefully) be updated.  
+   You can update the submodule to get the latest game data.
+   
+2. To make this data accessible to the bot, you need to update `database/JsonReader.py`. Add the newly added operators to the large dictionary at the start of the file.
+
+3. The `fileHelper()` method can help you read out missing IDs, but you can also find them listed on [arknights.wiki.gg](https://arknights.wiki.gg).
+
+4. After updating the data, run the file to create a new `.pkl` file with the operator data.
+
+5. From here, follow the steps in the "How to Contribute" section.
+
+---
+
+### Feel free to contribute!
