@@ -90,16 +90,17 @@ If you want to see how the bot works or expand it, it has a public repository: g
 """))
 	commands.register('guide', cmds.simple("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
-S1,S2,S3, sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
+S1,S2,S3,S0 sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
+total (total dmg over the skill duration), avg (factoring in skill downtime) (do not work for all operators)
 **Prompts, that take parameters:**
-targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
+targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), sp <value>(for ptilo etc), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
 **Handling conditional damage (turn off talent effects etc.):**
 all (plots all possible conditionals), conditional (further shows prompts to get a specific condition), c0...c31 (as given by "conditional", can add multiple)
 **or alternatively:** lowtrait/hightrait, lowtalent1/hightalent1, lowtalent2/hightalent2, lowskill/highskill, lowmodule/highmodule, **low/high (sets all previous 5)**
 **All following prompts are global and their position does not matter. Prompts for the graph:** 
 maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize), numbers (shows all the dmg numbers)
 **Other prompts:** 
-hide,left,tiny,short (for the legend), color (for colorblind people), text (puts everything after the prompt as title of the graph, ignoring further inputs)
+hide,left,tiny,short (for the legend), color (for colorblind people), title (puts everything after the prompt as title of the graph, ignoring further inputs)
 """))
 	aliases.register('prompt', 'guide')
 	aliases.register('prompts', 'guide')

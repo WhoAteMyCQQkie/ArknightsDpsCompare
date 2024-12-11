@@ -485,7 +485,7 @@ class StageData:
 		return enemies
 
 
-"""
+#"""
 if __name__ == "__main__":
 	op_data_dict = {}
 	for key in id_dict.keys():

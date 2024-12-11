@@ -65,6 +65,7 @@ def calc_command_linux(args: List[str]) -> DiscordSendable:
 	return DiscordSendable(str(result))#return_dict.get('result', 'No result'))
 
 def dps_command(args: List[str])-> DiscordSendable:
+	if len(args) == 0: return DiscordSendable("https://tenor.com/view/where-looking-confused-gif-16176243")
 	global_parameters = utils.PlotParametersSet()
 	already_drawn_ops = []
 	plt.clf()
