@@ -6,25 +6,21 @@
 # update the kwargs check for operators (false inputs get passed on as kwarg, operator can check for keywords of their kit)
 
 #TODO: specific Minijobs
-# indra: dodge mechanics can make use of the hits prompts
 # weedy: do some weight calculations for skill 3 and show the true dmg
 # add meteorite s2
 # hoshiguma: if self.hits > 0, then actually calculate the uptime of the dodge buff from modY
 # narantuya: proper frame counting to get the attack intervals more accurate
 # nymph: add the avgNecrosis as option
 # double check ifrits res shred interactions with her delta module
-# dodge mechanic for dagda/flametail s1
+# dodge mechanic for dagda/flametail s1 and Indra
 # ray: s1 killshots refunding ammo improves the actual ooa dps
 # kafka: hitdmg numbers in the label
 # double check ebenholz dps, it's just weird to calc
-# skill 0 for tequila and mlynar
+# skill 0 for tequila and mlynar average (seeing how the stacks count up)
 
 #TODO: bigger changes that may be complicated or even unrealistic
-# s123 prompt
-# off skill dps -> add as its own method normal_attack() and it can be used for avg_dmg() but has to be extensively overwritten/implemented for like 70% of operators, including adding conditional stuff
-#               -> add as self.skill == 0. has to be added to all ops, but should usually take only 1 line. makes avg_dmg() quite tricky.
-#				-> design change: move as much code into __init__() as possible, this makes the first option easier, but also doesnt work for every op.
-# guide image to show things at once
+# s123 prompt to add multiple skills
+# !guide image to show things graphically.
 # combine prompt to combine 2 ops dps
 # add and mul prompts
 # clean up plotting, so that the parts are not scattered around in the code
@@ -36,10 +32,7 @@
 # lower limit for axis scale
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
 # stylized plots. for example christmas themed etc.
-# skill down dps
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
-# rework enemy prompt: still not good as it is (better formatting, showing enemy hp)
-#				-> for some reason 14-14 and 14-16 dont work, but 14-15 and 14-17 do. throws no error
 
 
 import os

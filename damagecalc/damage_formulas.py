@@ -1782,7 +1782,7 @@ class Dusk(Operator):
 
 class Ebenholz(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Ebenholz",pp,[1,2,3],[1,2,3],3,1,3)
+		super().__init__("Ebenholz",pp,[1,3],[1,2,3],3,1,3)
 		if not self.talent_dmg and self.module == 2: self.module_dmg = False
 		if self.talent_dmg and self.elite > 0: self.name += " +Talent1Dmg"
 		if self.module == 3 and self.talent2_dmg: self.name += " withAvgNecrosis"
