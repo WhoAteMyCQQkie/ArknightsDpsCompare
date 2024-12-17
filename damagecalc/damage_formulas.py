@@ -251,8 +251,9 @@ class Operator:
 		if params.shred[2] != 1: self.buff_name += f" -{int(100*(1-params.shred[2])+0.0001)}%res"
 		if params.shred[3] != 0: self.buff_name += f" -{int(params.shred[3])}res"
 
-		#TODO
-		#skill = 0
+		if params.mul_add[0] != 1: self.buff_name += f" x{int(params.mul_add[0])}"
+		if params.mul_add[1] > 0: self.buff_name += f" +{int(params.mul_add[1])}"
+		if params.mul_add[1] < 0: self.buff_name += f" {int(params.mul_add[1])}"
 
 	def normal_attack(self,defense,res, extra_buffs = [0,0,0], hits = 1, aoe = 1):
 		final_atk = self.atk * (1 + extra_buffs[0] + self.buff_atk) + extra_buffs[1] + self.buff_atk_flat

@@ -262,7 +262,6 @@ def dps_command(args: List[str])-> DiscordSendable:
 	fixval = global_parameters.fix_value
 	graph_type = global_parameters.graph_type
 	enemies = global_parameters.enemies
-	enemy_key = global_parameters.enemy_key
 
 	ax = plt.gca()
 	ax.set_ylim(ymin = 0)
