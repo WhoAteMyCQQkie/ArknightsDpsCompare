@@ -469,7 +469,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
-		elif args[i] in ["total","totaldmg"]:
+		elif args[i] in ["total","totaldmg","totaldamage"]:
 			pps.normal_dps = 1 if pps.normal_dps != 1 else 0
 		elif args[i] in ["avg","avgdmg","average","averagedmg"]:
 			pps.normal_dps = 2 if pps.normal_dps != 2 else 0
@@ -553,7 +553,7 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 	entries = len(args)
 	unused_inputs = set()
 	while i < entries:
-		if args[i] in ["maxdef","limit","range","scale"]:
+		if args[i] in ["maxdef","limit","range","scale","deflimit"]:
 			i+=1
 			pps.max_def = 3000
 			try:
