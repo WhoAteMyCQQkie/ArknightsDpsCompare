@@ -841,7 +841,37 @@ class Aurora(Operator):
 		if self.skill_dmg and self.skill == 2: avgdmg = 2/3 * hitdmg + 1/3 * skilldmg			
 		dps = avgdmg/atk_interval * self.attack_speed/100
 		return dps
-		
+
+class Ayerscarpe(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Ayerscarpe",pp,[1,2],[1],2,1,1)
+		if not self.trait_dmg and self.skill == 1: self.name += " rangedAtk"   
+		if self.targets > 1 and self.skill > 0: self.name += f" {self.targets}targets"
+	
+	def skill_dps(self, defense, res):
+		atk_scale = 0.8 if not self.trait_dmg and self.skill == 1 else 1
+		bonus = 0.1 if self.module == 1 else 0
+		aspd = self.talent1_params[0] if self.elite > 0 else 0
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+
+		if self.skill < 2:
+			skill_scale = self.skill_params[0]
+			targets = self.skill_params[2] if self.skill == 1 else 1
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale *(1-res/100), final_atk * skill_scale * 0.05) * min(self.targets,targets)
+			avgdmg = (self.skill_cost * hitdmg + skilldmg)/(self.skill_cost + 1)
+			if self.skill == 0: avgdmg = hitdmg
+			dps = (avgdmg + bonusdmg) / self.atk_interval * (self.attack_speed+aspd)/100
+		if self.skill == 2:
+			skill_scale = self.skill_params[1]
+			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
+			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
+			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skilldmg *= self.targets if self.trait_dmg else self.targets -1
+			dps = (hitdmg + bonusdmg + skilldmg) / self.atk_interval * (self.attack_speed+aspd)/100
+		return dps
+
 class Bagpipe(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Bagpipe",pp,[1,2,3],[1,2],3,1,1)
@@ -7125,7 +7155,7 @@ class ZuoLe(Operator):
 ################################################################################################################################################################################
 
 #Add the operator with their names and nicknames here
-op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, 
+op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
 		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
 		"ebenholz": Ebenholz, "ela": Ela, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
@@ -7142,6 +7172,6 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
-operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
+operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
