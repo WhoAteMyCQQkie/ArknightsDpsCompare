@@ -50,7 +50,7 @@ from damagecalc.utils import Registry, DiscordSendable
 
 ##############################################
 #Bot Settings for the channels it will respond to
-VALID_CHANNELS = ['operation-room','bot-spam']
+VALID_CHANNELS = ['operation-room','dps-bot-spam']
 RESPOND_TO_DM = True
 
 intents = discord.Intents.all()
