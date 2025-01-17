@@ -62,7 +62,7 @@ class DiscordSendable:
 
 class PlotParameters:
 	def __init__(self,pot=-1,promotion=-1,level=-1,skill=-1,mastery=-1,module=-1,module_lvl=-1,buffs=[0,0,0,0],sp_boost=0,targets=-1,trust=100,conditionals=[True,True,True,True,True], all_cond = False,
-			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = 0,enemies=[],mul_add=[1,0],**kwargs):
+			  graph_type=0,fix_value=40,max_def=3000,max_res=120,res=[-1],defen=[-1],base_buffs=[1,0],shred=[1,0,1,0],normal_dps = 0,enemies=[],mul_add=[1,0],highlight=False,**kwargs):
 		#Operator Parameters
 		self.pot = pot
 		self.promotion = promotion
@@ -79,6 +79,7 @@ class PlotParameters:
 		self.all_conditionals = all_cond
 		self.input_kwargs = kwargs
 		self.mul_add = copy.deepcopy(mul_add)
+		self.highlight = highlight
 		
 
 		#Plot Parameters
@@ -114,7 +115,7 @@ class PlotParametersSet(PlotParameters):
 		output = []
 		if math.prod(len(x) for x in [self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls,self.conditionalss]) > 1280: raise ValueError("Too many requests")
 		for pot,promotion,level,skill,mastery,module,module_lvl,condition in itertools.product(self.pots,self.promotions,self.levels,self.skills,self.masteries,self.modules,self.module_lvls,self.conditionalss):
-			output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,int_to_bools(max(0,condition)),self.all_conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,self.mul_add,**self.input_kwargs))
+			output.append(PlotParameters(pot,promotion,level,skill,mastery,module,module_lvl,self.buffs,self.sp_boost,self.targets,self.trust,int_to_bools(max(0,condition)),self.all_conditionals,self.graph_type,self.fix_value,self.max_def,self.max_res,self.res,self.defen,self.base_buffs,self.shred,self.normal_dps,self.enemies,self.mul_add,self.highlight,**self.input_kwargs))
 		return output
 
 #read in the operator specific parameters	
@@ -473,6 +474,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.normal_dps = 1 if pps.normal_dps != 1 else 0
 		elif args[i] in ["avg","avgdmg","average","averagedmg"]:
 			pps.normal_dps = 2 if pps.normal_dps != 2 else 0
+		elif args[i] in ["highlight","mark","marked","feature"]:
+			pps.highlight = True
 		elif args[i] in ["l","low"]:
 			pps.temp_condition = [False,False,False,False,False]
 			pps.conditionalss = {bools_to_int(pps.temp_condition)}
@@ -687,6 +690,8 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 	if plotnumbers > 9: style = '--'
 	if plotnumbers > 19: style = ':'
 	if plotnumbers > 29: style = '-.'
+	linew = 5 if pp.highlight else 1
+	alph = 0.7 if pp.highlight else 1
 
 	dps_function = [operator.skill_dps, operator.total_dmg, operator.avg_dps][normal_dps]
 
@@ -715,7 +720,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 	if graph_type == 0:
 		damages = dps_function(defences,resistances) * fragile + pp.mul_add[1]
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style, linewidth=linew, alpha=alph)
 		
 		for defen in pp.defen:
 			if defen >= 0:
@@ -734,7 +739,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		damages = dps_function(newdefences,newresistances) * fragile + pp.mul_add[1]
 
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style, linewidth=linew, alpha=alph)
 		
 		for defen in pp.defen:
 			if defen >= 0:
@@ -756,7 +761,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		damages = dps_function(newdefences,newresistances) * fragile + pp.mul_add[1]
 
 		xaxis = np.linspace(0,max_def, 2*accuracy)
-		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style, linewidth=linew, alpha=alph)
 		
 		for defen in pp.defen:
 			if defen >= 0:
@@ -776,7 +781,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		
 		damages = dps_function(defences,resistances) * fragile + pp.mul_add[1]
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style, linewidth=linew, alpha=alph)
 		
 		for res in pp.res:
 			if res >= 0:
@@ -790,7 +795,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 		
 		damages = dps_function(defences,resistances) * fragile + pp.mul_add[1]
 		xaxis = np.linspace(0,max_def, accuracy)
-		p = plt.plot(xaxis, damages, label=op_name, linestyle=style)
+		p = plt.plot(xaxis, damages, label=op_name, linestyle=style, linewidth=linew, alpha=alph)
 		
 		for defen in pp.defen:
 			if defen >= 0:
@@ -806,7 +811,7 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 
 		damages = dps_function(np.array(defences),np.array(resistances)) * fragile + pp.mul_add[1]
 		p = plt.plot(xaxis,damages, marker=".", linestyle = "", label=op_name)
-		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color())
+		plt.plot(xaxis,damages, alpha = 0.2, c=p[0].get_color(), linewidth=linew)
 		for i, enemy in enumerate(enemies):
 			demanded = dps_function(max(0,(enemy[2]-shreds[1]))*shreds[0],max(0,(enemy[3]-shreds[3]))*shreds[2]) * fragile + pp.mul_add[1]
 			plt.text(i,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())

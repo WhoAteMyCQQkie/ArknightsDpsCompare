@@ -93,7 +93,7 @@ all (plots all possible conditionals), conditional (further shows prompts to get
 **All following prompts are global and their position does not matter. Prompts for the graph:** 
 maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize), numbers (shows all the dmg numbers)
 **Other prompts:** 
-hide,left,tiny,short (for the legend), color (for colorblind people), title (puts everything after the prompt as title of the graph, ignoring further inputs)
+hide,left,tiny,short (for the legend), highlight, color (for colorblind people), title (puts everything after the prompt as title of the graph, ignoring further inputs)
 """))
 	aliases.register('prompt', 'guide')
 	aliases.register('prompts', 'guide')
