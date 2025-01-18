@@ -327,11 +327,11 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			i-=1
 		elif args[i] in ["d","def","defense"]:
 			i+=1
-
 			pps.defen = [-10]
 			while i < entries:
 				try:
-					pps.defen.append(min(pps.max_def,int(args[i])))
+					pps.defen.append(int(args[i]))
+					pps.max_def = max(pps.max_def, int(args[i]))
 				except ValueError:
 					break
 				i+=1
@@ -553,14 +553,14 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 #read the graph scalings
 def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 	i = 0
+	def_request = 0
 	entries = len(args)
 	unused_inputs = set()
 	while i < entries:
 		if args[i] in ["maxdef","limit","range","scale","deflimit"]:
 			i+=1
-			pps.max_def = 3000
 			try:
-				pps.max_def = min(69420,max(100, int(args[i])))
+				pps.max_def = max(min(69420,max(100, int(args[i]))),def_request)
 			except ValueError:
 				break
 		elif args[i] in ["maxres","reslimit","limitres","scaleres","resscale"]:
@@ -581,7 +581,17 @@ def parse_plot_essentials(pps: PlotParametersSet, args: list[str]):
 				pps.fix_value = max(0,min(50000,pps.fix_value))
 				i+=1
 			except ValueError:
-				pass	
+				pass
+		elif args[i] in ["d","def","defense"]:
+			i+=1
+			while i < entries:
+				try:
+					def_request = max(def_request, int(args[i]))
+					pps.max_def = max(pps.max_def, int(args[i]))
+				except ValueError:
+					break
+				i+=1
+			i-=1
 		elif args[i] in ["fixres","fixedres","fixresistance","fixedresistance","setres","resresistance"]: 
 			try:
 				pps.graph_type = 4
