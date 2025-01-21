@@ -520,7 +520,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.temp_condition[1] = True
 			pps.temp_condition[2] = True
 			pps.conditionalss = {bools_to_int(pps.temp_condition)}
-		elif args[i] in ["conditionals", "conditional","variation","variations"]:
+		elif args[i] in ["conditionals", "conditional","variation","variations","situational"]:
 			pps.all_conditionals = True
 			pps.conditionalss = set(range(32))
 		elif args[i] in ["all"]:
