@@ -1445,11 +1445,13 @@ class ChenAlter(Operator):
 
 class Chongyue(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Chongyue",pp,[1,3],[1],3,1,1)
+		super().__init__("Chongyue",pp,[1,3],[1,2],3,1,2)
+		if self.module == 2 and self.module_dmg: self.name += " >50%Hp"
 		if self.skill == 1 and self.elite > 0 and not self.talent_dmg: self.name += " NoSkillCrit"
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
+		aspd = 10 if self.module == 2 and self.module_dmg else 0
 		crate = self.talent1_params[0] if self.elite > 0 else 0
 		dmg = self.talent1_params[1] if self.elite > 0 else 1
 		duration = self.talent1_params[2] if self.elite > 0 else 0
@@ -1460,19 +1462,19 @@ class Chongyue(Operator):
 		skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 		if self.skill < 2:
 			if self.talent_dmg and self.elite > 0: skilldmg *= dmg
-			relevant_hits = int(duration/(self.atk_interval /self.attack_speed*100)) + 1
+			relevant_hits = int(duration/(self.atk_interval /(self.attack_speed+aspd)*100)) + 1
 			crit_chance = 1 - (1-crate) ** relevant_hits
 			hitdmg *= (1-crit_chance) + dmg * crit_chance
-			dps = (hitdmg + skilldmg/self.skill_cost * self.skill) / self.atk_interval * self.attack_speed/100
+			dps = (hitdmg + skilldmg/self.skill_cost * self.skill) / self.atk_interval * (self.attack_speed+aspd)/100
 
 		if self.skill == 3:
 			hits = self.skill_cost // 2 + self.skill_cost % 2
-			relevant_hits = int(duration/(self.atk_interval /self.attack_speed*100)) * 2 + 2
+			relevant_hits = int(duration/(self.atk_interval /(self.attack_speed+aspd)*100)) * 2 + 2
 			relevant_hits *= hits/(hits+1) #skill hits cant trigger crit and therefore technically have a lower crit rate than normal attacks, but ehh
 			crit_chance = 1 - (1-crate) ** relevant_hits
 			skilldmg *= self.targets
 			avghit = 2 * (hits * hitdmg + skilldmg) /(hits + 1) * ((1-crit_chance) + dmg * crit_chance)
-			dps = avghit/self.atk_interval * self.attack_speed/100
+			dps = avghit/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
 class CivilightEterna(Operator):
