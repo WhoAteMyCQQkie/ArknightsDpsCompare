@@ -1018,6 +1018,63 @@ class Blaze(Operator):
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
+class BlazeAlter(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("BlazeAlter",pp,[1,2,3],[],3,1,0) #available skills, available modules, default skill, def pot, def mod
+		if self.skill in [1,2]:
+			if not self.trait_dmg: self.name += " no Burn"
+			else:
+				if self.skill_dmg: self.name += " avgBurn"
+				else: self.name += " avgBurn vsBoss"
+		if self.skill == 3 and self.skill_dmg: self.name += " vsBurn"
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		falloutdmg = 7000
+		if self.skill == 0:
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			newres = np.fmax(0,res-20)
+			elegauge = 1000 if self.skill_dmg else 2000
+			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) #number 2 is against enemies under burn fallout
+			skilldmg1 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skilldmg2 = np.fmax(final_atk * skill_scale * (1-newres/100), final_atk * skill_scale * 0.05)
+			dpsNorm = hitdmg1/self.atk_interval * (self.attack_speed)/100 + skilldmg1 * self.targets
+			dpsFallout = hitdmg2/self.atk_interval * (self.attack_speed)/100 + skilldmg2 * self.targets
+			timeToFallout = elegauge/(skilldmg1 * self.skill_params[1])
+			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
+			if not self.trait_dmg: dps = dpsNorm
+		
+		if self.skill == 2:
+			atkbuff = self.skill_params[0]
+			skill_scale = self.skill_params[2]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			newres = np.fmax(0,res-20)
+			elegauge = 1000 if self.skill_dmg else 2000
+			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * min(self.targets,3)
+			hitdmg2 = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) * min(self.targets,3) #number 2 is against enemies under burn fallout
+			skilldmg1 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
+			skilldmg2 = np.fmax(final_atk * skill_scale * (1-newres/100), final_atk * skill_scale * 0.05)
+			dpsNorm = hitdmg1/2.5 * (self.attack_speed)/100 + skilldmg1 * self.targets
+			dpsFallout = hitdmg2/2.5 * (self.attack_speed)/100 + skilldmg2 * self.targets
+			timeToFallout = elegauge/(skilldmg1 * self.skill_params[1])
+			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
+			if not self.trait_dmg: dps = dpsNorm
+
+		if self.skill == 3:
+			atkbuff = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			newres = np.fmax(0,res-20) if self.skill_dmg else res
+			ele_scale = self.skill_params[3] if self.skill_dmg else 0
+			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + final_atk * ele_scale
+			dps = hitdmg / 0.3 * self.attack_speed/ 100 * self.targets
+		return dps
+
 class Blemishine(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Blemishine",pp,[1,2,3],[2,1],3,1,1)
@@ -7222,7 +7279,7 @@ class ZuoLe(Operator):
 
 #Add the operator with their names and nicknames here
 op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
-		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
+		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "blazealter": BlazeAlter, "blaze2": BlazeAlter, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
 		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "figurino": Figurino, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
