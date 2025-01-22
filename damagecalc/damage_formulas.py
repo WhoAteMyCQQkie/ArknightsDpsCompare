@@ -1031,6 +1031,10 @@ class BlazeAlter(Operator):
 	
 	def skill_dps(self, defense, res):
 		falloutdmg = 7000
+		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		if self.elite > 0: falloutdmg += final_atk * self.talent1_params[0]
+
 		if self.skill == 0:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
