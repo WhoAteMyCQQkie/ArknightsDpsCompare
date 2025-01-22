@@ -7235,6 +7235,47 @@ class YatoAlter(Operator):
 			dps = (hitdmg+ hitdmgarts) * self.targets
 		return dps
 
+class Yu(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Yu",pp,[2],[],2,1,0)
+		if self.talent_dmg and self.elite > 0: 
+			self.name += " blocking"
+			if not self.trait_dmg: self.name += " vsBoss"
+		
+		try:
+			self.hits = kwargs['hits']
+		except KeyError:
+			self.hits = 0
+		if self.elite < 2: self.hits = 0
+		if self.hits > 0 and self.skill == 1: self.name += f" {round(self.hits,2)}hits/s"
+
+	def skill_dps(self, defense, res):
+		newres = np.fmax(0,res-20)
+		atkbuff = self.skill_params[1] if self.skill == 2 else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		dps = 0
+		time_to_fallout = -1
+		if self.talent_dmg and self.elite > 0:
+			arts_scale = self.talent1_params[1]
+			ele_scale = self.talent1_params[2]
+			block = 5 if self.skill == 2 else 3
+			artsdmg1 = np.fmax(final_atk * arts_scale * (1-res/100), final_atk * arts_scale * 0.05) * min(self.targets,block)
+			artsdmg2 = np.fmax(final_atk * arts_scale * (1-newres/100), final_atk * arts_scale * 0.05) * min(self.targets,block)
+			ele_gauge = 1000 if self.trait_dmg else 2000
+			burn_dmg = final_atk * ele_scale
+			time_to_fallout = ele_gauge / burn_dmg
+			artsdmg = (artsdmg1 * time_to_fallout + artsdmg2 * 10)/(time_to_fallout + 10)
+			artsdmg += 7000/(10+time_to_fallout) * min(self.targets,block)
+			dps = artsdmg
+		if self.skill == 0: hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		else: 
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			if self.talent_dmg and self.elite > 0:
+				hitdmg2 = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
+				hitdmg = (hitdmg * time_to_fallout + hitdmg2 * 10)/(time_to_fallout + 10)
+		dps += hitdmg/self.atk_interval * self.attack_speed/100
+		return dps
+
 class ZuoLe(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("ZuoLe",pp,[1,2,3],[1],3,1,1)
@@ -7306,9 +7347,9 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
-		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "zuo": ZuoLe, "zuole": ZuoLe}
+		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","BlazeAlter","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Erato","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat","GreyyAlter",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","ZuoLe"]
+		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","Yu","ZuoLe"]

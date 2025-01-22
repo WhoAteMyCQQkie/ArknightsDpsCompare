@@ -1307,7 +1307,7 @@ class Whisperain(Healer):
 
 class Xingzhu(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Xingzhu",pp,[1,2],[1],1,1,1)
+		super().__init__("Xingzhu",pp,[1,2],[1],2,6,1)
 	
 	def skill_hps(self, **kwargs):
 		heal_factor = 1 if self.module == 1 else 0.75
