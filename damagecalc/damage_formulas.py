@@ -4694,19 +4694,21 @@ class Nymph(Operator):
 
 class Odda(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Odda",pp,[1,2],[],2,6,0)	
+		super().__init__("Odda",pp,[1,2],[1],2,6,1)	
+		if self.module == 1 and self.module_dmg: self.name += " 3inRange"
 		if self.talent_dmg and self.elite > 0: self.name += f" after{int(self.talent1_params[0])}Hits"
 		if self.targets > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
+		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
 		atkbuff = self.talent1_params[1] if self.talent_dmg and self.elite > 0 else 0
 		if self.skill < 2:
 			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			splashhitdmg = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
-			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			splashskillhitdmg = np.fmax(0.5 * final_atk * skill_scale - defense, 0.5 * final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			splashhitdmg = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			splashskillhitdmg = np.fmax(0.5 * final_atk * atk_scale * skill_scale - defense, 0.5 * final_atk * atk_scale * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1)
 			avgsplash = (sp_cost * splashhitdmg + splashskillhitdmg) / (sp_cost + 1)
@@ -4716,8 +4718,8 @@ class Odda(Operator):
 		if self.skill == 2:
 			atkbuff += self.skill_params[0]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			splashhitdmg = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			splashhitdmg = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 			if self.targets > 1:
 				dps += splashhitdmg/self.atk_interval * self.attack_speed/100 * (self.targets - 1)
@@ -4860,20 +4862,22 @@ class Penance(Operator):
 
 class Pepe(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Pepe",pp,[1,2,3],[],3,1,0)
+		super().__init__("Pepe",pp,[1,2,3],[1],3,1,1)
 		self.try_kwargs(4,["stacks","maxstacks","max","nostacks"],**kwargs)
+		if self.module == 1 and self.module_dmg: self.name += " 3inRange"
 		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
 		if self.targets > 1: self.name += f" {self.targets}targets"	
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[0]
+		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
 
 		if self.skill < 2:
 			skill_scale = self.skill_params[0] if self.skill == 1 else 1
 			sp_cost = self.skill_cost /(1+self.sp_boost) + 1.2 #sp lockout
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(0.5 * final_atk - defense, 0.5 *final_atk * 0.05) * (self.targets-1)
-			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) + np.fmax(0.5 * skill_scale * final_atk - defense, 0.5 * skill_scale * final_atk * 0.05) * (self.targets-1)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) + np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05) * (self.targets-1)
+			skilldmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05) + np.fmax(0.5 * skill_scale * final_atk * atk_scale - defense, 0.5 * skill_scale * final_atk * atk_scale * 0.05) * (self.targets-1)
 			atkcycle = self.atk_interval/(self.attack_speed/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg
@@ -4890,8 +4894,8 @@ class Pepe(Operator):
 			if self.skill_dmg:
 				aspd += 2 * self.skill_params[2]
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgaoe = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed+aspd)/100)) + hitdmgaoe/(self.atk_interval/((self.attack_speed+aspd)/100))*(self.targets - 1)
 		
 		if self.skill == 3:
@@ -4900,8 +4904,8 @@ class Pepe(Operator):
 			if self.skill_dmg:
 				atkbuff += 4 * self.skill_params[2]
 			final_atk = self.atk * (1 + atkbuff+ self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			hitdmgaoe = np.fmax(0.5 * final_atk - defense, 0.5 * final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			hitdmgaoe = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) + hitdmgaoe/(self.atk_interval/(self.attack_speed/100))*(self.targets - 1)
 		return dps
 
