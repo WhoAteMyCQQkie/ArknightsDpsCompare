@@ -3775,8 +3775,9 @@ class Leto(Operator):
 
 class Lin(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Lin",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Lin",pp,[1,2,3],[1,2],3,1,1)
 		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.module == 2 and self.module_dmg: self.name += "  manyTargets"
 	
 	def skill_dps(self, defense, res):
 		if self.skill == 0: return res * 0
@@ -3791,6 +3792,7 @@ class Lin(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			dps = hitdmgarts/self.atk_interval * self.attack_speed/100 * self.targets
+		if self.module == 2 and self.module_dmg: dps *= 1.15
 		return dps
 
 class Ling(Operator):
@@ -7282,7 +7284,7 @@ class Yu(Operator):
 
 class ZuoLe(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("ZuoLe",pp,[1,2,3],[1],3,1,1)
+		super().__init__("ZuoLe",pp,[1,2,3],[1,2],3,1,1)
 		if self.talent_dmg and self.talent2_dmg: self.name += " lowHp"
 		else: self.name += " fullHp"
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -7297,10 +7299,14 @@ class ZuoLe(Operator):
 		if self.talent_dmg and self.talent2_dmg: sp_recovery += self.talent1_params[2]
 		if self.elite == 2:
 			sp_recovery += self.talent2_params[2] / self.atk_interval * (self.attack_speed+aspd)/100 if self.talent_dmg and self.talent2_dmg else self.talent2_params[0] / self.atk_interval * (self.attack_speed+aspd)/100
+		tal_scale = 0.9 + 0.1 * self.module_lvl if self.module == 2 and self.talent2_dmg and self.talent_dmg else 1
+		apply_rate = self.talent2_params[2] if self.talent_dmg and self.talent2_dmg and self.elite == 2 else 0.2
 
 		if self.skill == 0:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk * tal_scale - defense, final_atk * tal_scale * 0.05)
+			hitdmg = hitdmg * (1-apply_rate) + hitdmg2 * apply_rate
 			dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		if self.skill == 1:
 			atk_scale = self.skill_params[0]
@@ -7308,6 +7314,8 @@ class ZuoLe(Operator):
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
+			hitdmg2 = np.fmax(final_atk * tal_scale - defense, final_atk * tal_scale * 0.05)
+			hitdmg = hitdmg * (1-apply_rate) + hitdmg2 * apply_rate
 			sp_cost = self.skill_cost / (sp_recovery + self.sp_boost) + 1.2 #sp lockout
 			atkcycle = self.atk_interval/((self.attack_speed + aspd)/100)
 			atks_per_skillactivation = sp_cost / atkcycle
@@ -7322,11 +7330,15 @@ class ZuoLe(Operator):
 			atkbuff = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk * tal_scale - defense, final_atk * tal_scale * 0.05)
+			hitdmg = hitdmg * (1-apply_rate) + hitdmg2 * apply_rate
 			dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100 * min(self.targets, 2)
 		if self.skill == 3:
 			atk_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			hitdmg2 = np.fmax(final_atk * tal_scale - defense, final_atk * tal_scale * 0.05)
+			hitdmg = hitdmg * (1-apply_rate) + hitdmg2 * apply_rate
 			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk* atk_scale * 0.05)
 			skilldmg2= np.fmax(2*final_atk * atk_scale - defense, 2*final_atk* atk_scale * 0.05)
 			sp_cost = self.skill_cost / (sp_recovery + self.sp_boost) + 1.2 #sp lockout
