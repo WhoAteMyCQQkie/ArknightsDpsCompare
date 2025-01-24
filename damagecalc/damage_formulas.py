@@ -104,7 +104,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mon3tr","Rosmontis"]:
+					if name in ["Kaltsit","Phantom","Mon3tr","Rosmontis","Dusk","Eunectes"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -1828,11 +1828,12 @@ class Durnar(Operator):
 
 class Dusk(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Dusk",pp,[1,2,3],[1,2],3,1,1)
+		super().__init__("Dusk",pp,[1,2,3],[1,2,3],3,1,1)
 		if self.talent_dmg and self.elite > 0: self.name += f" {int(self.talent1_params[1])}stacks"
 		if self.talent2_dmg and self.elite == 2: self.name += " +Freeling"
 		if self.skill == 2 and self.skill_dmg: self.name += " vsLowHp"		
 		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.module == 3: self.name += " MOD NOT PROPERLY IMPLEMENTED YET"
 		if self.module == 2:
 			if self.module_lvl == 2: self.drone_atk += 15
 			if self.module_lvl == 3: self.drone_atk += 25
@@ -2052,7 +2053,7 @@ class Ethan(Operator):
 
 class Eunectes(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Eunectes",pp,[1,2,3],[1,2],3,1,1)
+		super().__init__("Eunectes",pp,[1,2,3],[1,2,3],3,1,1)
 		if not self.talent_dmg and self.elite > 0: self.name += " <50%hp"
 		if self.module_dmg and self.module == 2: self.name += " WhileBlocking"
 
@@ -2063,6 +2064,10 @@ class Eunectes(Operator):
 		atk_interval = 2 if self.skill == 2 else self.atk_interval
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 		dps = hitdmg/atk_interval * self.attack_speed/100
+		block = 3 if self.skill == 3 else 1
+		if self.module == 3 and self.skill > 0:
+			dps *= min(self.targets, block + (self.module_lvl - 1))
+			dps *= 0.8 + 0.2 * self.module_lvl
 		return dps
 
 class ExecutorAlter(Operator):

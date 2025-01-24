@@ -290,8 +290,13 @@ class OperatorData:
 			has_module = False
 			has_second_module = False
 		
-		has_third_module = key in ['char_003_kalts','char_4046_ebnhlz','char_250_phatom'] #I will assume this will stay in the minority
-		
+		has_third_module = True #key in ['char_003_kalts','char_4046_ebnhlz','char_250_phatom'] #I will assume this will stay in the minority
+		try:
+			module_key = "uniequip_004_" + name_id
+			_ = module_data[module_key]["phases"][1]["parts"]
+		except KeyError:
+			has_third_module = False
+
 		modules = []
 		if has_module: modules = [2]
 		if has_second_module: modules = [2,3]
