@@ -2638,13 +2638,15 @@ class Gladiia(Operator):
 
 class Gnosis(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Gnosis",pp,[1,3],[1],3,1,1)
+		super().__init__("Gnosis",pp,[1,3],[1,2],3,1,1)
 		if self.skill == 3:
 			if self.skill_dmg: self.name += " vsFrozen"
 			else: self.name += " vsNonFrozen"
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			nukedmg = final_atk * self.skill_params[0] * max(1+self.buff_fragile, max(self.talent1_params))
 			self.name += f" Nukedmg:{int(nukedmg)}"
+		if self.module == 2 and self.skill == 1:
+			if self.module_dmg: self.name += "vsElite"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 
 	def skill_dps(self, defense, res):
@@ -2653,12 +2655,13 @@ class Gnosis(Operator):
 		coldfragile = max(coldfragile, self.buff_fragile)
 		frozenfragile = max(frozenfragile, self.buff_fragile)
 		frozenres = np.fmax(0, res - 15)
-		
+		atkbuff = 0.05 * self.module_lvl if self.module == 2 and self.module_lvl > 1 else 0
+		extra_sp = 0.25 if self.module == 2 and self.skill == 1 and self.module_dmg else 0
 		####the actual skills
 		if self.skill < 2:
 			skill_scale = self.skill_params[0]
-			sp_cost = self.skill_cost/(1+ self.sp_boost) + 1.2 #sp lockout
-			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			sp_cost = self.skill_cost/(1+ self.sp_boost + extra_sp) + 1.2 #sp lockout
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
 			skilldmg1 = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
 			skilldmg2 = np.fmax(final_atk * skill_scale * (1-frozenres/100), final_atk * skill_scale * 0.05)*(1+frozenfragile)/(1+self.buff_fragile)
@@ -2673,7 +2676,7 @@ class Gnosis(Operator):
 		
 		if self.skill == 3:
 			aspd = self.skill_params[1]
-			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)*(1+coldfragile)/(1+self.buff_fragile)
 			if self.skill_dmg: hitdmg = np.fmax(final_atk * (1-frozenres/100), final_atk * 0.05)*(1+frozenfragile)/(1+self.buff_fragile)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * min(2, self.targets)
@@ -5152,7 +5155,7 @@ class Popukar(Operator):
 
 class Pozemka(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Pozemka",pp,[1,3],[2],3,1,2)
+		super().__init__("Pozemka",pp,[1,3],[2,1],3,1,2)
 		if self.module == 2 and self.module_lvl > 1: self.drone_atk += 10 + 20 * self.module_lvl
 		if not self.talent_dmg and self.elite > 0:
 			self.name += " w/o Typewriter"
@@ -5170,6 +5173,8 @@ class Pozemka(Operator):
 				defshred = 0.25 if self.pot > 4 else 0.23
 			else:
 				defshred = 0.2 if self.pot > 4 else 0.18
+			if self.module == 1:
+				defshred += 0.05 * (self.module_lvl - 1)
 		newdef = defense * (1-defshred)
 		atk_scale = 1.05 if self.module_dmg and self.module == 2 else 1
 
@@ -6338,14 +6343,14 @@ class Thorns(Operator):
 
 class ThornsAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("ThornsAlter",pp,[2,3],[],3,1,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("ThornsAlter",pp,[2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill != 0 and not self.trait_dmg: self.name += " unitOnly"
 		if self.skill == 3: self.name += " averaged"
 		if self.targets > 1 and self.skill > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
-		atkbuff = self.talent1_params[2]
-		extra_duration = self.talent1_params[0]
+		atkbuff = min(self.talent1_params)
+		extra_duration = max(self.talent1_params)
 		aspd = self.talent2_params[0] if self.elite > 2 else 0
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
@@ -6374,7 +6379,7 @@ class ThornsAlter(Operator):
 
 class TinMan(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("TinMan",pp,[1,2],[],1,6,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("TinMan",pp,[1,2],[1],1,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 2: self.name += " 1UnitActive"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe	
 	
@@ -6665,7 +6670,7 @@ class Vermeil(Operator):
 
 class Vigil(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Vigil",pp,[1,2,3],[1],3,6,1)
+		super().__init__("Vigil",pp,[1,2,3],[1,2],3,6,2)
 		if self.talent_dmg:
 			if self.trait_dmg: self.name += " vsBlocked"
 			if not self.skill_dmg: self.name += " 1wolf"
@@ -6679,7 +6684,7 @@ class Vigil(Operator):
 		if self.talent_dmg:
 			wolves = 3 if self.skill_dmg  else 1
 			if self.trait_dmg:
-				atk_scale = 1.5
+				atk_scale = 1.65 if self.module == 2 else 1.5 
 				defignore = self.talent2_params[0] if self.elite == 2 else 0
 		newdef = np.fmax(0, defense - defignore)
 		wolfdef = np.fmax(0, defense - self.talent2_params[0]) if self.elite == 2 else defense
