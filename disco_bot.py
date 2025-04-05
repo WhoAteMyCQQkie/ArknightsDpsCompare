@@ -1,4 +1,5 @@
-# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). Also Change line 48!
+# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). 
+# You can add a channel.txt file, too. If the file exists, the bot will only respond to channels listed there. Both channel names and channel ids work. 1 channel per line.
 
 #TODO: Easy but tedious tasks that just take a lot of time
 # implement the missing operators
@@ -36,7 +37,6 @@
 # Add GUI
 
 import os
-from typing import Callable, List
 import platform
 
 import discord
@@ -46,16 +46,13 @@ from PIL import Image
 import damagecalc.commands as cmds
 from damagecalc.damage_formulas import operators
 from damagecalc.healing_formulas import healers
-from damagecalc.utils import Registry, DiscordSendable
-
-
-##############################################
-#Bot Settings for the channels it will respond to
+from damagecalc.utils import DiscordSendable
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+#Set the accepted channels
 if os.path.exists("channels.txt"):
 	with open("channels.txt","r") as f:
 		channels = f.read().split()
@@ -68,7 +65,7 @@ def check_channel(ctx):
 		if str(ctx.channel.id) in channels or ctx.channel.name in channels:
 			return True
 	elif isinstance(ctx.channel, discord.DMChannel):
-		return True
+		return True ######################################################### this defines if the bot reacts to DMs
 	return False
 
 
@@ -76,47 +73,39 @@ def check_channel(ctx):
 @bot.command(aliases=["DPS","Dps"])
 @commands.check(check_channel)
 async def dps(ctx, *content):
+	"""Plots the dps graph"""
 	await cmds.dps_command(list(content)).send(ctx.channel)
 
-@bot.command()
+@bot.command(aliases=["HPS","Hps"])
 @commands.check(check_channel)
 async def hps(ctx, *content):
+	"""Compares hps of operators"""
 	await cmds.hps_command(list(content)).send(ctx.channel)
 
-@bot.command()
+@bot.command(aliases=["Stage"])
 @commands.check(check_channel)
 async def stage(ctx, *content):
+	"""Type !stage for more details"""
 	await cmds.stage_command(list(content)).send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)
 async def ops(ctx):
+	"""Lists the available operators"""
 	output = DiscordSendable(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)")
 	await output.send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)
 async def hops(ctx):
+	"""Lists the available healers"""
 	output = DiscordSendable(f"These are the currently available healers: \n{', '.join(healers)}")
-	await output.send(ctx.channel)
-
-@bot.command() #TODO: Make a proper help command
-@commands.check(check_channel)
-async def help2(ctx):
-	output = DiscordSendable("""General use: !dps <opname1> <opname2> ... 
-Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
-example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
-**The Bot will also respond to DMs.**
-!guide will show you the available modifiers to the graphs, !ops lists the available operators.
-The same works for healers: !hps <opname> ... works similar to !dps. !hops shows the available healers.
-Errors do happen, so feel free to double check the results.
-If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
-""")
 	await output.send(ctx.channel)
 
 @bot.command(aliases=["prompt", "prompts"])
 @commands.check(check_channel)
 async def guide(ctx):
+	"""Lists all the prompts with short explanations"""
 	output = DiscordSendable("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
 S1,S2,S3,S0 sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
@@ -136,6 +125,7 @@ hide,left,tiny,short (for the legend), highlight, color (for colorblind people),
 @bot.command(aliases=["muelsyse"])
 @commands.check(check_channel)
 async def mumu(ctx):
+	"""Guide on how to properly use !dps muelsyse"""
 	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu. ONLY OPERATORS OF THE NEW SYSTEM CAN BE CLONED!(which may be all of them by the end of the year).
 Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, this number is however not accurate, since i havent figured out how to properly estimate that.
 Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
@@ -143,20 +133,47 @@ Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+
 
 @bot.command()
 @commands.check(check_channel)
-async def ping(ctx): 
+async def ping(ctx):
+	""" """
 	await ctx.send("Pong!")
 
 @bot.command()
-async def marco(ctx): 
+async def marco(ctx):
+	""" """
 	await ctx.send("Polo!")
 
 @bot.command()
 async def calc(ctx, *content):
+	"""Does math calculations, following python syntax. Accepts x instead of *"""
 	if platform.system() == "Linux":
 		output = cmds.calc_command_linux(list(content))
 	else:
 		output = cmds.calc_command(list(content))
 	await output.send(ctx.channel)
+
+#Creating the help command
+class MyHelpCommand(commands.HelpCommand):
+	async def send_bot_help(self, mapping):
+		help_message = """General use: !dps <opname1> <opname2> ... 
+Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
+example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
+**The Bot will also respond to DMs.**
+!guide will show you the available modifiers to the graphs, !ops lists the available operators.
+The same works for healers: !hps <opname> ... works similar to !dps. !hops shows the available healers.
+Errors do happen, so feel free to double check the results.
+If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
+**The commands:**
+"""
+		for cog, commands_list in mapping.items():
+			for command in commands_list:
+				if command.name in ["ping", "marco"]: continue
+				help_message += f"{command.name}: {command.help}\n"
+		await self.context.send(help_message)
+
+	async def send_command_help(self, command):
+		await self.context.send(f"**{command.name}**: {command.help}")
+
+bot.help_command = MyHelpCommand()
 
 #Error handling. Usually it will just be a command outside of the valid channels
 @bot.event

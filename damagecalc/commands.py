@@ -12,12 +12,11 @@ from PIL import Image
 
 import damagecalc.utils as utils
 from damagecalc.utils import DiscordSendable
-import damagecalc.damage_formulas as df
 from damagecalc.damage_formulas import op_dict
 from damagecalc.healing_formulas import healer_dict
 
 #These are a bunch of bad words that should not be used by the bot and might even get it banned. I wanted them included in the script itself, 
-#but i also do not want them in clear text in an open source project, hence the base64 encoding.
+#but I also do not want them in clear text in an open source project, hence the base64 encoding.
 encoded_profanity = ['bmVncm8=', 'bmlnZ2Vy', 'bmVnZXI=', 'bmlnbm9n', 'bmlnZ2E=', 'bmlnZXI=', 'bmlnYQ==', 'YWRvbGY=', 'aGl0bGVy', 'ZmFnZ290', 'Y3VudA==', 'c2hpdA==', 'ZnVjaw==', 'bmF6aQ==', 'cmV0YXJk', 'ZG93bnk=', 'Yml0Y2g=', 'd2hvcmU=', 'c2x1dA==', 'cmFwZQ==', 'cmFwaXN0', 'cGVkbw==']
 profanity = [base64.b64decode(wort.encode("utf-8")).decode("utf-8") for wort in encoded_profanity]
 
@@ -31,9 +30,6 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
-
-def simple(content: str) -> Callable[[List[str]], DiscordSendable]:
-	return lambda args: DiscordSendable(content)
 
 def calc_command(args: List[str]) -> DiscordSendable:
 	manager = multiprocessing.Manager()
@@ -76,7 +72,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 	textsize = 10
 	short_names = False
 
-	#Adding the text prompt
+	#Adding the title prompt
 	for i, word in enumerate(args):
 		if word in ["text", "title"]:
 			plot_title = f"{' '.join(args[i+1:])}"
@@ -86,6 +82,8 @@ def dps_command(args: List[str])-> DiscordSendable:
 					add_title = False
 			if add_title: plt.title(plot_title)
 			args = args[:i]
+
+	args = [str(item).lower() for item in args]
 
 	#some more error correction with wrong spaces
 	for i in range(len(args)-1):
@@ -211,7 +209,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 			utils.parse_plot_parameters(global_parameters, args[scopes[i]:scopes[i+1]])
 	if plot_numbers == 0: return DiscordSendable() #maybe return a "no operator found, use !guide" hint instead?
 
-	#find unused parts
+	#find unused parts for the error message
 	error_message = "" 
 	test_parameters = utils.PlotParametersSet()
 	unparsed_inputs = utils.parse_plot_parameters(test_parameters, args) &  utils.parse_plot_essentials(test_parameters, args)
@@ -229,8 +227,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 				break
 
 
-
-	#prevent the legend from messing up the graphs format
+	#prevent the legend from messing up the graphs format, aka forcing the legend to be small enough to fit inside the plot
 	legend_columns = 1
 	if plot_numbers < 2: plot_size = 4
 	if plot_numbers > 15 and plot_size == 4:
@@ -247,6 +244,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 		if not bottomleft: plt.legend(loc="upper right",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
 		else: plt.legend(loc="lower left",fontsize=textsize,ncol=legend_columns,framealpha=0.7)
 	
+	#Adding the axis description
 	if global_parameters.graph_type != 5:
 		plt.xlabel("Defense\nRes")
 		plt.ylabel("DPS" , rotation=0)
@@ -321,7 +319,6 @@ def dps_command(args: List[str])-> DiscordSendable:
 	buf.seek(0)
 	file = discord.File(buf, filename='plot.png')
 	plt.close()
-	#return DiscordSendable(file=file)
 	if parsing_error:
 		return DiscordSendable(content=error_message, file=file)
 	else:
