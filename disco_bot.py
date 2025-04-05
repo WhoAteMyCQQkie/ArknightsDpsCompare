@@ -33,13 +33,14 @@
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
 # stylized plots. for example christmas themed etc.
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
-
+# Add GUI
 
 import os
 from typing import Callable, List
 import platform
 
 import discord
+from discord.ext import commands
 from PIL import Image
 
 import damagecalc.commands as cmds
@@ -50,29 +51,59 @@ from damagecalc.utils import Registry, DiscordSendable
 
 ##############################################
 #Bot Settings for the channels it will respond to
-VALID_CHANNELS = ['operation-room','dps-bot-spam']
-RESPOND_TO_DM = True
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-#this part is only needed because i use the same token on my pc for my testserver, whereas the script usually runs on a raspberry pi
-if os.path.exists("testrun.txt"):
-	VALID_CHANNELS = ['privatebottest']
-	RESPOND_TO_DM = False
+if os.path.exists("channels.txt"):
+	with open("channels.txt","r") as f:
+		channels = f.read().split()
+else:
+	channels = []
 
-commands: Registry[str, Callable[[List[str]], DiscordSendable]] = Registry("commands")
-aliases: Registry[str, str] = Registry("aliases")
+def check_channel(ctx):
+	if channels == []: return True
+	if isinstance(ctx.channel, discord.TextChannel):
+		if str(ctx.channel.id) in channels or ctx.channel.name in channels:
+			return True
+	elif isinstance(ctx.channel, discord.DMChannel):
+		return True
+	return False
 
-@client.event
-async def on_ready():
-	print(f"We have logged in as {client.user}")
-	print('Registering commands...')
-	commands.register('ping', cmds.simple('Pong!'))
-	commands.register('marco', cmds.simple('Polo!'))
-	commands.register('ops', cmds.simple(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)"))
-	commands.register('hops', cmds.simple(f"These are the currently available healers: \n{', '.join(healers)}"))
-	commands.register('help', cmds.simple("""General use: !dps <opname1> <opname2> ... 
+
+#The main command for the bot. Generates the graphs
+@bot.command(aliases=["DPS","Dps"])
+@commands.check(check_channel)
+async def dps(ctx, *content):
+	await cmds.dps_command(list(content)).send(ctx.channel)
+
+@bot.command()
+@commands.check(check_channel)
+async def hps(ctx, *content):
+	await cmds.hps_command(list(content)).send(ctx.channel)
+
+@bot.command()
+@commands.check(check_channel)
+async def stage(ctx, *content):
+	await cmds.stage_command(list(content)).send(ctx.channel)
+
+@bot.command()
+@commands.check(check_channel)
+async def ops(ctx):
+	output = DiscordSendable(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)")
+	await output.send(ctx.channel)
+
+@bot.command()
+@commands.check(check_channel)
+async def hops(ctx):
+	output = DiscordSendable(f"These are the currently available healers: \n{', '.join(healers)}")
+	await output.send(ctx.channel)
+
+@bot.command() #TODO: Make a proper help command
+@commands.check(check_channel)
+async def help2(ctx):
+	output = DiscordSendable("""General use: !dps <opname1> <opname2> ... 
 Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
 example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
 **The Bot will also respond to DMs.**
@@ -80,8 +111,13 @@ example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
 The same works for healers: !hps <opname> ... works similar to !dps. !hops shows the available healers.
 Errors do happen, so feel free to double check the results.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
-"""))
-	commands.register('guide', cmds.simple("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
+""")
+	await output.send(ctx.channel)
+
+@bot.command(aliases=["prompt", "prompts"])
+@commands.check(check_channel)
+async def guide(ctx):
+	output = DiscordSendable("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
 S1,S2,S3,S0 sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
 total (total dmg over the skill duration), avg (factoring in skill downtime) (do not work for all operators)
@@ -94,58 +130,46 @@ all (plots all possible conditionals), conditional (further shows prompts to get
 maxdef/maxres <value>, split/split2 (separates def/res increase), fixdef/fixres <value>, big(increases plotsize), numbers (shows all the dmg numbers)
 **Other prompts:** 
 hide,left,tiny,short (for the legend), highlight, color (for colorblind people), title (puts everything after the prompt as title of the graph, ignoring further inputs)
-"""))
-	aliases.register('prompt', 'guide')
-	aliases.register('prompts', 'guide')
-	commands.register('muelsyse', cmds.simple("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu. ONLY OPERATORS OF THE NEW SYSTEM CAN BE CLONED!(which may be all of them by the end of the year).
+""")
+	await output.send(ctx.channel)
+
+@bot.command(aliases=["muelsyse"])
+@commands.check(check_channel)
+async def mumu(ctx):
+	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu. ONLY OPERATORS OF THE NEW SYSTEM CAN BE CLONED!(which may be all of them by the end of the year).
 Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, this number is however not accurate, since i havent figured out how to properly estimate that.
-Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op."""))
-	aliases.register('mumu', 'muelsyse')
+Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
+	await output.send(ctx.channel)
+
+@bot.command()
+@commands.check(check_channel)
+async def ping(ctx): 
+	await ctx.send("Pong!")
+
+@bot.command()
+async def marco(ctx): 
+	await ctx.send("Polo!")
+
+@bot.command()
+async def calc(ctx, *content):
 	if platform.system() == "Linux":
-		commands.register('calc', cmds.calc_command_linux)
+		output = cmds.calc_command_linux(list(content))
 	else:
-		commands.register('calc', cmds.calc_command)
-	commands.register('dps', cmds.dps_command)
-	commands.register('hps', cmds.hps_command)
-	commands.register('stage', cmds.stage_command)
-	
-	print(f"{len(commands)} command(s) and {len(aliases)} alias(es) registered!")
+		output = cmds.calc_command(list(content))
+	await output.send(ctx.channel)
 
-@client.event
-async def on_message(message):
-	if message.author == client.user:
-		return
-
-	if isinstance(message.channel, discord.channel.DMChannel) and RESPOND_TO_DM:
-		pass
-	elif not message.channel.name in VALID_CHANNELS: return
-
-	# Check for bot command flag
-	if not message.content.lower().startswith('!'):
-		return
-	
-	# Tokenize the message, removing the flag
-	content = message.content.lower()[1:].split()
-
-	# Attempt to retrieve the command, and check for aliases
-	command_name = content[0]
-	alias_result: str = aliases.get(command_name)
-
-	if alias_result is not None:
-		command_name = alias_result
-
-	command: Callable[[List[str]], DiscordSendable] = commands.get(command_name)
-
-	if command is not None:
-		# Run the command and send the result
-		await command(content[1:]).send(message.channel)
+#Error handling. Usually it will just be a command outside of the valid channels
+@bot.event
+async def on_command_error(ctx, error):
+	if isinstance(error, commands.CheckFailure): pass
+	else: print(f"An error occurred: {error}")
 
 
 if __name__ == "__main__":
 	try:
-		with open("token.txt", encoding="locale") as testfile:
-			token = testfile.readline()
-		client.run(token)
+		with open("token.txt", encoding="locale") as f:
+			token = f.readline()
+		bot.run(token)
 	except FileNotFoundError:
 		print("""In order to function as a discord bot you need a file "token.txt" containing your discord token in the same directory as disco_bot.py.\nYou can however still use !dps right here in the console, following the normal syntax.""")
 		while True:

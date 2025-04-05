@@ -1,7 +1,7 @@
 __pycache__/
 .pylintrc
 token.txt
-testrun.txt
+channels.txt
 Database/CN-gamedata/
 Database/images/*
 !Database/images/.gitkeep
