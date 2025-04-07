@@ -3450,6 +3450,35 @@ class Kafka(Operator):#TODO: dmg numbers in the label
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
+class Kaltsit(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Kaltsit",pp,[1,2,3],[1,2,3],3,1,2)
+		if not self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " NotInHealRange"
+		if self.skill == 3: self.name += " averaged"
+		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
+		if self.module in [2,3]:
+			self.attack_speed -= 4 + self.module_lvl #because we want mon3trs attack speed
+
+	def skill_dps(self, defense, res):
+		aspd = 0
+		if self.module == 2 and self.talent_dmg:
+			if self.module_lvl == 2: aspd = 12
+			if self.module_lvl == 3: aspd = 20
+		atkbuff = 0.25 * (self.module_lvl - 1) if self.module == 3 else 0
+			
+		if self.skill < 2:
+			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
+		if self.skill == 2:
+			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1] + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
+		if self.skill == 3:
+			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] * 0.5 + atkbuff) + self.buff_atk_flat
+			dps = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
+		return dps
+
 class Kazemaru(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Kazemaru",pp,[1,2],[1],2,1,1)
@@ -4426,33 +4455,18 @@ class Mlynar(Operator):
 		
 		return dps
 
-class Kaltsit(Operator):
+class Mon3tr(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Kaltsit",pp,[1,2,3],[1,2,3],3,1,2)
-		if not self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " NotInHealRange"
-		if self.skill == 3: self.name += " averaged"
-		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
-		if self.module in [2,3]:
-			self.attack_speed -= 4 + self.module_lvl #because we want mon3trs attack speed
+		super().__init__("Mon3tr",pp,[3],[],3,1,0)
+		if self.targets > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
-		aspd = 0
-		if self.module == 2 and self.talent_dmg:
-			if self.module_lvl == 2: aspd = 12
-			if self.module_lvl == 3: aspd = 20
-		atkbuff = 0.25 * (self.module_lvl - 1) if self.module == 3 else 0
-			
-		if self.skill < 2:
-			final_atk = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100
-		if self.skill == 2:
-			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[1] + atkbuff) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			dps = hitdmg/self.drone_atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
+		aspd = self.talent2_params[1] if self.elite > 1 else 0		
+		if self.skill < 3: return res * 0
 		if self.skill == 3:
-			final_atk = self.drone_atk * (1 + self.buff_atk + self.skill_params[0] * 0.5 + atkbuff) + self.buff_atk_flat
-			dps = final_atk/self.drone_atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1)
+			atk_interval = self.atk_interval + self.skill_params[4]
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] ) + self.buff_atk_flat
+			dps = final_atk/atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1) * min(self.targets, 3)
 		return dps
 
 class Morgan(Operator):
@@ -7401,7 +7415,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"jackie": Jackie, "jaye": Jaye, "jessica": Jessica, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, "justiceknight": JusticeKnight,
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
-		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Kaltsit, "mon3ter": Kaltsit, "mon3tr": Kaltsit, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
+		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "m3": Mon3tr, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
@@ -7410,5 +7424,5 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","BlazeAlter","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Entelechia","Erato","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Grani","Greythroat","GreyyAlter",
-		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
+		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kafka","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Wis'adel","YatoAlter","Yu","ZuoLe"]
