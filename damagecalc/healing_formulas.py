@@ -482,6 +482,39 @@ class Lumen(Healer):
 			self.name += f": **{int(skill_hps)}**/{int(base_hps)}"
 		return self.name
 
+class Mon3tr(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Mon3tr",pp,[1,2,3],[],2,1,0)
+		if not self.talent_dmg or (self.skill == 2 and not self.skill_dmg): self.name += " noConstruct"
+
+	def skill_hps(self, **kwargs):
+		targets = min(self.targets,4)
+		atkbuff = self.talent1_params[1] if self.talent_dmg and (self.skill != 2 or self.skill_dmg) else 0
+		target_scaling = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2]
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		aspd = self.talent2_params[1] if self.elite > 0 else 0
+		if self.skill == 1:
+			target_scaling_skill = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2 + 0.75**3]
+			heals =  (final_atk * target_scaling[targets] * self.skill_cost + final_atk * self.skill_params[0] * target_scaling_skill[targets]) / (self.skill_cost + 1)
+			avg_hps = heals/self.atk_interval * (self.attack_speed + aspd)/100 * (1+self.buff_fragile)
+			self.name += f": *{int(avg_hps)}*"
+			return self.name
+		
+		base_hps = final_atk/self.atk_interval * (self.attack_speed+aspd)/100 * (1+self.buff_fragile) * target_scaling[targets]
+		skill_down_duration = self.atk_interval / (self.attack_speed+aspd) * 100 * self.skill_cost
+		if self.skill == 2:
+			aspd *= self.skill_params[0]
+			skill_hps = final_atk / self.atk_interval * (self.attack_speed+aspd)/100 * (1+self.buff_fragile) * target_scaling[targets]
+			if self.skill_dmg and self.talent_dmg: skill_hps *= 2
+		if self.skill == 3: 
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff + self.skill_params[0]) + self.buff_atk_flat
+			atk_interval = self.atk_interval + self.skill_params[4]
+			target_scaling_skill = [0, 1, 2, 2.75 , 2.75 + 0.75**2]
+			skill_hps = final_atk/atk_interval *(self.attack_speed+aspd)/100 * (1+self.buff_fragile) * target_scaling_skill[targets] * 0.5
+		avg_hps = (skill_hps * self.skill_duration + base_hps * skill_down_duration)/(self.skill_duration + skill_down_duration)
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class Mulberry(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
 		super().__init__("Mulberry",params,[1,2],[1],2,6,1)
@@ -1327,8 +1360,9 @@ class Xingzhu(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry, "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
+healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry,
+			   "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mon3tr": Mon3tr, "m3": Mon3tr, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "thorns": ThornsAlter, "thornsalter": ThornsAlter, "lobster": ThornsAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain, "xingzhu": Xingzhu}
 
-healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
+healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mon3tr","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
