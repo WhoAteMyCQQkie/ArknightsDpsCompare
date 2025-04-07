@@ -1209,7 +1209,7 @@ class Bryophyta(Operator):
 
 class Cantabile(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Cantabile",pp,[1,2],[],2,1,0)
+		super().__init__("Cantabile",pp,[1,2],[2],2,1,2)
 		if self.elite > 0:
 			if self.talent_dmg: self.name += " melee"
 			else: self.name += " ranged"
@@ -3233,7 +3233,7 @@ class Indra(Operator):
 
 class Ines(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Ines",pp,[1,2,3],[],2,1,0)
+		super().__init__("Ines",pp,[1,2,3],[2],2,1,2)
 		self.try_kwargs(4,["steal","nosteal"],**kwargs)
 		if self.skill == 2:
 			if self.skill_dmg: self.name += " maxSteal"
@@ -3928,7 +3928,7 @@ class Ling(Operator):
 
 class Logos(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Logos",pp,[1,2,3],[3],3,1,3)
+		super().__init__("Logos",pp,[1,2,3],[3,2],3,1,3)
 		if self.skill == 2 and self.skill_dmg: self.name += " after5sec"
 		if self.module == 3 and self.talent_dmg: self.name += " withAvgNecrosis"
 		elif self.module == 3: self.name += " noNecrosis"
@@ -3947,6 +3947,7 @@ class Logos(Operator):
 		bonuschance = self.talent1_params[0] if self.elite > 0 else 0
 		if self.module == 3: bonuschance += 0.1 * (self.module_lvl - 1)
 		bonusdmg = self.talent1_params[1]
+		bonus_hitcount = 2 if self.module == 2 and self.module_lvl > 1 else 1
 		falloutdmg = 0.2 * self.module_lvl /(1+self.buff_fragile) if self.module == 3 and self.module_lvl > 1 else 0
 		newres = np.fmax(0,res-10) if self.elite == 2 else res
 		if self.elite == 2:
@@ -3960,7 +3961,7 @@ class Logos(Operator):
 		if self.skill < 2:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]*self.skill) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance * bonus_hitcount
 			dps = (hitdmg+bonusdmg)/self.atk_interval * self.attack_speed/100
 			if self.module == 3 and self.talent_dmg:
 				ele_gauge = 1000 if self.module_dmg else 2000
@@ -3975,7 +3976,7 @@ class Logos(Operator):
 			if self.skill_dmg: scaling *= 3
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * scaling * (1-newres/100), final_atk * scaling * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance * bonus_hitcount
 			dps = (hitdmg+bonusdmg) * 2
 			if self.module == 3 and self.talent_dmg:
 				ele_gauge = 1000 if self.module_dmg else 2000
@@ -3988,7 +3989,7 @@ class Logos(Operator):
 		if self.skill == 3:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)
-			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance
+			bonusdmg = (np.fmax(final_atk * bonusdmg * (1-newres/100), final_atk * bonusdmg * 0.05) + np.fmax(shreddmg * (1-newres/100), shreddmg * 0.05)) * bonuschance * bonus_hitcount
 			dps = (hitdmg+bonusdmg)/self.atk_interval * self.attack_speed/100 * min(self.targets,self.skill_params[1])
 			if self.module == 3 and self.talent_dmg:
 				ele_gauge = 1000 if self.module_dmg else 2000
@@ -4588,7 +4589,9 @@ class MrNothing(Operator):
 		
 class Mudrock(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mudrock",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Mudrock",pp,[1,2,3],[1,2],3,1,1)
+		if self.module == 2 and self.module_dmg: self.name += " alone"
+		if self.module == 2 and self.talent2_dmg: self.name += " vsNonSarkaz"
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
 		try: self.hits = kwargs['hits']
 		except KeyError: self.hits = 0
@@ -4596,15 +4599,17 @@ class Mudrock(Operator):
 			
 	def skill_dps(self, defense, res):
 		atkbuff = self.skill_params[0] if self.skill == 3 else 0
+		if self.module == 2 and self.module_dmg: atkbuff += 0.08
+		dmg = self.talent2_params[1] if self.module == 2 and self.module_lvl > 1 and self.talent2_dmg else 1
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		atk_interval = self.atk_interval * 0.7 if self.skill == 3 else self.atk_interval
-		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * dmg
 		dps = hitdmg/atk_interval * self.attack_speed/100
 		if self.skill == 3: dps *= min(self.targets,3)
 
 		if self.skill == 2 and self.hits > 0:
 			atk_scale = self.skill_params[0]
-			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)	
+			skilldmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmg
 			spcost = self.skill_cost
 			extra_sp = (self.module_lvl-1)/9 if self.module == 1 else 0
 			if self.module_lvl == 2: extra_sp *= (spcost-1)/spcost #these roughly factor in the wasted potential. realistically more gets wasted due to the lockout
