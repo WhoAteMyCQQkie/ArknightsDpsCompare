@@ -329,6 +329,8 @@ def hps_command(args: List[str]) -> DiscordSendable:
 	global_parameters = utils.PlotParametersSet()
 	healer_message = ""
 
+	args = [str(item).lower() for item in args]
+
 	#fix typos in operator names
 	for i in range(len(args)):
 		if utils.fix_typos(args[i], healer_dict.keys()) != "":
