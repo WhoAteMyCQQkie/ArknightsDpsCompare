@@ -134,12 +134,10 @@ Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+
 @bot.command()
 @commands.check(check_channel)
 async def ping(ctx):
-	""" """
 	await ctx.send("Pong!")
 
 @bot.command()
 async def marco(ctx):
-	""" """
 	await ctx.send("Polo!")
 
 @bot.command()
@@ -166,7 +164,7 @@ If you want to see how the bot works or expand it, it has a public repository: g
 """
 		for cog, commands_list in mapping.items():
 			for command in commands_list:
-				if command.name in ["ping", "marco"]: continue
+				if command.name in ["ping", "marco","gui"]: continue
 				help_message += f"{command.name}: {command.help}\n"
 		await self.context.send(help_message)
 
