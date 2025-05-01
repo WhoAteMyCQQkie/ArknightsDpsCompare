@@ -6407,7 +6407,7 @@ class TerraResearchCommission(Operator):
 
 class Thorns(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Thorns",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Thorns",pp,[1,2,3],[1,3],3,1,1)
 		if self.skill == 1 and not self.trait_dmg: self.name += "rangedAtk"   ##### keep the ones that apply
 		if self.talent_dmg: self.name += " vsRanged"
 		try:
@@ -6416,6 +6416,8 @@ class Thorns(Operator):
 			self.hits = 0
 		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 		if self.skill == 3 and not self.skill_dmg: self.name += " firstActivation"
+		if self.module == 3: self.name += " averaged"
+		if self.module == 3 and not self.module_dmg: self.name += "(vsBoss)"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe	
 			
 	def skill_dps(self, defense, res):
@@ -6431,6 +6433,12 @@ class Thorns(Operator):
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmg + bonusdmg)/self.atk_interval * self.attack_speed/100 + arts_dot_dps
+			if self.module == 3:
+				time_to_fallout = 1000/(dps*0.1) if self.module_dmg else 2000/(dps*0.1)
+				if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+				else:
+					fallout_dps = dps - arts_dot_dps + arts_dot
+					dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 		if self.skill == 2 and self.hits > 0:
 			atk_scale = 0.8
 			cooldown = self.skill_params[2]
@@ -6439,9 +6447,21 @@ class Thorns(Operator):
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			if(1/self.hits < cooldown):
 				dps = (hitdmg/cooldown + arts_dot_dps + bonusdmg/cooldown) * min(self.targets,4)
+				if self.module == 3:
+					time_to_fallout = 1000/(dps*0.1) / min(self.targets,4) if self.module_dmg else 2000/(dps*0.1) / min(self.targets,4)
+					if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+					else:
+						fallout_dps = dps - (arts_dot_dps + arts_dot) * min(self.targets,4)
+						dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 			else:
 				cooldown = 1/self.hits
 				dps = (hitdmg/cooldown + arts_dot_dps) * min(self.targets,4)
+				if self.module == 3:
+					time_to_fallout = 1000/(dps*0.1) / min(self.targets,4) if self.module_dmg else 2000/(dps*0.1) / min(self.targets,4)
+					if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+					else:
+						fallout_dps = dps - (arts_dot_dps + arts_dot) * min(self.targets,4)
+						dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 		elif self.skill == 2:
 			return defense*0
 		if self.skill == 3:
@@ -6450,6 +6470,12 @@ class Thorns(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmg + bonusdmg)/self.atk_interval * (self.attack_speed + bufffactor * self.skill_params[1])/100 + arts_dot_dps
+			if self.module == 3:
+				time_to_fallout = 1000/(dps*0.1) if self.module_dmg else 2000/(dps*0.1)
+				if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+				else:
+					fallout_dps = dps - arts_dot_dps + arts_dot
+					dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)		
 		return dps
 
 class ThornsAlter(Operator):
