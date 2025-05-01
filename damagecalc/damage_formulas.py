@@ -3788,6 +3788,37 @@ class Lee(Operator):
 		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
+class Lemuen(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Lemuen",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
+		if self.skill == 2: self.talent_dmg = self.talent_dmg and self.skill_dmg
+		if self.talent_dmg and self.elite > 0: self.name += " vsMarked"
+		if not self.talent2_dmg and self.elite > 1: self.name += f" <{self.talent2_params[0]}s"
+		if self.targets > 1 and self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		atkbuff = self.talent2_params[1] if self.talent2_dmg and self.elite > 1 else 0
+		dmg = min(self.talent1_params) if self.talent_dmg and self.elite > 0 else 1
+		
+		if self.skill < 2:
+			atk_scale = self.skill_params[0] if self.skill == 1 else 1
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * min(self.targets, 1 + self.skill) * dmg
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+		
+		if self.skill == 2:
+			aspd = self.skill_params[0]
+			atkbuff += self.skill_params[1]
+			atk_scale = self.skill_params[8]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			if self.talent_dmg: hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmg
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+			if self.talent_dmg:
+				dps = hitdmg / 3.5
+
+		return dps
+
 class Lessing(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Lessing",pp,[1,2,3],[1,2],2,6,1)
@@ -5672,13 +5703,12 @@ class SandReckoner(Operator):
 	
 class SanktaMiksaparato(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("SanktaMiksaparato",pp ,[1,2,3],[1],3,1,1)
+		super().__init__("SanktaMiksaparato",pp ,[1,2,3],[1],2,6,1)
 		if self.elite > 0 and not self.talent_dmg: self.name += " noStacks"
 		if self.skill == 3: self.name += " idealCase" if self.skill_dmg else " 1hit/s"
 		if self.skill == 3 and self.targets > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
-		print(self.skill_params)
 		aspd = self.talent1_params[1] * 3 if self.elite > 0 and self.talent_dmg else 0
 		if self.skill < 2:
 			final_atk = self.atk * (1+ self.buff_atk) + self.buff_atk_flat
@@ -7473,7 +7503,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"franka": Franka, "frost": Frost, "frostleaf": Frostleaf, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "greyy": GreyyAlter, "greyyalter": GreyyAlter, "harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
 		"jackie": Jackie, "jaye": Jaye, "jessica": Jessica, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, "justiceknight": JusticeKnight,
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
-		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
+		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lemuen": Lemuen, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
 		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
