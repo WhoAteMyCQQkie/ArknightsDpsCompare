@@ -2187,6 +2187,39 @@ class Exusiai(Operator):
 			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk* atk_scale* skill_scale * 0.05)
 			dps = 5*hitdmg/(atk_interval/((self.attack_speed+aspd)/100))
 		return dps
+
+class ExusiaiAlter(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("ExusiaiAlter",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		atkbuff = 2 * self.talent2_params[0] if self.elite > 1 else 0
+		explosion_prob = min(self.talent1_params[1:])
+		explosion_scale = max(self.talent1_params)
+
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05) * self.skill
+			dps = (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
+		if self.skill == 2:
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
+			dps =  (hitdmg + explosionhit * explosion_prob * self.targets) / 0.6 * (self.attack_speed) / 100
+		if self.skill == 3:
+			atkbuff += self.skill_params[5]
+			skill_scale = self.skill_params[3]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
+			dps =  5 * (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
+
+		return dps
+
 		
 class Eyjafjalla(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -3793,7 +3826,7 @@ class Lemuen(Operator):
 		super().__init__("Lemuen",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 2: self.talent_dmg = self.talent_dmg and self.skill_dmg
 		if self.talent_dmg and self.elite > 0: self.name += " vsMarked"
-		if not self.talent2_dmg and self.elite > 1: self.name += f" <{self.talent2_params[0]}s"
+		if not self.talent2_dmg and self.elite > 1: self.name += f" <{int(self.talent2_params[0])}s"
 		if self.targets > 1 and self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
@@ -7498,7 +7531,7 @@ class ZuoLe(Operator):
 op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
 		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "blazealter": BlazeAlter, "blaze2": BlazeAlter, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
-		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
+		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai,"exia": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "exusiaialter": ExusiaiAlter, "exualter": ExusiaiAlter, "covenant": ExusiaiAlter, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "figurino": Figurino, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
 		"franka": Franka, "frost": Frost, "frostleaf": Frostleaf, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "greyy": GreyyAlter, "greyyalter": GreyyAlter, "harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
 		"jackie": Jackie, "jaye": Jaye, "jessica": Jessica, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, "justiceknight": JusticeKnight,
