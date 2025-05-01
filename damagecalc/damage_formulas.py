@@ -1605,19 +1605,21 @@ class Conviction(Operator):
 
 class Crownslayer(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Crownslayer",pp,[1,3],[1],3,6,1) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Crownslayer",pp,[1,3],[1,2],3,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.elite > 1 and not self.talent2_dmg: self.name += " dmgTaken"
 		if self.skill == 3 and not self.skill_dmg: self.name += " singleTargetOnly"
+		if self.module == 2 and self.module_dmg: self.name += " alone"
 	
 	def skill_dps(self, defense, res):
+		atkbuff = 0.1 if self.module_dmg and self.module == 2 else 0
 		atk_scale = self.talent2_params[0] if self.talent2_dmg and self.elite == 2 else 1
 		if self.skill < 2:
-			final_atk = self.atk * (1 + self.skill_params[0]*self.skill + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.skill_params[0]*self.skill + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg / self.atk_interval * self.attack_speed / 100
 		if self.skill == 3:
 			skill_scale = self.skill_params[3]
-			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg
 			if not self.skill_dmg: dps *= 1/3
@@ -4413,7 +4415,7 @@ class Mizuki(Operator):
 
 class Mlynar(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mlynar",pp,[1,2,3],[],3,1,0)
+		super().__init__("Mlynar",pp,[1,2,3],[1],3,1,1)
 		if not self.trait_dmg: self.name += " -10stacks"
 		if self.elite > 0 and self.talent_dmg and self.targets < 3: self.name += " 3+Nearby"
 		if self.targets > 1: self.name += f" {self.targets}targets"
@@ -6264,7 +6266,7 @@ class TexasAlter(Operator):
 	
 class Tequila(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Tequila",pp,[1,2],[],2,6,0)
+		super().__init__("Tequila",pp,[1,2],[1],2,6,1)
 		if self.skill == 2: self.trait_dmg = self.trait_dmg and self.skill_dmg
 		if not self.trait_dmg: self.name += " 20Stacks"   ##### keep the ones that apply
 		else: self.name += " 40Stacks"
@@ -7271,7 +7273,7 @@ class Wildmane(Operator):
 
 class Windscoot(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Windscoot",pp,[1,2],[],2,6,0)
+		super().__init__("Windscoot",pp,[1,2],[1],2,6,1)
 		if not self.trait_dmg or not self.talent_dmg: self.name += " halfStacks"   ##### keep the ones that apply
 		else: self.name += " maxStacks"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
