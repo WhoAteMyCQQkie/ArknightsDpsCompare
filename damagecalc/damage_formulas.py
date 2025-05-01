@@ -4622,7 +4622,7 @@ class Mudrock(Operator):
 	
 class Muelsyse(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Muelsyse",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Muelsyse",pp,[1,2,3],[1,2],3,1,1)
 		try:
 			self.cloned_op = kwargs["prev_op"]
 			_ =  self.cloned_op.ranged
@@ -4653,6 +4653,7 @@ class Muelsyse(Operator):
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1.5 if self.trait_dmg else 1
+		if self.trait_dmg and self.module == 2: atk_scale = 1.65
 		copy_factor = 1 if self.module == 1 and self.module_lvl == 3 else 0.5 + 0.2 * self.elite
 
 		atkbuff = self.skill_params[2] if self.skill == 1 else self.skill_params[1] * min(self.skill,1)
@@ -5667,6 +5668,33 @@ class SandReckoner(Operator):
 		final_atk_drone = self.drone_atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		hitdmgdrone = np.fmax(final_atk_drone *(1-res/100) , final_atk_drone * 0.05) * dmg
 		dps += hitdmgdrone/self.drone_atk_interval * (self.attack_speed + aspd + module_aspd)/100 * drones
+		return dps
+	
+class SanktaMiksaparato(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("SanktaMiksaparato",pp ,[1,2,3],[1],3,1,1)
+		if self.elite > 0 and not self.talent_dmg: self.name += " noStacks"
+		if self.skill == 3: self.name += " idealCase" if self.skill_dmg else " 1hit/s"
+		if self.skill == 3 and self.targets > 1: self.name += f" {self.targets}targets"
+
+	def skill_dps(self, defense, res):
+		print(self.skill_params)
+		aspd = self.talent1_params[1] * 3 if self.elite > 0 and self.talent_dmg else 0
+		if self.skill < 2:
+			final_atk = self.atk * (1+ self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk  - defense, final_atk  * 0.05)
+			skillhitdmg = np.fmax(final_atk * self.skill_params[0] - defense, final_atk * self.skill_params[0] * 0.05) * 3
+			avgphys = (self.skill_cost * hitdmg + skillhitdmg) / (self.skill_cost + 1)
+			if self.skill == 0: avgphys = hitdmg
+			dps = avgphys/(self.atk_interval/((self.attack_speed + aspd)/100))
+		if self.skill == 2:
+			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+		if self.skill == 3:
+			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)	* min(self.targets,3)
+			dps = hitdmg/self.atk_interval * 10 * (self.attack_speed+aspd)/100 if self.skill_dmg else hitdmg
 		return dps
 
 class Savage(Operator):
@@ -7448,7 +7476,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
 		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
-		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
+		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
