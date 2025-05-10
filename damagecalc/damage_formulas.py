@@ -1605,19 +1605,21 @@ class Conviction(Operator):
 
 class Crownslayer(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Crownslayer",pp,[1,3],[1],3,6,1) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Crownslayer",pp,[1,3],[1,2],3,6,1) #available skills, available modules, default skill, def pot, def mod
 		if self.elite > 1 and not self.talent2_dmg: self.name += " dmgTaken"
 		if self.skill == 3 and not self.skill_dmg: self.name += " singleTargetOnly"
+		if self.module == 2 and self.module_dmg: self.name += " alone"
 	
 	def skill_dps(self, defense, res):
+		atkbuff = 0.1 if self.module_dmg and self.module == 2 else 0
 		atk_scale = self.talent2_params[0] if self.talent2_dmg and self.elite == 2 else 1
 		if self.skill < 2:
-			final_atk = self.atk * (1 + self.skill_params[0]*self.skill + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.skill_params[0]*self.skill + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg / self.atk_interval * self.attack_speed / 100
 		if self.skill == 3:
 			skill_scale = self.skill_params[3]
-			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg
 			if not self.skill_dmg: dps *= 1/3
@@ -2185,6 +2187,39 @@ class Exusiai(Operator):
 			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk* atk_scale* skill_scale * 0.05)
 			dps = 5*hitdmg/(atk_interval/((self.attack_speed+aspd)/100))
 		return dps
+
+class ExusiaiAlter(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("ExusiaiAlter",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		atkbuff = 2 * self.talent2_params[0] if self.elite > 1 else 0
+		explosion_prob = min(self.talent1_params[1:])
+		explosion_scale = max(self.talent1_params)
+
+		if self.skill < 2:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05) * self.skill
+			dps = (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
+		if self.skill == 2:
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
+			dps =  (hitdmg + explosionhit * explosion_prob * self.targets) / 0.6 * (self.attack_speed) / 100
+		if self.skill == 3:
+			atkbuff += self.skill_params[5]
+			skill_scale = self.skill_params[3]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
+			dps =  5 * (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
+
+		return dps
+
 		
 class Eyjafjalla(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -3786,6 +3821,37 @@ class Lee(Operator):
 		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
+class Lemuen(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Lemuen",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
+		if self.skill == 2: self.talent_dmg = self.talent_dmg and self.skill_dmg
+		if self.talent_dmg and self.elite > 0: self.name += " vsMarked"
+		if not self.talent2_dmg and self.elite > 1: self.name += f" <{int(self.talent2_params[0])}s"
+		if self.targets > 1 and self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		atkbuff = self.talent2_params[1] if self.talent2_dmg and self.elite > 1 else 0
+		dmg = min(self.talent1_params) if self.talent_dmg and self.elite > 0 else 1
+		
+		if self.skill < 2:
+			atk_scale = self.skill_params[0] if self.skill == 1 else 1
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * min(self.targets, 1 + self.skill) * dmg
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+		
+		if self.skill == 2:
+			aspd = self.skill_params[0]
+			atkbuff += self.skill_params[1]
+			atk_scale = self.skill_params[8]
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			if self.talent_dmg: hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmg
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+			if self.talent_dmg:
+				dps = hitdmg / 3.5
+
+		return dps
+
 class Lessing(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Lessing",pp,[1,2,3],[1,2],2,6,1)
@@ -4417,7 +4483,7 @@ class Mizuki(Operator):
 
 class Mlynar(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mlynar",pp,[1,2,3],[],3,1,0)
+		super().__init__("Mlynar",pp,[1,2,3],[1],3,1,1)
 		if not self.trait_dmg: self.name += " -10stacks"
 		if self.elite > 0 and self.talent_dmg and self.targets < 3: self.name += " 3+Nearby"
 		if self.targets > 1: self.name += f" {self.targets}targets"
@@ -4624,7 +4690,7 @@ class Mudrock(Operator):
 	
 class Muelsyse(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Muelsyse",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Muelsyse",pp,[1,2,3],[1,2],3,1,1)
 		try:
 			self.cloned_op = kwargs["prev_op"]
 			_ =  self.cloned_op.ranged
@@ -4655,6 +4721,7 @@ class Muelsyse(Operator):
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1.5 if self.trait_dmg else 1
+		if self.trait_dmg and self.module == 2: atk_scale = 1.65
 		copy_factor = 1 if self.module == 1 and self.module_lvl == 3 else 0.5 + 0.2 * self.elite
 
 		atkbuff = self.skill_params[2] if self.skill == 1 else self.skill_params[1] * min(self.skill,1)
@@ -5670,6 +5737,32 @@ class SandReckoner(Operator):
 		hitdmgdrone = np.fmax(final_atk_drone *(1-res/100) , final_atk_drone * 0.05) * dmg
 		dps += hitdmgdrone/self.drone_atk_interval * (self.attack_speed + aspd + module_aspd)/100 * drones
 		return dps
+	
+class SanktaMiksaparato(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("SanktaMiksaparato",pp ,[1,2,3],[1],2,6,1)
+		if self.elite > 0 and not self.talent_dmg: self.name += " noStacks"
+		if self.skill == 3: self.name += " idealCase" if self.skill_dmg else " 1hit/s"
+		if self.skill == 3 and self.targets > 1: self.name += f" {self.targets}targets"
+
+	def skill_dps(self, defense, res):
+		aspd = self.talent1_params[1] * 3 if self.elite > 0 and self.talent_dmg else 0
+		if self.skill < 2:
+			final_atk = self.atk * (1+ self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk  - defense, final_atk  * 0.05)
+			skillhitdmg = np.fmax(final_atk * self.skill_params[0] - defense, final_atk * self.skill_params[0] * 0.05) * 3
+			avgphys = (self.skill_cost * hitdmg + skillhitdmg) / (self.skill_cost + 1)
+			if self.skill == 0: avgphys = hitdmg
+			dps = avgphys/(self.atk_interval/((self.attack_speed + aspd)/100))
+		if self.skill == 2:
+			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)		
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
+		if self.skill == 3:
+			final_atk = self.atk * (1+ self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)	* min(self.targets,3)
+			dps = hitdmg/self.atk_interval * 10 * (self.attack_speed+aspd)/100 if self.skill_dmg else hitdmg
+		return dps
 
 class Savage(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -6268,7 +6361,7 @@ class TexasAlter(Operator):
 	
 class Tequila(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Tequila",pp,[1,2],[],2,6,0)
+		super().__init__("Tequila",pp,[1,2],[1],2,6,1)
 		if self.skill == 2: self.trait_dmg = self.trait_dmg and self.skill_dmg
 		if not self.trait_dmg: self.name += " 20Stacks"   ##### keep the ones that apply
 		else: self.name += " 40Stacks"
@@ -6318,7 +6411,7 @@ class TerraResearchCommission(Operator):
 
 class Thorns(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Thorns",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Thorns",pp,[1,2,3],[1,3],3,1,1)
 		if self.skill == 1 and not self.trait_dmg: self.name += "rangedAtk"   ##### keep the ones that apply
 		if self.talent_dmg: self.name += " vsRanged"
 		try:
@@ -6327,6 +6420,8 @@ class Thorns(Operator):
 			self.hits = 0
 		if self.skill == 2: self.name += f" {round(self.hits,2)}hits/s"
 		if self.skill == 3 and not self.skill_dmg: self.name += " firstActivation"
+		if self.module == 3: self.name += " averaged"
+		if self.module == 3 and not self.module_dmg: self.name += "(vsBoss)"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe	
 			
 	def skill_dps(self, defense, res):
@@ -6342,6 +6437,12 @@ class Thorns(Operator):
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmg + bonusdmg)/self.atk_interval * self.attack_speed/100 + arts_dot_dps
+			if self.module == 3:
+				time_to_fallout = 1000/(dps*0.1) if self.module_dmg else 2000/(dps*0.1)
+				if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+				else:
+					fallout_dps = dps - arts_dot_dps + arts_dot
+					dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 		if self.skill == 2 and self.hits > 0:
 			atk_scale = 0.8
 			cooldown = self.skill_params[2]
@@ -6350,9 +6451,21 @@ class Thorns(Operator):
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			if(1/self.hits < cooldown):
 				dps = (hitdmg/cooldown + arts_dot_dps + bonusdmg/cooldown) * min(self.targets,4)
+				if self.module == 3:
+					time_to_fallout = 1000/(dps*0.1) / min(self.targets,4) if self.module_dmg else 2000/(dps*0.1) / min(self.targets,4)
+					if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+					else:
+						fallout_dps = dps - (arts_dot_dps + arts_dot) * min(self.targets,4)
+						dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 			else:
 				cooldown = 1/self.hits
 				dps = (hitdmg/cooldown + arts_dot_dps) * min(self.targets,4)
+				if self.module == 3:
+					time_to_fallout = 1000/(dps*0.1) / min(self.targets,4) if self.module_dmg else 2000/(dps*0.1) / min(self.targets,4)
+					if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+					else:
+						fallout_dps = dps - (arts_dot_dps + arts_dot) * min(self.targets,4)
+						dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)
 		elif self.skill == 2:
 			return defense*0
 		if self.skill == 3:
@@ -6361,6 +6474,12 @@ class Thorns(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			bonusdmg = np.fmax(final_atk * bonus *(1-res/100), final_atk * bonus * 0.05)
 			dps = (hitdmg + bonusdmg)/self.atk_interval * (self.attack_speed + bufffactor * self.skill_params[1])/100 + arts_dot_dps
+			if self.module == 3:
+				time_to_fallout = 1000/(dps*0.1) if self.module_dmg else 2000/(dps*0.1)
+				if self.module_lvl == 1: dps += 6000/(time_to_fallout+10)
+				else:
+					fallout_dps = dps - arts_dot_dps + arts_dot
+					dps = (fallout_dps * 10 + dps * time_to_fallout + 6000) / (10 + time_to_fallout)		
 		return dps
 
 class ThornsAlter(Operator):
@@ -7275,7 +7394,7 @@ class Wildmane(Operator):
 
 class Windscoot(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Windscoot",pp,[1,2],[],2,6,0)
+		super().__init__("Windscoot",pp,[1,2],[1],2,6,1)
 		if not self.trait_dmg or not self.talent_dmg: self.name += " halfStacks"   ##### keep the ones that apply
 		else: self.name += " maxStacks"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
@@ -7442,15 +7561,15 @@ class ZuoLe(Operator):
 op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
 		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "blazealter": BlazeAlter, "blaze2": BlazeAlter, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
-		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
+		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai,"exia": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "exusiaialter": ExusiaiAlter, "exualter": ExusiaiAlter, "covenant": ExusiaiAlter, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "figurino": Figurino, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
 		"franka": Franka, "frost": Frost, "frostleaf": Frostleaf, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "grani": Grani, "greythroat": GreyThroat, "greyy": GreyyAlter, "greyyalter": GreyyAlter, "harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": Hoshiguma, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
 		"jackie": Jackie, "jaye": Jaye, "jessica": Jessica, "jessica2": JessicaAlter, "jessicaalt": JessicaAlter, "<:jessicry:1214441767005589544>": JessicaAlter, "jester":JessicaAlter, "jessicaalter": JessicaAlter, "justiceknight": JusticeKnight,
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
-		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
+		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lemuen": Lemuen, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
 		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
-		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
+		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
