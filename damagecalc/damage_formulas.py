@@ -2220,6 +2220,18 @@ class ExusiaiAlter(Operator):
 			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
 			dps =  5 * (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
 		return dps
+	
+	def total_dmg(self, defense, res):
+		if self.skill == 1:
+			return(self.skill_dps(defense,res) * 8 * (self.atk_interval/(self.attack_speed/100)))
+		elif self.skill == 2:
+			aspd = 70 if self.skill_dmg else 0
+			ammo = 40 if self.skill_dmg else 35
+			return(self.skill_dps(defense,res) * ammo * (0.6/((self.attack_speed+aspd)/100)))
+		elif self.skill == 3:
+			return(self.skill_dps(defense,res) * 10 * (self.atk_interval/(self.attack_speed/100)))
+		else:
+			return(super().total_dmg(defense,res))
 		
 class Eyjafjalla(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -3856,11 +3868,12 @@ class Lee(Operator):
 
 class Lemuen(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Lemuen",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Lemuen",pp,[1,2,3],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 2: self.talent_dmg = self.talent_dmg and self.skill_dmg
 		if self.talent_dmg and self.elite > 0: self.name += " vsMarked"
 		if not self.talent2_dmg and self.elite > 1: self.name += f" <{int(self.talent2_params[0])}s"
 		if self.targets > 1 and self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.skill == 3: self.name += " totalDMG"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[1] if self.talent2_dmg and self.elite > 1 else 0
@@ -3881,9 +3894,24 @@ class Lemuen(Operator):
 			if self.talent_dmg: hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * dmg
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 			if self.talent_dmg:
-				dps = hitdmg / 3.5
+				dps = hitdmg / self.skill_params[3]
+		if self.skill == 3:
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			ammo = 5 + self.talent2_params[2] if self.talent2_dmg else 5
+			centralhit_dmg = np.fmax(final_atk * self.skill_params[4] - defense, final_atk * self.skill_params[4] * 0.05) * dmg
+			outerhit_dmg = np.fmax(final_atk * self.skill_params[6] - defense, final_atk * self.skill_params[6] * 0.05) * dmg
+			dps = ammo * centralhit_dmg * self.targets
 
 		return dps
+	
+	def total_dmg(self, defense, res):
+		extra_ammo = self.talent2_params[2] if self.elite > 1 and self.talent2_dmg else 0
+		if self.skill == 1:
+			return(self.skill_dps(defense,res) * (self.skill_params[1] + extra_ammo) * (self.atk_interval/(self.attack_speed/100)))
+		elif self.skill == 2 and self.talent_dmg:
+			return(self.skill_dps(defense,res) * (self.skill_params[2] + extra_ammo) * (self.skill_params[3]))
+		else:
+			return(super().total_dmg(defense,res))
 
 class Lessing(Operator):
 	def __init__(self, pp, *args, **kwargs):
