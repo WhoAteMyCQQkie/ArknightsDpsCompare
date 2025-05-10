@@ -104,7 +104,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mon3tr","Rosmontis","Dusk","Eunectes"]:
+					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -4361,14 +4361,18 @@ class Mint(Operator):
 
 class Mizuki(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mizuki",pp,[1,2,3],[1,2],3,1,1)
+		super().__init__("Mizuki",pp,[1,2,3],[1,2,3],3,1,1)
 		if self.talent2_dmg: self.name += " vsLowHp"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.module == 3 and self.module_dmg: self.name += " inIS"
 
 	def skill_dps(self, defense, res):
 		bonusdmg = self.talent1_params[0] if self.elite > 0 else 0
 		bonustargets = self.talent1_params[1] if self.elite > 0 else 0
 		atkbuff = self.talent2_params[1] if self.talent2_dmg else 0
+		aspd = 50 if self.module == 3 and self.module_dmg else 0
+		if self.module == 3 and self.module_dmg and self.module_lvl > 1: bonustargets += 1
+		if self.module == 3 and self.module_dmg and self.module_lvl == 3 and self.skill > 0: bonustargets += 1
 
 		if self.skill < 2:
 			skill_scale = self.skill_params[0] if self.skill == 1 else 1
@@ -4391,7 +4395,7 @@ class Mizuki(Operator):
 				else:
 					avghit = (skilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)
 					avgarts = (skillbonus + int(atks_per_skillactivation) * hitbonus) / (int(atks_per_skillactivation)+1)		
-			dps = avghit/(self.atk_interval/(self.attack_speed/100)) * self.targets + avgarts/(self.atk_interval/(self.attack_speed/100)) * min(self.targets, bonustargets)
+			dps = avghit/(self.atk_interval/(self.attack_speed/100)) * self.targets + avgarts/(self.atk_interval/((self.attack_speed+aspd)/100)) * min(self.targets, bonustargets)
 			
 		if self.skill == 2:
 			atkbuff += self.skill_params[1]
@@ -4400,7 +4404,7 @@ class Mizuki(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgarts = np.fmax(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
-			dps = hitdmg/(atk_interval/(self.attack_speed/100)) * self.targets + hitdmgarts/(atk_interval/(self.attack_speed/100)) * min(self.targets, bonustargets)
+			dps = hitdmg/(atk_interval/(self.attack_speed/100)) * self.targets + hitdmgarts/(atk_interval/((self.attack_speed+aspd)/100)) * min(self.targets, bonustargets)
 		
 		if self.skill == 3:
 			atkbuff += self.skill_params[0]
@@ -4408,7 +4412,7 @@ class Mizuki(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			hitdmgarts = np.fmax(final_atk * bonusdmg * (1-res/100), final_atk * bonusdmg * 0.05)
-			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * self.targets + hitdmgarts/(self.atk_interval/(self.attack_speed/100)) * min(self.targets, bonustargets)
+			dps = hitdmg/(self.atk_interval/(self.attack_speed/100)) * self.targets + hitdmgarts/(self.atk_interval/((self.attack_speed+aspd)/100)) * min(self.targets, bonustargets)
 		return dps
 
 class Mlynar(Operator):

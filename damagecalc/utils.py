@@ -135,7 +135,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			pps.module_lvls = {-1}
 		elif arg in ["0"] and previous_arg not in ["skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl","lvl","level","lv","t","target","targets","trust","hit","hits","r","res","resis","resistance","d","def","defense","fixres","fixdef","fix"]:
 			pps.modules = {-1}
-		elif arg in ["mod0","modx","x","mody","y","modd","d","no","mod","nomod","alpha","is","moda","modalpha","moddelta"]:
+		elif arg in ["mod0","modx","x","mody","y","modd","d","no","mod","nomod","delta","alpha","is","moda","modalpha","moddelta"]:
 			pps.modules = {-1}
 		elif arg in ["x1","x2","x3","y1","y2","y3","d1","d2","d3","modx1","modx2","modx3","mody1","mody2","mody3","modd1","modd2","modd3","mod1","mod2","mod3"]:
 			pps.modules = {-1}
@@ -193,7 +193,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["mody","y"]:
 			pps.modules.add(2)
 			pps.modules.discard(-1)
-		elif args[i] in ["modd","d","a","alpha","is","modalpha","moda","moddelta"]:
+		elif args[i] in ["modd","d","a","delta","alpha","is","modalpha","moda","moddelta"]:
 			pps.modules.add(3)
 			pps.modules.discard(-1)
 		elif args[i] in ["d1","d2","d3","modd1","modd2","modd3"]: 
