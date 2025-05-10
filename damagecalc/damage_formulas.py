@@ -2192,6 +2192,7 @@ class ExusiaiAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("ExusiaiAlter",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+		if self.skill == 2 and self.skill_dmg: self.name += " +StolenAspd"
 	
 	def skill_dps(self, defense, res):
 		atkbuff = 2 * self.talent2_params[0] if self.elite > 1 else 0
@@ -2206,10 +2207,11 @@ class ExusiaiAlter(Operator):
 			dps = (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
 		if self.skill == 2:
 			skill_scale = self.skill_params[0]
+			aspd = 70 if self.skill_dmg else 0
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
-			dps =  (hitdmg + explosionhit * explosion_prob * self.targets) / 0.6 * (self.attack_speed) / 100
+			dps =  (hitdmg + explosionhit * explosion_prob * self.targets) / 0.6 * (self.attack_speed + aspd) / 100
 		if self.skill == 3:
 			atkbuff += self.skill_params[5]
 			skill_scale = self.skill_params[3]
@@ -2217,7 +2219,6 @@ class ExusiaiAlter(Operator):
 			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			explosionhit = np.fmax(final_atk * explosion_scale - defense, final_atk * explosion_scale * 0.05)
 			dps =  5 * (hitdmg + explosionhit * explosion_prob * self.targets) / self.atk_interval * (self.attack_speed) / 100
-
 		return dps
 		
 class Eyjafjalla(Operator):
