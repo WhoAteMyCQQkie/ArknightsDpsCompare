@@ -1,4 +1,4 @@
-# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token (see last 3 lines of this file). 
+# In order for the bot to work you need a "token.txt" file in the same directory as this file, which should contain your discord token. 
 # You can add a channel.txt file, too. If the file exists, the bot will only respond to channels listed there. Both channel names and channel ids work. 1 channel per line.
 
 #TODO: Easy but tedious tasks that just take a lot of time
@@ -23,7 +23,6 @@
 # s123 prompt to add multiple skills
 # !guide image to show things graphically.
 # combine prompt to combine 2 ops dps
-# add and mul prompts
 # clean up plotting, so that the parts are not scattered around in the code
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # add plus ultra prompt to show unrealistically high dmg
@@ -32,7 +31,6 @@
 # drone/summon(count) prompt for summoners
 # lower limit for axis scale
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
-# stylized plots. for example christmas themed etc.
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
 # Add GUI
 
@@ -126,8 +124,8 @@ hide,left,tiny,short (for the legend), highlight, color (for colorblind people),
 @commands.check(check_channel)
 async def mumu(ctx):
 	"""Guide on how to properly use !dps muelsyse"""
-	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu. ONLY OPERATORS OF THE NEW SYSTEM CAN BE CLONED!(which may be all of them by the end of the year).
-Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, this number is however not accurate, since i havent figured out how to properly estimate that.
+	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu.
+Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, which isn't super accurate.
 Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
 	await output.send(ctx.channel)
 
