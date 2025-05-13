@@ -1076,16 +1076,17 @@ class Silence(Healer):
 
 class SilenceAlter(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("SilenceAlter",pp,[1,2,3],[1],2,6,1)
+		super().__init__("SilenceAlter",pp,[1,2,3],[1,2],2,6,1)
 	
 	def skill_hps(self, **kwargs):
+		targets = 2 if self.module == 2 else 1
 		heal_factor = 1 if self.module == 1 else 0.75
 		if self.skill in [1,3]:
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
-			skill_hps = heal_factor * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile)
+			skill_hps = heal_factor * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * min(self.targets,targets)
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-			skill_hps = heal_factor * final_atk/self.atk_interval *(self.attack_speed+self.skill_params[0])/100 * (1+self.buff_fragile)
+			skill_hps = heal_factor * final_atk/self.atk_interval *(self.attack_speed+self.skill_params[0])/100 * (1+self.buff_fragile) * min(self.targets,targets)
 		avg_hps = (skill_hps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 		self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
 		if self.elite == 2:
@@ -1360,7 +1361,7 @@ class Xingzhu(Healer):
 #################################################################################################################################################
 
 
-healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry,
+healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjaalter": Eyjaberry, "eyjafjallaalter": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry,
 			   "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mon3tr": Mon3tr, "m3": Mon3tr, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "thorns": ThornsAlter, "thornsalter": ThornsAlter, "lobster": ThornsAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain, "xingzhu": Xingzhu}
