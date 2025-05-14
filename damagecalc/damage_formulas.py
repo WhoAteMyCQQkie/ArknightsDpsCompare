@@ -4866,6 +4866,75 @@ class NearlAlter(Operator):
 		dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
+class Necrass(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Eblana",pp,[1,2,3],[],3,1,0) #available skills, available modules, default skill, def pot, def mod
+		if self.skill == 0:
+			if not self.trait_dmg: self.name += " noSummon"
+			else: self.name += f" {int(self.talent1_params[0])}Summons"
+			if self.talent_dmg: self.name += "(upgraded)"
+		if self.skill == 1:
+			if not self.trait_dmg: self.name += " 1Summon"
+			else: self.name += f" {int(self.talent1_params[0])}Summons"
+			if self.talent_dmg: self.name += "(upgraded)"
+		if self.skill == 3:
+			if not self.trait_dmg: self.name += " noSummon"
+			else:
+				if self.talent_dmg:
+					self.name += " 1+2summons"
+				else:
+					self.name += " 1summon"
+				if self.skill_dmg: self.name += "(Maxed)"
+		if self.talent2_dmg and self.elite > 1: self.name += " vsLowHp"
+		
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		dmg_scale = self.talent2_params[1] if self.elite > 1 and self.talent2_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		summon_atk = self.talent1_params[2] if self.talent_dmg else 0
+		if self.skill == 0:
+			drones = self.talent1_params[0] if self.trait_dmg else 0
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
+			final_atk_summon = self.drone_atk * (1 + self.buff_atk + summon_atk) + self.buff_atk_flat
+			summondmg = np.fmax(final_atk_summon * (1-res/100), final_atk_summon * 0.05) * dmg_scale
+			dps += drones * summondmg / self.drone_atk_interval * (self.attack_speed) / 100
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
+			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
+			hits = self.talent1_params[0] if self.trait_dmg else 1
+			dps += hits * skilldmg * self.targets / (self.skill_cost/(1 + self.sp_boost) + 1.2) #sp lockout
+			final_atk_summon = self.drone_atk * (1 + self.buff_atk + summon_atk) + self.buff_atk_flat
+			summondmg = np.fmax(final_atk_summon * (1-res/100), final_atk_summon * 0.05) * dmg_scale
+			dps += hits * summondmg / self.drone_atk_interval * (self.attack_speed) / 100
+		if self.skill == 2:
+			skill_scale = self.skill_params[0]
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
+			dps = 2 * hitdmg * min(self.targets,2)
+		if self.skill == 3:
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
+			skill_scale = self.skill_params[1]
+			skill_hits = self.skill_params[4]
+			skilldmg =  np.fmax(final_atk *skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
+			dps += skilldmg * skill_hits * self.targets / (self.skill_cost/(1 + self.sp_boost) + 1.2 + skill_hits)
+			if self.trait_dmg:
+				main_atk_buff = 2 + 0.8 * 6 if self.skill_dmg else 2
+				main_summon_atk = self.drone_atk * (1 + self.buff_atk + main_atk_buff) + self.buff_atk_flat
+				mainhit = np.fmax(main_summon_atk * (1-res/100), main_summon_atk * 0.05) * dmg_scale
+				maindps = mainhit/(self.drone_atk_interval + 0.7) * self.attack_speed/100
+				mainskilldps = np.fmax(main_summon_atk * 1.2 * (1-res/100), main_summon_atk * 1.2 * 0.05) * dmg_scale
+				dps += (maindps * 15/(1+self.sp_boost) + mainskilldps * 8 * self.targets) / (8 + 15/(1+self.sp_boost))
+				if self.talent_dmg:
+					final_atk_summon = self.drone_atk * (1 + self.buff_atk + summon_atk) + self.buff_atk_flat
+					summondmg = np.fmax(final_atk_summon * (1-res/100), final_atk_summon * 0.05) * dmg_scale
+					dps += 2 * summondmg / self.drone_atk_interval * (self.attack_speed) / 100
+
+		return dps
+
 class Nian(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Nian",pp,[1,2,3],[1,2],3,1,1)
@@ -7629,7 +7698,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"kafka": Kafka, "kazemaru": Kazemaru, "kirara": Kirara, "kjera": Kjera, "kroos": KroosAlter, "kroosalt": KroosAlter, "kroosalter": KroosAlter, "3starkroos": Kroos, "kroos3star": Kroos, "laios": Laios, "lapluma": LaPluma, "pluma": LaPluma,
 		"lappland": Lappland, "lappy": Lappland, "<:lappdumb:1078503487484207104>": Lappland, "lappy2": LapplandAlter, "lapp2": LapplandAlter, "lappland2": LapplandAlter, "lapplandalter": LapplandAlter, "decadenza": LapplandAlter, "lappalt": LapplandAlter, "lappalter": LapplandAlter, "lava3star": Lava3star, "lava": Lavaalt, "lavaalt": Lavaalt,"lavaalter": Lavaalt, "lee": Lee, "lemuen": Lemuen, "lessing": Lessing, "leto": Leto, "logos": Logos, "lin": Lin, "ling": Ling, "lucilla": Lucilla, "lunacub": Lunacub, "luoxiaohei": LuoXiaohei, "luo": LuoXiaohei, "lutonada": Lutonada, 
 		"magallan": Magallan, "maggie": Magallan, "manticore": Manticore, "marcille": Marcille, "matoimaru": Matoimaru, "may": May, "melantha": Melantha, "meteor":Meteor, "meteorite": Meteorite, "midnight": Midnight, "minimalist": Minimalist, "mint": Mint, "mizuki": Mizuki, "mlynar": Mlynar, "uncle": Mlynar, "monster": Mon3tr, "mon3ter": Mon3tr, "kaltsit": Kaltsit, "mostima": Mostima, "morgan": Morgan, "mountain": Mountain, "mousse": Mousse, "mrnothing": MrNothing, "mudmud": Mudrock, "mudrock": Mudrock,
-		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
+		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "necrass": Necrass, "eblana": Necrass, "banana": Necrass, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
@@ -7637,5 +7706,5 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","BlazeAlter","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Entelechia","Erato","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Gracebearer","Grani","Greythroat","GreyyAlter",
-		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kafka","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
+		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kafka","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Necrass","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
 		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Toddifons","Tomimi","Totter","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","Warmy","Weedy","Whislash","Wildmane","Windscoot","Wis'adel","YatoAlter","Yu","ZuoLe"]
