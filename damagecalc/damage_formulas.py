@@ -9,6 +9,49 @@ from damagecalc.utils import PlotParameters
 with open('Database/json_data.pkl', 'rb') as f:
 	op_data_dict= dill.load(f)
 
+class AttackSpeed:
+	def __init__(self, value=100):
+		self._value = self._clamp(value)
+	def _clamp(self, x):
+		return max(20, min(600, x))
+	@property
+	def value(self):
+		return self._value
+	@value.setter
+	def value(self, new_value):
+		self._value = self._clamp(new_value)
+	def __int__(self):
+		return self._value
+	def __float__(self):
+		return float(self._value)
+	def __repr__(self):
+		return f"AttackSpeed({self._value})"
+	def __str__(self):
+		return str(self._value)
+	def __add__(self, other):
+		return AttackSpeed(self._clamp(self._value + other))
+	def __radd__(self, other):
+		return self.__add__(other)
+	def __sub__(self, other):
+		return AttackSpeed(self._clamp(self._value - other))
+	def __rsub__(self, other):
+		return AttackSpeed(self._clamp(other - self._value))
+	def __mul__(self, other):
+			return AttackSpeed(self._clamp(float(self._value) * other))
+	def __rmul__(self, other):
+			return self.__mul__(other)
+	def __truediv__(self, other):
+		return AttackSpeed(self._clamp(self._value / float(other)))
+	def __rtruediv__(self, other):
+		return float(other) / float(self._value)
+	def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+		raw_inputs = [float(i) if isinstance(i, AttackSpeed) else i for i in inputs]
+		result = getattr(ufunc, method)(*raw_inputs, **kwargs)
+		if isinstance(result, (int, float, np.number)):
+			return AttackSpeed(self._clamp(result))
+		else:
+			return result
+
 class Operator:
 
 	def __init__(self, name, params: PlotParameters, available_skills, module_overwrite = [], default_skill = 3, default_pot = 1, default_mod = 1):
@@ -27,7 +70,7 @@ class Operator:
 
 		self.atk_interval = op_data.atk_interval
 		self.trait_dmg, self.talent_dmg, self.talent2_dmg, self.skill_dmg, self.module_dmg = params.conditionals
-		self.targets = max(1,params.targets)
+		self.targets = min(max(1,params.targets),128)
 		self.sp_boost = params.sp_boost
 		self.physical = op_data.physical
 		self.ranged = op_data.ranged
@@ -114,7 +157,7 @@ class Operator:
 		self.base_name = self.name
 
 		########### Read all the parameters from the json
-		self.attack_speed = 100
+		self.attack_speed = 100 #AttackSpeed()
 		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
@@ -471,7 +514,7 @@ class AmiyaGuard(Operator):
 			if self.skill_dmg:
 				atkbuff += 3 * self.skill_params[3]
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
-			dps = final_atk/self.atk_interval * (self.attack_speed+aspd)/100 * np.fmax(1,-defense) #this defense part has to be included
+			dps = final_atk/(self.atk_interval/((self.attack_speed+aspd)/100)) * np.fmax(1,-defense) #this defense part has to be included
 		return dps
 
 class AmiyaMedic(Operator):
@@ -4598,7 +4641,7 @@ class Mon3tr(Operator):
 		if self.skill == 3:
 			atk_interval = self.atk_interval + self.skill_params[4]
 			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] ) + self.buff_atk_flat
-			dps = final_atk/atk_interval * (self.attack_speed+aspd)/100 * np.fmax(-defense, 1) * min(self.targets, 3)
+			dps = final_atk/(atk_interval / (self.attack_speed+aspd)*100) * np.fmax(-defense, 1) * min(self.targets, 3)
 		return dps
 
 class Morgan(Operator):
