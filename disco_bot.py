@@ -36,6 +36,8 @@
 
 import os
 import platform
+import sys
+import traceback
 
 import discord
 from discord.ext import commands
@@ -176,6 +178,14 @@ bot.help_command = MyHelpCommand()
 async def on_command_error(ctx, error):
 	if isinstance(error, commands.CheckFailure): pass
 	else: print(f"An error occurred: {error}")
+
+@bot.event
+async def on_command_error(ctx, error):
+	# Send or log the full traceback
+	tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+
+	# Optionally send to console or a file
+	print(f"Full error:\n{tb}", file=sys.stderr)
 
 
 if __name__ == "__main__":
