@@ -1067,7 +1067,7 @@ class Silence(Healer):
 			skill_hps = heal_factor * final_atk_skill/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
 			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
 		if self.skill == 2:
-			skill_hps = self.drone_atk * min(self.targets,8)
+			skill_hps = self.drone_atk * min(self.targets,8) * 2
 			avg_hps = skill_hps * min(1, 10 / self.skill_cost * (1 + self.sp_boost))
 			skill_hps += base_hps
 			avg_hps += base_hps
