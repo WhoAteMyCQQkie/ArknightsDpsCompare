@@ -213,7 +213,6 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			i+=1
 			buffcount=0
 			pps.buffs=[0,0,0,0]
-			if args[i][-1] == "%": args[i] = args[i][:-1]
 			while i < entries and buffcount < 4:
 				try:
 					pps.buffs[buffcount] = float(args[i])

@@ -448,7 +448,7 @@ class Lancet2(Healer):
 	def skill_hps(self, **kwargs):
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		base_hps = final_atk/self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
-		self.name += f": *{int(base_hps)}* + {int(self.talent1_params[0])} on deploy"
+		self.name += f": {int(base_hps)} + {int(self.talent1_params[0])} on deploy"
 		return self.name
 
 class Lumen(Healer):
