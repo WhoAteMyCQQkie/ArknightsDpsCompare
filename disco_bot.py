@@ -158,6 +158,7 @@ async def calc(ctx, *content):
 #Creating the help command
 class MyHelpCommand(commands.HelpCommand):
 	async def send_bot_help(self, mapping):
+		if not check_channel(self.context): return
 		help_message = """General use: !dps <opname1> <opname2> ... 
 Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
 example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
