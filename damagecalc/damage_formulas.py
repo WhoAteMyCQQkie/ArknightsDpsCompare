@@ -38,20 +38,17 @@ class AttackSpeed:
 	def __rsub__(self, other):
 		return AttackSpeed(self._clamp(other - self._value))
 	def __mul__(self, other):
-			return float(self._clamp(float(self._value) * other))
+			return float(float(self._value) * other)
 	def __rmul__(self, other):
 			return self.__mul__(other)
 	def __truediv__(self, other):
-		return float(self._clamp(self._value / float(other)))
+		return float(self._value / float(other))
 	def __rtruediv__(self, other):
 		return float(other) / float(self._value)
 	def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
 		raw_inputs = [float(i) if isinstance(i, AttackSpeed) else i for i in inputs]
 		result = getattr(ufunc, method)(*raw_inputs, **kwargs)
-		if isinstance(result, (int, float, np.number)):
-			return AttackSpeed(self._clamp(result))
-		else:
-			return result
+		return result
 
 class Operator:
 
