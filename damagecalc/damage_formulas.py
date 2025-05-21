@@ -28,6 +28,7 @@ class AttackSpeed:
 		return f"AttackSpeed({self._value})"
 	def __str__(self):
 		return str(self._value)
+	#Addition stays AttackSpeed, multiplication turns it into float
 	def __add__(self, other):
 		return AttackSpeed(self._clamp(self._value + other))
 	def __radd__(self, other):
@@ -37,11 +38,11 @@ class AttackSpeed:
 	def __rsub__(self, other):
 		return AttackSpeed(self._clamp(other - self._value))
 	def __mul__(self, other):
-			return AttackSpeed(self._clamp(float(self._value) * other))
+			return float(self._clamp(float(self._value) * other))
 	def __rmul__(self, other):
 			return self.__mul__(other)
 	def __truediv__(self, other):
-		return AttackSpeed(self._clamp(self._value / float(other)))
+		return float(self._clamp(self._value / float(other)))
 	def __rtruediv__(self, other):
 		return float(other) / float(self._value)
 	def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
@@ -157,7 +158,7 @@ class Operator:
 		self.base_name = self.name
 
 		########### Read all the parameters from the json
-		self.attack_speed = 100 #AttackSpeed()
+		self.attack_speed = AttackSpeed()
 		self.atk = op_data.atk_e0[0] + (op_data.atk_e0[1]-op_data.atk_e0[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 		if elite == 1: self.atk = op_data.atk_e1[0] + (op_data.atk_e1[1]-op_data.atk_e1[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
 		if elite == 2: self.atk = op_data.atk_e2[0] + (op_data.atk_e2[1]-op_data.atk_e2[0]) * (level-1) / (max_levels[elite][rarity-1]-1)
