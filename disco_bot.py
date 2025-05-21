@@ -76,6 +76,12 @@ async def dps(ctx, *content):
 	"""Plots the dps graph"""
 	await cmds.dps_command(list(content)).send(ctx.channel)
 
+@bot.command(aliases=["DPH","Dph"])
+@commands.check(check_channel)
+async def dph(ctx, *content):
+	"""Plots the dps graph"""
+	await cmds.dps_command(["dph"]+list(content)).send(ctx.channel)
+
 @bot.command(aliases=["HPS","Hps"])
 @commands.check(check_channel)
 async def hps(ctx, *content):
@@ -109,7 +115,7 @@ async def guide(ctx):
 	output = DiscordSendable("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
 S1,S2,S3,S0 sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
-total (total dmg over the skill duration), avg (factoring in skill downtime) (do not work for all operators)
+dph (crudely looks for edges in the graph), total (total dmg over the skill duration), avg (factoring in skill downtime) (do not work for all operators)
 **Prompts, that take parameters:**
 targets <value>, trust <value>, level <values>, skilllevel <values>, aspd <value>, fragile <value>, res/def <values>, atk <values> (percentage and/or flat, like 90% or 250), bbuff <values> (base atk, percentage and/or flat), resshred/defshred <values> (percentage and/or flat), sp <value>(for ptilo etc), hits <receivedHitsPerSecond> (either like 0.33 or 1/3),
 **Handling conditional damage (turn off talent effects etc.):**
@@ -164,7 +170,7 @@ If you want to see how the bot works or expand it, it has a public repository: g
 """
 		for cog, commands_list in mapping.items():
 			for command in commands_list:
-				if command.name in ["ping", "marco","gui"]: continue
+				if command.name in ["ping","marco","gui","dph"]: continue
 				help_message += f"{command.name}: {command.help}\n"
 		await self.context.send(help_message)
 
@@ -177,15 +183,9 @@ bot.help_command = MyHelpCommand()
 @bot.event
 async def on_command_error(ctx, error):
 	if isinstance(error, commands.CheckFailure): pass
-	else: print(f"An error occurred: {error}")
-
-@bot.event
-async def on_command_error(ctx, error):
-	# Send or log the full traceback
-	tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
-
-	# Optionally send to console or a file
-	print(f"Full error:\n{tb}", file=sys.stderr)
+	else:
+		tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__)) 
+		print(f"Full error:\n{tb}", file=sys.stderr)
 
 
 if __name__ == "__main__":

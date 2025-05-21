@@ -469,6 +469,8 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 					break
 				i+=1
 			i-=1
+		elif args[i] in ["dph"]:
+			pps.input_kwargs["dph"] = True
 		elif args[i] in ["total","totaldmg","totaldamage"]:
 			pps.normal_dps = 1 if pps.normal_dps != 1 else 0
 		elif args[i] in ["avg","avgdmg","average","averagedmg"]:
@@ -688,13 +690,26 @@ def fix_typos(word, args):
 				optimize_error = levenshtein(key, word)
 	return output
 
+def edge_finder(x_values,y_values):
+	result = []
+	prev_grad = -1
+	for i in range(len(x_values)-1):
+		grad = y_values[i]-y_values[i+1]
+		if grad < 0.99 * prev_grad and grad > 0:
+			result.append([x_values[i],y_values[i]])
+			prev_grad = -1
+		else:
+			prev_grad = grad
+
+	return result
+
 def apply_plot(operator_input, plot_parameters, already_drawn=[], plot_numbers=0, short = False):
 	pp = plot_parameters
 	operator = operator_input(pp, **pp.input_kwargs)
 	return plot_graph(operator,pp,pp.graph_type,pp.max_def,pp.max_res,pp.fix_value,already_drawn,pp.shred,pp.enemies,pp.normal_dps, plot_numbers, short)
 
 def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res=120, fixval=40, already_drawn_ops = None, shreds = [1,0,1,0], enemies = [], normal_dps = 0, plotnumbers = 0, short = False):
-	accuracy = 1 + 30 * 6
+	accuracy = 1 + 30 * 6 * 4
 	style = '-'
 	if plotnumbers > 9: style = '--'
 	if plotnumbers > 19: style = ':'
@@ -739,6 +754,10 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 			if res >= 0:
 				demanded = dps_function(max(0,res/max_res*max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2]) * fragile + pp.mul_add[1]
 				plt.text(res*25/3000*max_def/max_res*120,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
+		
+		if 'dph' in pp.input_kwargs:
+			for value_pair in edge_finder(xaxis,damages):
+				plt.text(value_pair[0],value_pair[1],f"{int(value_pair[0]/xaxis[-1]*max_def/19*20)}",size=10)
 	
 	############### Increments defense and THEN res ################################
 	elif graph_type == 1: 
@@ -760,6 +779,10 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 				res = min(119,res)
 				demanded = dps_function(max(0,max_def-shreds[1])*shreds[0],max(res-shreds[3],0)*shreds[2]) * fragile + pp.mul_add[1]
 				plt.text(max_def/2+res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+		
+		if 'dph' in pp.input_kwargs:
+			for value_pair in edge_finder(xaxis,damages):
+				if value_pair[0] < xaxis[accuracy]: plt.text(value_pair[0],value_pair[1],f"{int(value_pair[0]/xaxis[-1]*max_def/19*20*2)}",size=10)
 	
 	############### Increments Res and THEN defense ################################
 	elif graph_type == 2:
@@ -782,6 +805,10 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 				res = min(max_res-1,res)
 				demanded = dps_function(0,max(res-shreds[3],0)*shreds[2]) * fragile + pp.mul_add[1]
 				plt.text(res*25/6000/max_res*120*max_def,demanded,f"{int(demanded)}",size=9, c=p[0].get_color())
+		
+		if 'dph' in pp.input_kwargs:
+			for value_pair in edge_finder(xaxis,damages):
+				if value_pair[0] > xaxis[accuracy]: plt.text(value_pair[0],value_pair[1],f"{int((value_pair[0]-xaxis[accuracy])/xaxis[-1]*max_def/19*20*2)}",size=10)
 	
 	############### DPS graph with a fixed defense value ################################
 	elif graph_type == 3:
@@ -810,6 +837,10 @@ def plot_graph(operator, pp: PlotParameters, graph_type=0, max_def=3000, max_res
 			if defen >= 0:
 				demanded = dps_function(max(0,defen-shreds[1])*shreds[0],max(fixval-shreds[3],0)*shreds[2]) * fragile + pp.mul_add[1]
 				plt.text(defen,demanded,f"{int(demanded)}",size=10, c=p[0].get_color())
+		
+		if 'dph' in pp.input_kwargs:
+			for value_pair in edge_finder(xaxis,damages):
+				plt.text(value_pair[0],value_pair[1],f"{int(value_pair[0]/xaxis[-1]*max_def/19*20)}",size=10)
 	
 	############### Graph with images of enemies -> enemy prompt ################################
 	elif graph_type == 5:
