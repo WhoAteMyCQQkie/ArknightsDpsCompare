@@ -450,6 +450,24 @@ def stage_command(args: List[str]) -> DiscordSendable:
 		return DiscordSendable(text[:-2])
 
 	if args[0].upper() in stage_data.stages.keys():
+			#check if the file already exists
+
+			#download images
+			utils.get_enemies(args[0])
+			
+			#prepare data into file
+
+			#execute the script #todo start extra thread, since this takes foreeever
+			import os
+			os.chdir("Database/")
+			print("attempting to do the thing")
+			os.system(f"MY_TEXT={args[0]} manim -ql StageAnimator.py StageAnimator")
+			print("done the thing")
+			#rename the file
+
+			#return the output
+
+			return DiscordSendable("not sure if that worked")
 			return dps_command(["helper1","helper2","stage",args[0]])
 	
 	if len(stage_data.get_stages(args[0])) > 0:
