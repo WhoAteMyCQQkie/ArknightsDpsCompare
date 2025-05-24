@@ -492,6 +492,94 @@ class StageData:
 		for enemy in stage_details["enemyDbRefs"]:
 			enemies.add(enemy["id"])
 		return enemies
+	
+	def get_stage_layout(self, stage):
+		layout = []
+		if not stage.upper() in self.stages.keys(): return layout
+		path = self.stages[stage.upper()]
+		with open(path,encoding="utf8") as json_file:
+			stage_details = json.load(json_file)
+		stage_layout = stage_details["mapData"]["map"]
+		layout.append(len(stage_layout[0])) #x size
+		layout.append(len(stage_layout)) #y size
+		for tile in stage_details["mapData"]["tiles"]:
+			if tile["tileKey"] == "tile_end" : layout.append(0) #blue box
+			elif tile["tileKey"] == "tile_start" : layout.append(1) #red box
+			elif tile["tileKey"] == "tile_forbidden" : layout.append(2) #outer border i think
+			elif tile["heightType"] == "HIGHLAND":
+				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(3) #usable ranged tile
+				else: layout.append(4) #unusable highground tile
+			elif tile["heightType"] == "LOWLAND":
+				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(5) #usable floor tile
+				else: layout.append(6) #unusable floor tile
+			else: layout.append(7) #no idea how this could happen, but we'll see
+		print(layout)
+		#todo: holes, special tiles (like bombs)
+		return layout
+	
+	def get_enemy_pathing(self, stage):
+		#return a list of dictionaries
+		enemy_pathing = []
+		if not stage.upper() in self.stages.keys(): return enemy_pathing
+		path = self.stages[stage.upper()]
+		with open(path,encoding="utf8") as json_file:
+			stage_details = json.load(json_file)
+		#step 1: read out all the routes, including checkpoints
+		routes = []
+		idle_spots = []
+		idle_durations = []
+		for route in stage_details["routes"]:
+			idle_spot = []
+			idle_duration =[]
+			path = []
+			currently_hidden = False
+			if route["motionMode"] == "E_NUM":
+				path.append((0,0))
+				continue
+			elif route["motionMode"] == "WALK":
+				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
+				for checkpoint in route["checkpoints"]:
+					if checkpoint["type"] == "MOVE":
+						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
+					if checkpoint["type"] == "DISAPPEAR": currently_hidden = True
+					if checkpoint["type"] == "WAIT_FOR_SECONDS":
+						idle_spot.append(len(path))
+						duration = checkpoint["time"]
+						if currently_hidden: duration *= -1
+						idle_duration.append(duration)
+					if checkpoint["type"] == "APPEAR_AT_POS":
+						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
+						currently_hidden = False
+
+				path.append((route["endPosition"]["row"],route["endPosition"]["col"]))
+			routes.append(path)
+			idle_spots.append(idle_spot)
+			idle_durations.append(idle_duration)
+		
+		enemy_data = EnemyData()
+		current_wave_delay = 0
+		for wave in stage_details["waves"]:
+			current_wave_delay += wave["preDelay"]
+			current_fragement_delay = 0
+			for fragement in wave["fragments"]:
+				current_fragement_delay += fragement["preDelay"]
+				for action in fragement["actions"]:
+					if not action["actionType"] == "SPAWN": continue
+					
+					number = action["count"]
+					interval = action["interval"]
+					delay = action["preDelay"]
+					enemy = enemy_data.get_data(action["key"])
+					for i in range(number):
+						input_data = dict()
+						input_data["start_time"] = current_wave_delay + current_fragement_delay + delay + i * interval
+						input_data["speed"] = enemy[4]
+						input_data["path"] = routes[action["routeIndex"]-1]
+						input_data["idle_points"] = idle_spots[action["routeIndex"]-1]
+						input_data["idle_durations"] = idle_durations[action["routeIndex"]-1]
+						input_data["image"] = enemy[5]
+						enemy_pathing.append(input_data)
+		return enemy_pathing
 
 
 #"""
