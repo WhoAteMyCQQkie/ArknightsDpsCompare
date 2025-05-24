@@ -302,7 +302,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 			ph = len(enemies)-1
 			mim_size = max(ph,12)
 			offset = 0.2 if ph < 12 else 0.4
-			img = np.asarray(Image.open('Database/images/' + enemies[i][0] + '.png'))
+			img = np.asarray(Image.open('Database/images/' + enemies[i][5] + '.png'))
 			if plot_size == 4: ax = fig.add_axes([offset*xl+1.1*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
 			else: ax = fig.add_axes([0.1*xl+1.22*(xh-xl)/ph*(i), 0 ,2.1*(xh-xl)/mim_size ,2.1*(xh-xl)/mim_size])
 			ax.axison = False

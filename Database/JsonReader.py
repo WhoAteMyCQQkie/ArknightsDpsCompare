@@ -431,7 +431,8 @@ class EnemyData:
 			max_hp = enemy["Value"][0]["enemyData"]["attributes"]["maxHp"]["m_value"]
 			defense = enemy["Value"][0]["enemyData"]["attributes"]["def"]["m_value"]
 			resistance = enemy["Value"][0]["enemyData"]["attributes"]["magicResistance"]["m_value"]
-			self.enemy_data[key] = [name, max_hp, defense, resistance] #TODO: get enemy level, so that bosses have the right HP (eg patriot)
+			speed = enemy["Value"][0]["enemyData"]["attributes"]["moveSpeed"]["m_value"]
+			self.enemy_data[key] = [name, max_hp, defense, resistance, speed, key] #TODO: get enemy level, so that bosses have the right HP (eg patriot)
 		
 		#Todo: overwrite CN names with EN names where applicable
 		"""
