@@ -5,6 +5,15 @@ from manim import *
 
 from JsonReader import StageData
 
+#Todo:
+#better default image
+#optimize animation, so that things only spawn when theyre supposed to (questionable gains from that)
+#path finding
+#extra thread
+#holes and other special tiles
+#teleports and idle starts
+#add enemy details animation
+#plot dimensions in large maps
 
 class StageAnimator(Scene):
 
@@ -60,15 +69,23 @@ class StageAnimator(Scene):
 				anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = entry["start_time"]))
 
 			# Move + idle animations
-			for i in range(1, len(path_coords)):
-				seg = VMobject().set_points_as_corners([path_coords[i - 1], path_coords[i]])
-				dist = np.linalg.norm(path_coords[i] - path_coords[i - 1])
+			for i in range(0, len(path_coords)-1):
+				if i in idle_map: #TODO add Blink to make the teleport possible
+					if idle_map[i] > 0:
+						anims.append(Wait(idle_map[i]))
+					else:
+						anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = abs(idle_map[i])))
+
+				seg = VMobject().set_points_as_corners([path_coords[i], path_coords[i + 1]])
+				dist = np.linalg.norm(path_coords[i + 1] - path_coords[i])
 				time_for_segment = dist / square_size / speed
+				if i in idle_map:
+					if idle_map[i] < 0:
+						time_for_segment = 0
 
 				anims.append(MoveAlongPath(img, seg, run_time=time_for_segment, rate_func=linear))
 
-				if i in idle_map: #TODO add Blink to make the teleport possible
-					anims.append(Wait(idle_map[i]))
+				
 
 			# Fade out
 			anims.append(FadeOut(img))

@@ -518,8 +518,7 @@ class StageData:
 				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(5) #usable floor tile
 				else: layout.append(6) #unusable floor tile
 			else: layout.append(7) #no idea how this could happen, but we'll see
-		print(layout)
-		#todo: holes, special tiles (like bombs)
+		#TODO: holes, special tiles (like bombs)
 		return layout
 	
 	def get_enemy_pathing(self, stage):
@@ -540,16 +539,15 @@ class StageData:
 			currently_hidden = False
 			if route["motionMode"] == "E_NUM":
 				path.append((0,0))
-				continue
 			elif route["motionMode"] == "WALK":
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE":
 						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
 					if checkpoint["type"] == "DISAPPEAR": currently_hidden = True
-					if checkpoint["type"] == "WAIT_FOR_SECONDS":
-						idle_spot.append(len(path))
-						duration = checkpoint["time"]
+					if checkpoint["type"] in ["WAIT_CURRENT_FRAGMENT_TIME","WAIT_FOR_SECONDS"]:
+						idle_spot.append(len(path)-1)
+						duration = checkpoint["time"] / 2
 						if currently_hidden: duration *= -1
 						idle_duration.append(duration)
 					if checkpoint["type"] == "APPEAR_AT_POS":
@@ -560,7 +558,7 @@ class StageData:
 			routes.append(path)
 			idle_spots.append(idle_spot)
 			idle_durations.append(idle_duration)
-		
+
 		enemy_data = EnemyData()
 		current_wave_delay = 0
 		for wave in stage_details["waves"]:
@@ -578,15 +576,15 @@ class StageData:
 					enemy = enemy_data.get_data(action["key"])
 					for i in range(number):
 						input_data = dict()
-						input_data["start_time"] = current_wave_delay + current_fragement_delay + delay + i * interval
+						input_data["start_time"] = (current_wave_delay + current_fragement_delay + delay + i * interval) / 2
 						max_delay = max(max_delay, delay + i * interval)
-						input_data["speed"] = enemy[4]
-						if routes[action["routeIndex"]-1] != []:
-							input_data["path"] = routes[action["routeIndex"]-1]
+						input_data["speed"] = enemy[4] * 2
+						if routes[action["routeIndex"]] != []:
+							input_data["path"] = routes[action["routeIndex"]]
 						else:
 							input_data["path"] = [(0,0)]
-						input_data["idle_points"] = idle_spots[action["routeIndex"]-1]
-						input_data["idle_durations"] = idle_durations[action["routeIndex"]-1]
+						input_data["idle_points"] = idle_spots[action["routeIndex"]]
+						input_data["idle_durations"] = idle_durations[action["routeIndex"]]
 						input_data["image"] = enemy[5]
 						enemy_pathing.append(input_data)
 				current_fragement_delay += max_delay
