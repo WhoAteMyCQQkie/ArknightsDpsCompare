@@ -539,7 +539,7 @@ class StageData:
 			currently_hidden = False
 			if route["motionMode"] == "E_NUM":
 				path.append((0,0))
-			elif route["motionMode"] == "WALK":
+			elif route["motionMode"] in ["WALK","FLY"]:
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE":

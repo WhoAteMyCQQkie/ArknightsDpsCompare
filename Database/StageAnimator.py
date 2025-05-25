@@ -9,7 +9,7 @@ from JsonReader import StageData
 #better default image
 #optimize animation, so that things only spawn when theyre supposed to (questionable gains from that)
 #path finding
-#extra thread
+#extra thread or extra script to handle a queue
 #holes and other special tiles
 #teleports and idle starts
 #add enemy details animation
