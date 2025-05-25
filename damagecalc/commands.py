@@ -450,25 +450,26 @@ def stage_command(args: List[str]) -> DiscordSendable:
 		return DiscordSendable(text[:-2])
 
 	if args[0].upper() in stage_data.stages.keys():
-			#check if the file already exists
-
-			#download images
-			utils.get_enemies(args[0])
-			
-			#prepare data into file
-
-			#execute the script #todo start extra thread, since this takes foreeever
 			import os
-			os.chdir("Database/")
-			print("attempting to do the thing")
-			os.system(f"MY_TEXT={args[0]} manim -ql StageAnimator.py StageAnimator")
-			print("done the thing")
-			#rename the file
+			#check if the file already exists
+			if not os.path.isfile(f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4'):
+				#download images
+				utils.get_enemies(args[0])
+
+				#execute the script #todo start extra thread, since this takes foreeever
+				
+				#os.chdir("Database/")
+				print("attempting to do the thing")
+				os.system(f"MY_TEXT={args[0]} manim -ql Database/StageAnimator.py StageAnimator")
+				print("done the thing")
+				#rename the file
+				os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
 
 			#return the output
+			file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
 
-			return DiscordSendable("not sure if that worked")
-			return dps_command(["helper1","helper2","stage",args[0]])
+			return DiscordSendable(file=file)
+
 	
 	if len(stage_data.get_stages(args[0])) > 0:
 		text = "These are the available stages:\n"

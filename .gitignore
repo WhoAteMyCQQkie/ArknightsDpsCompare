@@ -4,5 +4,5 @@ token.txt
 channels.txt
 Database/CN-gamedata/
 Database/images/*
-Database/media
+media
 !Database/images/.gitkeep

@@ -416,7 +416,12 @@ class OperatorData:
 					drone_atk2[1] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 					self.drone_atk_e2.append(drone_atk2)
 
-path_prefix = "" if __name__ == "__main__" else "Database/"
+path_prefix = "" #if __name__ == "__main__" else "Database/"
+try:
+	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
+		pass
+except:
+	path_prefix = "Database/"
 
 class EnemyData:
 	def __init__(self):
@@ -563,6 +568,7 @@ class StageData:
 			current_fragement_delay = 0
 			for fragement in wave["fragments"]:
 				current_fragement_delay += fragement["preDelay"]
+				max_delay = 0
 				for action in fragement["actions"]:
 					if not action["actionType"] == "SPAWN": continue
 					
@@ -573,12 +579,18 @@ class StageData:
 					for i in range(number):
 						input_data = dict()
 						input_data["start_time"] = current_wave_delay + current_fragement_delay + delay + i * interval
+						max_delay = max(max_delay, delay + i * interval)
 						input_data["speed"] = enemy[4]
-						input_data["path"] = routes[action["routeIndex"]-1]
+						if routes[action["routeIndex"]-1] != []:
+							input_data["path"] = routes[action["routeIndex"]-1]
+						else:
+							input_data["path"] = [(0,0)]
 						input_data["idle_points"] = idle_spots[action["routeIndex"]-1]
 						input_data["idle_durations"] = idle_durations[action["routeIndex"]-1]
 						input_data["image"] = enemy[5]
 						enemy_pathing.append(input_data)
+				current_fragement_delay += max_delay
+			current_wave_delay += current_fragement_delay
 		return enemy_pathing
 
 
