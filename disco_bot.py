@@ -38,6 +38,7 @@ import os
 import platform
 import sys
 import traceback
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -98,7 +99,10 @@ async def stage(ctx, *content):
 @commands.check(check_channel)
 async def animate(ctx, *content):
 	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
-	await cmds.animate_command(list(content)).send(ctx.channel)
+	output = DiscordSendable("Generating the animation will take at least 10 minutes, expect way longer. Annihilation may take 20+ hours.")
+	await output.send(ctx.channel)
+	task = await asyncio.to_thread(cmds.animate_command,list(content))
+	await task.send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)

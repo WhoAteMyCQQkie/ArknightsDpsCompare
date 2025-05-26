@@ -71,7 +71,7 @@ class StageAnimator(Scene):
 
 			# Move + idle animations
 			for i in range(0, len(path_coords)-1):
-				if i in idle_map: #TODO add Blink to make the teleport possible
+				if i in idle_map:
 					if idle_map[i] > 0:
 						anims.append(Wait(idle_map[i]))
 					else:
