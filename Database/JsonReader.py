@@ -543,7 +543,7 @@ class StageData:
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE":
-						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
+						path.append((checkpoint["position"]["row"]+checkpoint["reachOffset"]["x"],checkpoint["position"]["col"]+checkpoint["reachOffset"]["y"]))
 					if checkpoint["type"] == "DISAPPEAR": currently_hidden = True
 					if checkpoint["type"] in ["WAIT_CURRENT_FRAGMENT_TIME","WAIT_FOR_SECONDS"]:
 						idle_spot.append(len(path)-1)

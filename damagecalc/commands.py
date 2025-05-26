@@ -488,8 +488,10 @@ def animate_command(args: List[str]) -> DiscordSendable:
 			subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			#rename the file
 			os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
-
-		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
-		return DiscordSendable(file=file)
+		try:
+			file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+			return DiscordSendable(file=file)
+		except:
+			return DiscordSendable("An error occured")
 	else:
 		return DiscordSendable("Not a valid stage, check !stage to see available stages")
