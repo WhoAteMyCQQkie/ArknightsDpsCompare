@@ -1,7 +1,8 @@
 import io
 import signal
 import multiprocessing
-from typing import Callable, List
+import subprocess
+from typing import List
 import copy
 import base64
 
@@ -450,15 +451,12 @@ def stage_command(args: List[str]) -> DiscordSendable:
 		return DiscordSendable(text[:-2])
 
 	if args[0].upper() in stage_data.stages.keys():
-			import os
-			import subprocess
-			#if os.path.exists('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png'):
-			#	os.remove('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
+			
 
 			#download images
 			#utils.get_enemies(args[0])
 			#possible todo: add enemy info to image
-			#os.system(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator")
+			
 			subprocess.run(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 			#return the output
@@ -484,7 +482,7 @@ def animate_command(args: List[str]) -> DiscordSendable:
 			#download images
 			utils.get_enemies(args[0])
 			#Do the animation
-			os.system(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py StageAnimator")
+			subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			#rename the file
 			os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
 
