@@ -94,6 +94,12 @@ async def stage(ctx, *content):
 	"""Type !stage for more details"""
 	await cmds.stage_command(list(content)).send(ctx.channel)
 
+@bot.command(aliases=["Animate"])
+@commands.check(check_channel)
+async def animate(ctx, *content):
+	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
+	await cmds.animate_command(list(content)).send(ctx.channel)
+
 @bot.command()
 @commands.check(check_channel)
 async def ops(ctx):

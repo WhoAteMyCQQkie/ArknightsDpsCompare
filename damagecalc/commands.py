@@ -452,21 +452,14 @@ def stage_command(args: List[str]) -> DiscordSendable:
 	if args[0].upper() in stage_data.stages.keys():
 			import os
 			#check if the file already exists
-			if not os.path.isfile(f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4'):
-				#download images
-				utils.get_enemies(args[0])
 
-				#execute the script #todo start extra thread, since this takes foreeever
-				
-				#os.chdir("Database/")
-				print("attempting to do the thing")
-				os.system(f"MY_TEXT={args[0]} manim -ql Database/StageAnimator.py StageAnimator")
-				print("done the thing")
-				#rename the file
-				os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+			#download images
+			#utils.get_enemies(args[0])
+
+			os.system(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator")
 
 			#return the output
-			file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+			file = discord.File(fp = f'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png', filename=f'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
 
 			return DiscordSendable(file=file)
 
@@ -477,3 +470,22 @@ def stage_command(args: List[str]) -> DiscordSendable:
 			text += str(entry) + ", "
 		return DiscordSendable(text[:-2])
 	return DiscordSendable()
+
+def animate_command(args: List[str]) -> DiscordSendable:
+	from Database.JsonReader import StageData
+	stage_data = StageData()
+	if args[0].upper() in stage_data.stages.keys():
+		import os
+		#check if the file already exists
+		if not os.path.isfile(f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4'):
+			#download images
+			utils.get_enemies(args[0])
+			#Do the animation
+			os.system(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py StageAnimator")
+			#rename the file
+			os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+
+		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+		return DiscordSendable(file=file)
+	else:
+		return DiscordSendable("Not a valid stage, check !stage to see available stages")

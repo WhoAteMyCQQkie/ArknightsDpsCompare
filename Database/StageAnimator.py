@@ -21,7 +21,8 @@ class StageAnimator(Scene):
 		square_size = 1
 		squares = []
 		stage_data = StageData()
-		stage_name = os.environ.get("MY_TEXT", "Default text")
+		stage_name = os.environ.get("STAGE_NAME", "Default text")
+		animate = not (os.environ.get("DO_ANIM", "default") == "default")
 		stage_layout = stage_data.get_stage_layout(stage_name)
 
 		counter = 2 #the first 2 elements contain the dimensions of the plot
@@ -93,5 +94,6 @@ class StageAnimator(Scene):
 			all_anims.append(Succession(*anims))
 
 		# === Run all animations simultaneously ===
-		self.play(AnimationGroup(*all_anims, lag_ratio=0))
-		self.wait(1)
+		if animate:
+			self.play(AnimationGroup(*all_anims, lag_ratio=0))
+			self.wait(1)
