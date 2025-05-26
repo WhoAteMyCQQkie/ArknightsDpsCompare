@@ -1,4 +1,5 @@
 import io
+import os
 import signal
 import multiprocessing
 import subprocess
@@ -456,6 +457,8 @@ def stage_command(args: List[str]) -> DiscordSendable:
 			#download images
 			#utils.get_enemies(args[0])
 			#possible todo: add enemy info to image
+			if os.path.exists('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png'):
+				os.remove('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
 			
 			subprocess.run(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -476,7 +479,7 @@ def animate_command(args: List[str]) -> DiscordSendable:
 	from Database.JsonReader import StageData
 	stage_data = StageData()
 	if args[0].upper() in stage_data.stages.keys():
-		import os
+		
 		#check if the file already exists
 		if not os.path.isfile(f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4'):
 			#download images
