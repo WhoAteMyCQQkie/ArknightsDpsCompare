@@ -451,15 +451,16 @@ def stage_command(args: List[str]) -> DiscordSendable:
 
 	if args[0].upper() in stage_data.stages.keys():
 			import os
-			#check if the file already exists
+			if os.path.exists('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png'):
+				os.remove('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
 
 			#download images
 			#utils.get_enemies(args[0])
-
+			#possible todo: add enemy info to image
 			os.system(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator")
 
 			#return the output
-			file = discord.File(fp = f'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png', filename=f'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
+			file = discord.File(fp = 'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png', filename = 'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
 
 			return DiscordSendable(file=file)
 
