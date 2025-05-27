@@ -513,11 +513,12 @@ class StageData:
 			elif tile["tileKey"] == "tile_forbidden" : layout.append(2) #outer border i think
 			elif tile["tileKey"] == "tile_hole" : layout.append(8)
 			elif tile["tileKey"] in ["tile_telin", "tile_telout"] : layout.append(9)
+			elif tile["tileKey"] == "tile_flystart": layout.append(10)
 			elif tile["heightType"] == "HIGHLAND":
-				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(3) #usable ranged tile
+				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(3) #usable ranged tile
 				else: layout.append(4) #unusable highground tile
 			elif tile["heightType"] == "LOWLAND":
-				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(5) #usable floor tile
+				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(5) #usable floor tile
 				else: layout.append(6) #unusable floor tile
 			else: layout.append(7) #no idea how this could happen, but we'll see
 		#TODO: holes, special tiles (like bombs)
