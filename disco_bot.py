@@ -101,8 +101,8 @@ async def stage(ctx, *content):
 async def animate(ctx, *content):
 	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
 
-	if os.path.isfile(f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4'):
-		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4')
+	if os.path.isfile(f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4'):
+		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4', filename=f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4')
 		await DiscordSendable(file=file).send(ctx.channel)
 	else:
 		from Database.JsonReader import StageData

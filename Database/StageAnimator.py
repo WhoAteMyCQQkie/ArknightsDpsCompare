@@ -11,6 +11,7 @@ from JsonReader import StageData
 #special tiles (interactables)
 #add enemy details animation
 #plot dimensions in large maps
+config.frame_rate = 15
 
 class StageAnimator(Scene):
 
@@ -21,6 +22,14 @@ class StageAnimator(Scene):
 		stage_name = os.environ.get("STAGE_NAME", "Default text")
 		animate = not (os.environ.get("DO_ANIM", "default") == "default")
 		stage_layout = stage_data.get_stage_layout(stage_name)
+		
+		#set frame size
+		self.camera.frame_height = stage_layout[1]
+		self.camera.frame_width = stage_layout[0]
+		#add offset for even tile sized maps
+		x_offset = (stage_layout[0]+1)%2
+		y_offset = (stage_layout[1]+1)%2
+		self.camera.frame_center = np.array([-x_offset/2,-y_offset/2,0.0])
 
 		counter = 2 #the first 2 elements contain the dimensions of the plot
 		for row in range(stage_layout[1]):
@@ -34,7 +43,7 @@ class StageAnimator(Scene):
 				square.set_fill(WHITE, opacity=0.3)
 				if stage_layout[counter] == 0: square.set_fill(BLUE, opacity=1.0) #blue box
 				elif stage_layout[counter] == 1: square.set_fill(RED, opacity=1.0) #red box
-				elif stage_layout[counter] == 2: square.set_fill(WHITE, opacity = 0.15) #tile forbidden
+				elif stage_layout[counter] == 2: square.set_fill(WHITE, opacity = 0.13) #tile forbidden
 				elif stage_layout[counter] == 3: square.set_fill(WHITE, opacity=0.8) #usable highground
 				elif stage_layout[counter] == 4: square.set_fill(GREEN, opacity=0.7) #unusable highground
 				elif stage_layout[counter] == 5: square.set_fill(WHITE, opacity=0.3) #usable floor
@@ -42,6 +51,7 @@ class StageAnimator(Scene):
 				elif stage_layout[counter] == 7: square.set_fill(GREEN, opacity=0.8) #something nefarious
 				elif stage_layout[counter] == 8: square.set_fill(BLACK, opacity=1.0) #hole
 				elif stage_layout[counter] == 9: square.set_fill(PURPLE, opacity=0.6) #teleporter
+				elif stage_layout[counter] == 10: square.set_fill(RED, opacity=0.5) #fly start
 				counter += 1
 				square.set_stroke(BLACK, opacity=0.9, width=1)
 				self.add(square)

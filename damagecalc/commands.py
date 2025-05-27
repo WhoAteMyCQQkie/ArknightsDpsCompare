@@ -459,8 +459,8 @@ def stage_command(args: List[str]) -> DiscordSendable:
 			#possible todo: add enemy info to image
 			if os.path.exists('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png'):
 				os.remove('media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
-			
-			subprocess.run(f"STAGE_NAME={args[0]} manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			dimensions = stage_data.get_stage_layout(args[0].upper())
+			subprocess.run(f"STAGE_NAME={args[0]} manim -r {dimensions[0]*60},{dimensions[1]*60} Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 			#return the output
 			file = discord.File(fp = 'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png', filename = 'media/images/StageAnimator/StageAnimator_ManimCE_v0.19.0.png')
@@ -480,14 +480,17 @@ def animate_command(args: List[str], handler) -> DiscordSendable:
 		#clear cached files
 		#for file_name in os.listdir(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}"):
 		#	os.remove(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}/"+file_name)
-
+		from Database.JsonReader import StageData
+		stage_data = StageData()
 		#download images
 		utils.get_enemies(args[0])
+		dimensions = stage_data.get_stage_layout(args[0].upper())
 		#Do the animation
-		subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py Handler{handler}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -r {dimensions[0]*60},{dimensions[1]*60} Database/StageAnimator.py Handler{handler}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		#rename the file
-		os.rename(f'media/videos/StageAnimator/480p15/Handler{handler}.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
-		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+		os.makedirs("media/videos/StageAnimator/outputs", exist_ok=True)
+		os.rename(f'media/videos/StageAnimator/{dimensions[1]*60}p15/Handler{handler}.mp4', f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4')
+		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4')
 		return DiscordSendable(file=file)
 	except:
 		return DiscordSendable("error")
