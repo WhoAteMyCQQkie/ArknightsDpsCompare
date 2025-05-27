@@ -6,15 +6,11 @@ from manim import *
 from JsonReader import StageData
 
 #Todo:
-#better default image
-#optimize animation, so that things only spawn when theyre supposed to (questionable gains from that)
+#better default image, when failing to load enemy image
 #path finding
-#extra thread or extra script to handle a queue
-#holes and other special tiles
-#teleports and idle starts
+#special tiles (interactables)
 #add enemy details animation
 #plot dimensions in large maps
-#maybe add class handler1-3(StageAnimator): pass?
 
 class StageAnimator(Scene):
 
@@ -36,16 +32,18 @@ class StageAnimator(Scene):
 					DOWN * (stage_layout[1] // 2 - row) * square_size
 				)
 				square.set_fill(WHITE, opacity=0.3)
-				if stage_layout[counter] == 0: square.set_fill(BLUE, opacity=1.0)
-				elif stage_layout[counter] == 1: square.set_fill(RED, opacity=1.0)
-				elif stage_layout[counter] == 2: square.set_fill(WHITE, opacity=0.1)
-				elif stage_layout[counter] == 3: square.set_fill(WHITE, opacity=0.8)
-				elif stage_layout[counter] == 4: square.set_fill(WHITE, opacity=0.7)
-				elif stage_layout[counter] == 5: square.set_fill(WHITE, opacity=0.4)
-				elif stage_layout[counter] == 6: square.set_fill(WHITE, opacity=0.3)
-				elif stage_layout[counter] == 7: square.set_fill(GREEN, opacity=0.8)
+				if stage_layout[counter] == 0: square.set_fill(BLUE, opacity=1.0) #blue box
+				elif stage_layout[counter] == 1: square.set_fill(RED, opacity=1.0) #red box
+				elif stage_layout[counter] == 2: square.set_fill(WHITE, opacity = 0.15) #tile forbidden
+				elif stage_layout[counter] == 3: square.set_fill(WHITE, opacity=0.8) #usable highground
+				elif stage_layout[counter] == 4: square.set_fill(GREEN, opacity=0.7) #unusable highground
+				elif stage_layout[counter] == 5: square.set_fill(WHITE, opacity=0.3) #usable floor
+				elif stage_layout[counter] == 6: square.set_fill(GRAY_BROWN, opacity=0.9) #unusable floor
+				elif stage_layout[counter] == 7: square.set_fill(GREEN, opacity=0.8) #something nefarious
+				elif stage_layout[counter] == 8: square.set_fill(BLACK, opacity=1.0) #hole
+				elif stage_layout[counter] == 9: square.set_fill(PURPLE, opacity=0.6) #teleporter
 				counter += 1
-				square.set_stroke(BLACK, width=1)
+				square.set_stroke(BLACK, opacity=0.9, width=1)
 				self.add(square)
 				row_squares.append(square)
 			squares.append(row_squares)

@@ -511,6 +511,8 @@ class StageData:
 			if tile["tileKey"] == "tile_end" : layout.append(0) #blue box
 			elif tile["tileKey"] == "tile_start" : layout.append(1) #red box
 			elif tile["tileKey"] == "tile_forbidden" : layout.append(2) #outer border i think
+			elif tile["tileKey"] == "tile_hole" : layout.append(8)
+			elif tile["tileKey"] in ["tile_telin", "tile_telout"] : layout.append(9)
 			elif tile["heightType"] == "HIGHLAND":
 				if tile["buildableType"] in ["ANY","RANGED","MELEE"]: layout.append(3) #usable ranged tile
 				else: layout.append(4) #unusable highground tile
