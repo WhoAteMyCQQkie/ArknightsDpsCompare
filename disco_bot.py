@@ -52,6 +52,7 @@ from damagecalc.utils import DiscordSendable
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
+handler_busy = [0,0,0]
 
 #Set the accepted channels
 if os.path.exists("channels.txt"):
@@ -99,10 +100,38 @@ async def stage(ctx, *content):
 @commands.check(check_channel)
 async def animate(ctx, *content):
 	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
-	output = DiscordSendable("Generating the animation will take at least 10 minutes, expect way longer. Annihilation may take 20+ hours.")
-	await output.send(ctx.channel)
-	task = await asyncio.to_thread(cmds.animate_command,list(content))
-	await task.send(ctx.channel)
+
+	if os.path.isfile(f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4'):
+		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{list(content)[0].upper()}.mp4')
+		await DiscordSendable(file=file).send(ctx.channel)
+	else:
+		from Database.JsonReader import StageData
+		stage_data = StageData()
+		if not list(content)[0].upper() in stage_data.stages.keys():
+			output = DiscordSendable("No valid stage name detected, try !stage to get valid inputs.")
+			await output.send(ctx.channel)
+		elif sum(handler_busy) == 3:
+			output = DiscordSendable("The bot is currently running at max capacity, please wait for earlier requests to finish.")
+			await output.send(ctx.channel)
+		elif sum(handler_busy) == 2 and len(stage_data.get_enemy_pathing(list(content)[0].upper())) > 199:
+			output = DiscordSendable("The last free processing slot is reserved for non annihilation maps, please wait for a less busy time to request those.")
+			await output.send(ctx.channel)
+		else:
+			handler = handler_busy.index(0)
+			handler_busy[handler] = 1
+			output = DiscordSendable("Generating the animation will take at least 10 minutes, expect way longer. Annihilation will take 10+ hours.")
+			await output.send(ctx.channel)
+			task = await asyncio.to_thread(cmds.animate_command,list(content),handler)
+			handler_busy[handler] = 0
+			if task.content == "error":
+				output = DiscordSendable(f"An error occurred while processing {list(content)[0]}")
+				await output.send(ctx.channel)
+			else:
+				await task.send(ctx.channel)
+	#output = DiscordSendable("Generating the animation will take at least 10 minutes, expect way longer. Annihilation may take 20+ hours.")
+	#await output.send(ctx.channel)
+	#task = await asyncio.to_thread(cmds.animate_command,list(content))
+	#await task.send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)

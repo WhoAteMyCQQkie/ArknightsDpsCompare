@@ -475,23 +475,19 @@ def stage_command(args: List[str]) -> DiscordSendable:
 		return DiscordSendable(text[:-2])
 	return DiscordSendable()
 
-def animate_command(args: List[str]) -> DiscordSendable:
-	from Database.JsonReader import StageData
-	stage_data = StageData()
-	if args[0].upper() in stage_data.stages.keys():
-		
-		#check if the file already exists
-		if not os.path.isfile(f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4'):
-			#download images
-			utils.get_enemies(args[0])
-			#Do the animation
-			subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py StageAnimator", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-			#rename the file
-			os.rename('media/videos/StageAnimator/480p15/StageAnimator.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
-		try:
-			file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
-			return DiscordSendable(file=file)
-		except:
-			return DiscordSendable("An error occured")
-	else:
-		return DiscordSendable("Not a valid stage, check !stage to see available stages")
+def animate_command(args: List[str], handler) -> DiscordSendable:
+	try:
+		#clear cached files
+		#for file_name in os.listdir(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}"):
+		#	os.remove(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}/"+file_name)
+
+		#download images
+		utils.get_enemies(args[0])
+		#Do the animation
+		subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -ql Database/StageAnimator.py Handler{handler}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		#rename the file
+		os.rename(f'media/videos/StageAnimator/480p15/Handler{handler}.mp4', f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+		file = discord.File(fp = f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/480p15/{args[0].upper()}.mp4')
+		return DiscordSendable(file=file)
+	except:
+		return DiscordSendable("error")

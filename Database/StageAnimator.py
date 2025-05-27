@@ -14,6 +14,7 @@ from JsonReader import StageData
 #teleports and idle starts
 #add enemy details animation
 #plot dimensions in large maps
+#maybe add class handler1-3(StageAnimator): pass?
 
 class StageAnimator(Scene):
 
@@ -49,51 +50,62 @@ class StageAnimator(Scene):
 				row_squares.append(square)
 			squares.append(row_squares)
 
-		# === Define Entries ===
-		entry_list = stage_data.get_enemy_pathing(stage_name)
-		# === Build animations for all entries ===
-		all_anims = []
-
-		for entry in entry_list:
-			path_coords = [squares[r][c].get_center() for r, c in entry["path"]]
-			speed = entry["speed"]
-			idle_map = dict(zip(entry["idle_points"], entry["idle_durations"]))
-
-			anims = []
-
-			# Wait before showing image
-			try:
-				img = ImageMobject("Database/images/" + entry["image"] + ".png").scale(0.6).move_to(path_coords[0])
-			except:
-				img = ImageMobject("Database/images/W.png").scale(0.6).move_to(path_coords[0])
-			if entry["start_time"] > 0:
-				anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = entry["start_time"]))
-
-			# Move + idle animations
-			for i in range(0, len(path_coords)-1):
-				if i in idle_map:
-					if idle_map[i] > 0:
-						anims.append(Wait(idle_map[i]))
-					else:
-						anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = abs(idle_map[i])))
-
-				seg = VMobject().set_points_as_corners([path_coords[i], path_coords[i + 1]])
-				dist = np.linalg.norm(path_coords[i + 1] - path_coords[i])
-				time_for_segment = dist / square_size / speed
-				if i in idle_map:
-					if idle_map[i] < 0:
-						time_for_segment = 0
-
-				anims.append(MoveAlongPath(img, seg, run_time=time_for_segment, rate_func=linear))
-
-				
-
-			# Fade out
-			anims.append(FadeOut(img))
-
-			all_anims.append(Succession(*anims))
-
-		# === Run all animations simultaneously ===
+		# Doing the Animation
 		if animate:
+			entry_list = stage_data.get_enemy_pathing(stage_name)
+			#entry["speed"] = 0.7
+			#entry["path"] = [(1,0), (1,1), (3,1), (3,3)]
+			#entry["start_time"] = 24.5
+			#entry["idle_points"] = [0,3]  can be empty
+			#entry["idle_time"] = [15.0,-3.0]   pos=idle time, neg=teleport time
+			all_anims = []
+
+			for entry in entry_list:
+				path_coords = [squares[r][c].get_center() for r, c in entry["path"]]
+				speed = entry["speed"]
+				idle_map = dict(zip(entry["idle_points"], entry["idle_durations"]))
+
+				anims = []
+
+				# Wait before showing image
+				try:
+					img = ImageMobject("Database/images/" + entry["image"] + ".png").scale(0.6).move_to(path_coords[0])
+				except:
+					img = ImageMobject("Database/images/W.png").scale(0.6).move_to(path_coords[0])
+				if entry["start_time"] > 0:
+					anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = entry["start_time"]))
+
+				# Move + idle animations
+				for i in range(0, len(path_coords)-1):
+					if i in idle_map:
+						if idle_map[i] > 0:
+							anims.append(Wait(idle_map[i]))
+						else:
+							anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = abs(idle_map[i])))
+
+					seg = VMobject().set_points_as_corners([path_coords[i], path_coords[i + 1]])
+					dist = np.linalg.norm(path_coords[i + 1] - path_coords[i])
+					time_for_segment = dist / square_size / speed
+					if i in idle_map:
+						if idle_map[i] < 0:
+							time_for_segment = 0
+
+					anims.append(MoveAlongPath(img, seg, run_time=time_for_segment, rate_func=linear))
+
+				anims.append(FadeOut(img))
+
+				all_anims.append(Succession(*anims))
+
 			self.play(AnimationGroup(*all_anims, lag_ratio=0))
 			self.wait(1)
+
+#This makes sure that multiple threads don't interfere with each other. It IS necessary.
+#there are probably more elegant ways of doing this, but meh. Manim was never meant for this usecase anyway
+class Handler0(StageAnimator):
+	pass
+
+class Handler1(StageAnimator):
+	pass
+
+class Handler2(StageAnimator):
+	pass
