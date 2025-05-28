@@ -92,16 +92,20 @@ def dps_command(args: List[str])-> DiscordSendable:
 		if args[i] == "no" or args[i+1] == "alter" or args[i] == "-" or (args[i] in ["la","zuo"] and args[i+1] in ["pluma","le"]):
 			args[i] = args[i]+args[i+1]
 			args[i+1] = "null"
+		if args[i+1] == "+": args[i+1] = "null"
 		if args[i+1].startswith("+"): args[i+1] = args[i+1][1:]
 	
 	#error correction: remove illegal inputs
-	for i in range(len(args)-1):
+	for i in range(len(args)):
 		if args[i] in ["+",",","!dps"]:
 			args[i] = "null"
 		elif args[i][0] in ["+",","]:
 			args[i] = args[i][1:]
 		elif args[i][-1] in ["+",","]:
 			args[i] = args[i][:-1]
+	
+	#remove all the null inputs
+	args = [item for item in args if item != "null"]
 
 	#fix typos in operator names
 	for i in range(len(args)):

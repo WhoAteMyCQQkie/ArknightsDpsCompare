@@ -33,6 +33,7 @@
 # harmacists in healing_formulas, giving them the res prompt as possible outputs
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
 # Add GUI
+# logging of wrong inputs for future improvements
 
 import os
 import platform
