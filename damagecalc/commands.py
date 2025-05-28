@@ -76,7 +76,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 
 	#Adding the title prompt
 	for i, word in enumerate(args):
-		if word in ["text", "title"]:
+		if word.lower() in ["text", "title"]:
 			plot_title = f"{' '.join(args[i+1:])}"
 			add_title = True
 			for bad_word in profanity:
@@ -84,6 +84,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 					add_title = False
 			if add_title: plt.title(plot_title)
 			args = args[:i]
+			break
 
 	args = [str(item).lower() for item in args]
 
