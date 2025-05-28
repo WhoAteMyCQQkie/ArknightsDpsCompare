@@ -8,9 +8,10 @@ from JsonReader import StageData
 #Todo:
 #better default image, when failing to load enemy image
 #path finding
-#special tiles (interactables)
-#add enemy details animation
-#plot dimensions in large maps
+#special tiles (interactables, buff tiles)
+#fenced off ground tiles
+#add enemy details (animation or just image)
+config.disable_caching = True
 config.frame_rate = 15
 
 class StageAnimator(Scene):
@@ -98,10 +99,10 @@ class StageAnimator(Scene):
 					seg = VMobject().set_points_as_corners([path_coords[i], path_coords[i + 1]])
 					dist = np.linalg.norm(path_coords[i + 1] - path_coords[i])
 					time_for_segment = dist / square_size / speed
-					finish_time += time_for_segment
 					if i in idle_map:
 						if idle_map[i] < 0:
 							time_for_segment = 0
+					finish_time += time_for_segment
 
 					anims.append(MoveAlongPath(img, seg, run_time=time_for_segment, rate_func=linear))
 
@@ -115,12 +116,12 @@ class StageAnimator(Scene):
 			total = len(all_finish_times)
 			counter_anims = []
 			last_time = 0
-			text = Text(f"0/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0]))
+			text = Text(f"0/{total}",font_size=20).move_to(np.array([(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0]))
 			for i, time in enumerate(all_finish_times):
 				counter_anims.append(Wait(time-last_time))
 				last_time = time
-				counter_anims.append(Transform(text,Text(f"{i+1}/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0])),run_time=0))
-			counter_anims.append(Transform(text,Text(f"{total}/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0])),run_time=0))
+				counter_anims.append(Transform(text,Text(f"{i+1}/{total}",font_size=20).move_to(np.array([(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0])),run_time=0))
+			counter_anims.append(Transform(text,Text(f"{total}/{total}",font_size=20).move_to(np.array([(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0])),run_time=0))
 			text_animation = Succession(*counter_anims)
 
 
