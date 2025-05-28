@@ -67,6 +67,7 @@ class StageAnimator(Scene):
 			#entry["idle_points"] = [0,3]  can be empty
 			#entry["idle_time"] = [15.0,-3.0]   pos=idle time, neg=teleport time
 			all_anims = []
+			all_finish_times = []
 
 			for entry in entry_list:
 				path_coords = [squares[r][c].get_center() for r, c in entry["path"]]
@@ -74,6 +75,7 @@ class StageAnimator(Scene):
 				idle_map = dict(zip(entry["idle_points"], entry["idle_durations"]))
 
 				anims = []
+				finish_time = 0
 
 				# Wait before showing image
 				try:
@@ -82,10 +84,12 @@ class StageAnimator(Scene):
 					img = ImageMobject("Database/images/W.png").scale(0.6).move_to(path_coords[0])
 				if entry["start_time"] > 0:
 					anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = entry["start_time"]))
+					finish_time += entry["start_time"]
 
 				# Move + idle animations
 				for i in range(0, len(path_coords)-1):
 					if i in idle_map:
+						finish_time += abs(idle_map[i])
 						if idle_map[i] > 0:
 							anims.append(Wait(idle_map[i]))
 						else:
@@ -94,6 +98,7 @@ class StageAnimator(Scene):
 					seg = VMobject().set_points_as_corners([path_coords[i], path_coords[i + 1]])
 					dist = np.linalg.norm(path_coords[i + 1] - path_coords[i])
 					time_for_segment = dist / square_size / speed
+					finish_time += time_for_segment
 					if i in idle_map:
 						if idle_map[i] < 0:
 							time_for_segment = 0
@@ -103,8 +108,23 @@ class StageAnimator(Scene):
 				anims.append(FadeOut(img))
 
 				all_anims.append(Succession(*anims))
+				all_finish_times.append(finish_time)
+			
+			#Add a counter to keep track of the enemies
+			all_finish_times.sort()
+			total = len(all_finish_times)
+			counter_anims = []
+			last_time = 0
+			text = Text(f"0/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0]))
+			for i, time in enumerate(all_finish_times):
+				counter_anims.append(Wait(time-last_time))
+				last_time = time
+				counter_anims.append(Transform(text,Text(f"{i+1}/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0])),run_time=0))
+			counter_anims.append(Transform(text,Text(f"{total}/{total}",font_size=20).move_to(np.array([0,(stage_layout[1]-1)//2,0])),run_time=0))
+			text_animation = Succession(*counter_anims)
 
-			self.play(AnimationGroup(*all_anims, lag_ratio=0))
+
+			self.play(AnimationGroup(*all_anims, text_animation, lag_ratio=0))
 			self.wait(1)
 
 #This makes sure that multiple threads don't interfere with each other. It IS necessary.
