@@ -495,7 +495,11 @@ class StageData:
 		with open(path,encoding="utf8") as json_file:
 			stage_details = json.load(json_file)
 		for enemy in stage_details["enemyDbRefs"]:
-			enemies.add(enemy["id"])
+			if enemy["id"].endswith("_a"):
+				name = enemy["id"][:-1]+"2"
+				enemies.add(name)
+			else:
+				enemies.add(enemy["id"])
 		return enemies
 	
 	def get_stage_layout(self, stage):
