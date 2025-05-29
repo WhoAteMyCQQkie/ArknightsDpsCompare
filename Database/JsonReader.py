@@ -544,6 +544,7 @@ class StageData:
 			idle_duration =[]
 			path = []
 			currently_hidden = False
+			is_instant_teleport = False
 			if route["motionMode"] == "E_NUM":
 				path.append((0,0))
 			elif route["motionMode"] in ["WALK","FLY"]:
@@ -551,13 +552,21 @@ class StageData:
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE":
 						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
-					if checkpoint["type"] == "DISAPPEAR": currently_hidden = True
+					if checkpoint["type"] == "DISAPPEAR":
+						currently_hidden = True
+						is_instant_teleport = True
 					if checkpoint["type"] in ["WAIT_CURRENT_FRAGMENT_TIME","WAIT_FOR_SECONDS"]:
 						idle_spot.append(len(path)-1)
 						duration = checkpoint["time"] / 2
-						if currently_hidden: duration *= -1
+						if currently_hidden: 
+							duration *= -1
+							is_instant_teleport = False
 						idle_duration.append(duration)
 					if checkpoint["type"] == "APPEAR_AT_POS":
+						if is_instant_teleport:
+							idle_spot.append(len(path)-1)
+							idle_duration.append(-0.01)
+							is_instant_teleport = False
 						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
 						currently_hidden = False
 
