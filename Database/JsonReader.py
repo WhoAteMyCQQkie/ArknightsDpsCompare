@@ -580,7 +580,9 @@ class StageData:
 					number = action["count"]
 					interval = action["interval"]
 					delay = action["preDelay"]
-					enemy = enemy_data.get_data(action["key"])
+					enemy_key = action["key"]
+					if enemy_key.endswith("_a"): enemy_key = enemy_key[:-1] + "2"
+					enemy = enemy_data.get_data(enemy_key)
 					for i in range(number):
 						input_data = dict()
 						input_data["start_time"] = (current_wave_delay + current_fragement_delay + delay + i * interval) / 2
