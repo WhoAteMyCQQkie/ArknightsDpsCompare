@@ -2,6 +2,8 @@
 #IMPORTANT!!!: You probably have to edit the jsons if you want to update the script. See line 78f
 
 import json
+import os
+
 import dill
 
 id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'char_376_therex','JusticeKnight': 'char_4000_jnight','TerraResearchCommission': 'char_4077_palico',
@@ -458,7 +460,7 @@ class StageData:
 		
 		annihilation_counter = 1
 		self.stages = dict()
-		for key in stage_data["stages"].keys():
+		for key in stage_data["stages"].keys(): #reading out everything from stage_stable.json
 			challenge_mode = stage_data["stages"][key]["difficulty"] == "FOUR_STAR"
 			adverse = stage_data["stages"][key]["diffGroup"] == "TOUGH"
 			code = stage_data["stages"][key]["code"]
@@ -475,6 +477,13 @@ class StageData:
 				self.stages[code] = path
 			except:
 				pass
+		for entry in os.listdir(path_prefix +"CN-gamedata/zh_CN/gamedata/levels/obt/memory/"):
+			op_name = entry[13:-7]
+			for key in id_dict.keys():
+				if op_name in id_dict[key]:
+					self.stages["PSIM-"+key.upper()] = path_prefix +"CN-gamedata/zh_CN/gamedata/levels/obt/memory/" + entry
+					break
+
 		
 		self.stage_prefixes = set()
 		for key in self.stages.keys():
@@ -608,9 +617,9 @@ class StageData:
 				current_fragement_delay += max_delay
 			current_wave_delay += current_fragement_delay
 		return enemy_pathing
+x = StageData()
 
-
-#"""
+"""
 if __name__ == "__main__":
 	op_data_dict = {}
 	for key in id_dict.keys():
