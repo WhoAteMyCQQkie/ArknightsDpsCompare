@@ -6107,7 +6107,7 @@ class Sideroca(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Sideroca",pp,[1,2],[2],2,6,2) #available skills, available modules, default skill, def pot, def mod
 		if self.talent_dmg and self.elite == 2: self.name += f" After{int(self.talent1_params[0])}kills"
-		if self.module == 2 and self.module_dmg: self.name += " vsBlocked"
+		if self.module == 2 and self.module_dmg: self.name += " blocking"
 	
 	def skill_dps(self, defense, res):
 		dmg = 1.1 if self.module == 2 and self.module_dmg else 1

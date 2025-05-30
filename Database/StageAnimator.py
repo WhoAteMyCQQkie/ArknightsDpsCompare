@@ -63,6 +63,9 @@ class StageAnimator(Scene):
 				self.add(square)
 				row_squares.append(square)
 			squares.append(row_squares)
+		
+		label = Text(f"{stage_name.upper()}",font_size=20).move_to(np.array([-(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0]))
+		self.add(label)
 
 		# Doing the Animation
 		if animate:
