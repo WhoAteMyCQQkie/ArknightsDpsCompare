@@ -11,6 +11,11 @@ from JsonReader import StageData
 #special tiles (interactables, buff tiles)
 #fenced off ground tiles
 #add enemy details (animation or just image)
+#add !status to see current progress, using /dev/shm/
+#add this is already being processed
+#put stagename in top left corner and/or text "finished job xxx"
+#exceptions handler for weird stage mechanics like chapter 12 boss
+
 config.disable_caching = True
 config.frame_rate = 15
 
