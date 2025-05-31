@@ -5,4 +5,4 @@ channels.txt
 Database/CN-gamedata/
 Database/images/*
 media
-!Database/images/.gitkeep
+!Database/images/default.png

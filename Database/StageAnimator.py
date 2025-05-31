@@ -6,15 +6,15 @@ from manim import *
 from JsonReader import StageData
 
 #Todo:
-#better default image, when failing to load enemy image
 #path finding
 #special tiles (interactables, buff tiles)
 #fenced off ground tiles
 #add enemy details (animation or just image)
 #add !status to see current progress, using /dev/shm/
 #add this is already being processed
-#put stagename in top left corner and/or text "finished job xxx"
+#text "finished job xxx"
 #exceptions handler for weird stage mechanics like chapter 12 boss
+#similar:exception handling for wrong enemy names in stages
 
 config.disable_caching = True
 config.frame_rate = 15
@@ -64,7 +64,7 @@ class StageAnimator(Scene):
 				row_squares.append(square)
 			squares.append(row_squares)
 		
-		label = Text(f"{stage_name.upper()}",font_size=20).move_to(np.array([-(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0]))
+		label = Text(f"{stage_name.upper().replace('PSIM-','')}",font_size=20).move_to(np.array([-(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0]))
 		self.add(label)
 
 		# Doing the Animation
@@ -86,11 +86,12 @@ class StageAnimator(Scene):
 				anims = []
 				finish_time = 0
 
-				# Wait before showing image
 				try:
 					img = ImageMobject("Database/images/" + entry["image"] + ".png").scale(0.6).move_to(path_coords[0])
 				except:
-					img = ImageMobject("Database/images/W.png").scale(0.6).move_to(path_coords[0])
+					img = ImageMobject("Database/images/default.png").scale(0.6).move_to(path_coords[0])
+				
+				# Wait before showing image
 				if entry["start_time"] > 0:
 					anims.append(Blink(img, blinks=1,time_on = 0.0, time_off = entry["start_time"]))
 					finish_time += entry["start_time"]
