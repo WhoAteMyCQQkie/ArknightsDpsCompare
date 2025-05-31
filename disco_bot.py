@@ -40,6 +40,7 @@ import platform
 import sys
 import traceback
 import asyncio
+import json
 
 import discord
 from discord.ext import commands
@@ -55,20 +56,43 @@ client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
 handler_busy = [0,0,0]
 
-#Set the accepted channels
-if os.path.exists("channels.txt"):
-	with open("channels.txt","r") as f:
-		channels = f.read().split()
-else:
-	channels = []
+CONFIG_TEMPLATE = { #!!!changing this does nothing, change your settings in the config.json file that gets created the first time you run the script
+    "token": "YOUR_BOT_TOKEN_HERE",
+    "channels": ["general", 1145312466163728425],
+	"_comment_channels": "Leave 'channels' empty to respond to every channel",
+    "respond_to_dm": True,
+    "debug_mode": False,
+	"allow_stage_command": True,
+	"_comment_include": "stage command needs CN gamedata loaded"
+}
 
+try:
+	with open("config.json", "r") as f:
+		config = json.load(f)
+except:
+	print("Generating a config file. Please fill in your data.")
+	with open("config.json", "w") as f:
+		json.dump(CONFIG_TEMPLATE, f, indent=4)
+	config = CONFIG_TEMPLATE
+
+channels = config["channels"]
+token = config["token"]
+respond_to_dm = config["respond_to_dm"]
+allow_stage = config["allow_stage_command"]
+if allow_stage:
+	if not os.path.exists('Database/CN-gamedata/zh_CN/gamedata/excel/stage_table.json'):
+		print("In order for the !stage and !animate commands to function you need to download the CN gamefiles. You can do so by running:\ngit submodule update --remote")
+		allow_stage = False
+
+
+#Check for valid channels
 def check_channel(ctx):
 	if channels == []: return True
 	if isinstance(ctx.channel, discord.TextChannel):
 		if str(ctx.channel.id) in channels or ctx.channel.name in channels:
 			return True
 	elif isinstance(ctx.channel, discord.DMChannel):
-		return True ######################################################### this defines if the bot reacts to DMs
+		return respond_to_dm
 	return False
 
 
@@ -95,13 +119,14 @@ async def hps(ctx, *content):
 @commands.check(check_channel)
 async def stage(ctx, *content):
 	"""Type !stage for more details"""
+	if not allow_stage: return
 	await cmds.stage_command(list(content)).send(ctx.channel)
 
 @bot.command(aliases=["Animate"])
 @commands.check(check_channel)
 async def animate(ctx, *content):
 	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
-
+	if not allow_stage: return
 	if os.path.isfile(f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4'):
 		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4', filename=f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4')
 		await DiscordSendable(file=file).send(ctx.channel)
@@ -129,10 +154,6 @@ async def animate(ctx, *content):
 				await output.send(ctx.channel)
 			else:
 				await task.send(ctx.channel)
-	#output = DiscordSendable("Generating the animation will take at least 10 minutes, expect way longer. Annihilation may take 20+ hours.")
-	#await output.send(ctx.channel)
-	#task = await asyncio.to_thread(cmds.animate_command,list(content))
-	#await task.send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)
@@ -231,11 +252,9 @@ async def on_command_error(ctx, error):
 
 if __name__ == "__main__":
 	try:
-		with open("token.txt", encoding="locale") as f:
-			token = f.readline()
 		bot.run(token)
-	except FileNotFoundError:
-		print("""In order to function as a discord bot you need a file "token.txt" containing your discord token in the same directory as disco_bot.py.\nYou can however still use !dps right here in the console, following the normal syntax.""")
+	except:
+		print("""No Valid token detected, please change the config.json file.\nYou can still use the dps command locally without a token right here:""")
 		while True:
 			print("Please enter your operators and prompts")
 			input_text = input()

@@ -1,7 +1,6 @@
 __pycache__/
 .pylintrc
-token.txt
-channels.txt
+config.json
 Database/CN-gamedata/
 Database/images/*
 media

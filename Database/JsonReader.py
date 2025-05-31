@@ -504,7 +504,7 @@ class StageData:
 		with open(path,encoding="utf8") as json_file:
 			stage_details = json.load(json_file)
 		for enemy in stage_details["enemyDbRefs"]:
-			if enemy["id"].endswith("_a"):
+			if enemy["id"].endswith("_a") or enemy["id"].endswith("_b"):
 				name = enemy["id"][:-1]+"2"
 				enemies.add(name)
 			else:
