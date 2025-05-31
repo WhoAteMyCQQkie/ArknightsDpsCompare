@@ -449,7 +449,7 @@ def stage_command(args: List[str]) -> DiscordSendable:
 	from Database.JsonReader import StageData
 	stage_data = StageData()
 	if len(args) == 0:
-		text = "Use !stage <prefix> to get a list of the available stages. You can then use stage <stageLabel> as a prompt for !dps or just write !stage <stageLabel> to see def/res numbers. Note that !dps with a stage takes up to 90s on the first call(afterwards ~8s) \nHere are the available prefixes:\n"
+		text = "Use !stage <prefix> to get a list of the available labels. Labels can be used 3 ways:!animate <label>, !stage <label> or !dps stage <label> (stage2 to sort by res).\nHere are the available prefixes:\n"
 		stage_prefixes = list(stage_data.stage_prefixes)
 		stage_prefixes.sort()
 		for entry in stage_prefixes:

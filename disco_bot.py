@@ -172,7 +172,7 @@ async def hops(ctx):
 @bot.command(aliases=["prompt", "prompts"])
 @commands.check(check_channel)
 async def guide(ctx):
-	"""Lists all the prompts with short explanations"""
+	"""**How to use the bot.** Lists all the prompts."""
 	output = DiscordSendable("""Any prompt written *before the first* operator will affect all operators, prompts written after an operator will change the settings for that operator alone. global allows you to change the settings affecting all following ops, reset sets everything back to default.
 **Prompts without parameters (adding multiple will plot all combinations):**
 S1,S2,S3,S0 sl1..sl7,M1..M3, P1..P6, E0,E1,E2 mod0,modx,mody,modd and 1,2,3 for modlvl, or combined: 0,x1,x2,x3,y1,y2,y3,d1,d2,d3
@@ -192,10 +192,10 @@ hide,left,tiny,short (for the legend), highlight, color (for colorblind people),
 @bot.command(aliases=["muelsyse"])
 @commands.check(check_channel)
 async def mumu(ctx):
-	"""Guide on how to properly use !dps muelsyse"""
+	"""shows how to properly use !dps muelsyse"""
 	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu.
-Lowtalent removes the main clone, lowtrait the dmg bonus against blocked. for melee clones, lowtalent2 will remove the steal. for S1/S2 ranged operators some averaged amount of clones will be assumed, which isn't super accurate.
-Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is not included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
+for S1/S2 ranged operators some averaged amount of clones will be assumed, which isn't super accurate.
+Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is NOT included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
 	await output.send(ctx.channel)
 
 @bot.command()
@@ -209,23 +209,35 @@ async def marco(ctx):
 
 @bot.command()
 async def calc(ctx, *content):
-	"""Does math calculations, following python syntax. Accepts x instead of *"""
+	"""Does math calculations, following python syntax. Accepts x and ^ instead of * and **"""
 	if platform.system() == "Linux":
 		output = cmds.calc_command_linux(list(content))
 	else:
 		output = cmds.calc_command(list(content))
 	await output.send(ctx.channel)
 
+#allow deleting (recent) bot messages via reacting with red X
+@bot.event
+async def on_reaction_add(reaction, user):
+	if str(reaction.emoji) == "❌":
+		message = reaction.message
+		if message.author == bot.user:
+			try:
+				await message.delete()
+			except discord.Forbidden:
+				print("Missing permissions to delete message.")
+			except discord.HTTPException as e:
+				print(f"Failed to delete message: {e}")
+			
+
 #Creating the help command
 class MyHelpCommand(commands.HelpCommand):
 	async def send_bot_help(self, mapping):
 		if not check_channel(self.context): return
 		help_message = """General use: !dps <opname1> <opname2> ... 
-Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc, so the reality typically differs a bit from the result, not that one would even notice a < 5% difference):
-example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 low ulpianus s2
-**The Bot will also respond to DMs.**
-!guide will show you the available modifiers to the graphs, !ops lists the available operators.
-The same works for healers: !hps <opname> ... works similar to !dps. !hops shows the available healers.
+Spaces are used as delimiters, so make sure to keep operator names in one word. The result is purely mathematical (no frame counting etc.)!
+example: !dps def 0 targets 3 lapluma p4 s2 m1 x2 ulpianus s2
+**The Bot will also respond to DMs.** You can delete a recent bot message by reacting to it with ❌.
 Errors do happen, so feel free to double check the results.
 If you want to see how the bot works or expand it, it has a public repository: github.com/WhoAteMyCQQkie/ArknightsDpsCompare
 **The commands:**
