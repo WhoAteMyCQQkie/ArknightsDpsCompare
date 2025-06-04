@@ -1188,12 +1188,12 @@ class SwireAlter(Healer):
 
 class ThornsAlter(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("ThornsAlter",pp,[1,2],[],1,1,0)
+		super().__init__("ThornsAlter",pp,[1,2],[1],1,1,1)
 	
 	def skill_hps(self, **kwargs):
-		atkbuff = self.talent1_params[2]
+		atkbuff = self.talent1_params[0] if self.module == 1 and self.module_lvl > 1 else min(self.talent1_params)
 		aspd = self.talent2_params[0] if self.elite > 2 else 0
-		extra_duration = self.talent1_params[0]
+		extra_duration = max(self.talent1_params)
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		base_hps = 0
 		heal_scale = self.skill_params[0] if self.skill == 1 else self.skill_params[9]
