@@ -728,7 +728,7 @@ class Asbestos(Operator):
 
 class Ascalon(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Ascalon",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Ascalon",pp,[1,2,3],[1,2],3,1,1)
 		if not self.talent_dmg: self.name += " 1Stack"
 		else: self.name += " 3Stacks"
 		if self.elite == 2:
@@ -1813,18 +1813,20 @@ class Doc(Operator):
 
 class Dorothy(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Dorothy",pp,[1,2,3],[2],3,1,2)
+		super().__init__("Dorothy",pp,[1,2,3],[2,1],3,1,2)
 		if not self.trait_dmg or self.skill == 0: self.name += " noMines"
 		else:
 			if not self.talent_dmg: self.name += " 1MinePerSPcost"
 			else: self.name += " 1MinePer5s"
 			if self.skill == 1 and self.skill_dmg: " withDefshredNormalAtks"
 		if self.talent2_dmg: self.name += " maxTalent2"
+		if self.module == 1 and self.module_lvl == 3 and self.module_dmg: self.name += " +ExtraMines"
 		if self.targets > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent2_params[0] * self.talent2_params[1] if self.talent2_dmg else 0
 		cdmg = 1.2 if self.module == 2 else 1
+		if self.module == 1 and self.module_lvl == 3 and self.module_dmg: cdmg = 1.5
 		sp_cost = max(self.skill_cost / (1+ self.sp_boost),5)
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		mine_scale = self.skill_params[1] if self.trait_dmg and self.skill > 0 else 0
@@ -4677,8 +4679,8 @@ class Mostima(Operator):
 
 class Mountain(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mountain",pp, [1,2,3],[1],2,1,1)
-		if self.module == 1:
+		super().__init__("Mountain",pp, [1,2,3],[2,1],2,1,1)
+		if self.module == 2:
 			if self.module_dmg: self.name += " >50% hp"				
 			else: self.name += " <50% hp"
 		if self.targets > 1: self.name += f" {self.targets}targets"
@@ -4686,7 +4688,7 @@ class Mountain(Operator):
 	def skill_dps(self, defense, res):
 		crate = self.talent1_params[1]
 		cdmg = self.talent1_params[0]
-		aspd = 10 if self.module == 1 and self.module_dmg else 0
+		aspd = 10 if self.module == 2 and self.module_dmg else 0
 
 		if self.skill == 1:
 			atk_scale = self.skill_params[0]
