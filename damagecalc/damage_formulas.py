@@ -321,6 +321,9 @@ class Operator:
 				case 3: self.talent2_dmg= False
 				case 4: self.skill_dmg = False
 				case 5: self.module_dmg = False
+				case _: pass
+			return True
+		return False
 		
 	def skill_dps(self, defense, res):
 		print("The operator has not implemented the skill_dps method")
@@ -4911,7 +4914,7 @@ class NearlAlter(Operator):
 
 class Necrass(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Eblana",pp,[1,2,3],[],3,1,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Eblana",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 0:
 			if not self.trait_dmg: self.name += " noSummon"
 			else: self.name += f" {int(self.talent1_params[0])}Summons"
@@ -4929,23 +4932,28 @@ class Necrass(Operator):
 					self.name += " 1summon"
 				if self.skill_dmg: self.name += "(Maxed)"
 		if self.talent2_dmg and self.elite > 1: self.name += " vsLowHp"
+		if self.module == 1 and self.module_dmg: self.name += " vsBlocked"
+		self.no_kill = self.try_kwargs(6,["nokill","kill"],**kwargs)
+		if self.module == 1 and self.module_lvl > 1 and not self.no_kill: self.name += " afterKill"
 		
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
 		dmg_scale = self.talent2_params[1] if self.elite > 1 and self.talent2_dmg else 1
-		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		atk_scale = 1.15 if self.module_dmg and self.module == 1 else 1
+		atkbuff = 0.05 + 0.1 * self.module_lvl if self.module == 1 and self.module_lvl > 1  and not self.no_kill else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		summon_atk = self.talent1_params[2] if self.talent_dmg else 0
 		if self.skill == 0:
 			drones = self.talent1_params[0] if self.trait_dmg else 0
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
 			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
 			final_atk_summon = self.drone_atk * (1 + self.buff_atk + summon_atk) + self.buff_atk_flat
 			summondmg = np.fmax(final_atk_summon * (1-res/100), final_atk_summon * 0.05) * dmg_scale
 			dps += drones * summondmg / self.drone_atk_interval * (self.attack_speed) / 100
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
 			skilldmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
 			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
 			hits = self.talent1_params[0] if self.trait_dmg else 1
@@ -4955,14 +4963,14 @@ class Necrass(Operator):
 			dps += hits * summondmg / self.drone_atk_interval * (self.attack_speed) / 100
 		if self.skill == 2:
 			skill_scale = self.skill_params[0]
-			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale * atk_scale
 			dps = 2 * hitdmg * min(self.targets,2)
 		if self.skill == 3:
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale
+			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg_scale * atk_scale
 			dps = hitdmg / self.atk_interval * (self.attack_speed) / 100
 			skill_scale = self.skill_params[1]
 			skill_hits = self.skill_params[4]
-			skilldmg =  np.fmax(final_atk *skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale
+			skilldmg =  np.fmax(final_atk *skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * dmg_scale * atk_scale
 			dps += skilldmg * skill_hits * self.targets / (self.skill_cost/(1 + self.sp_boost) + 1.2 + skill_hits)
 			if self.trait_dmg:
 				main_atk_buff = 2 + 0.8 * 6 if self.skill_dmg else 2
