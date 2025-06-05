@@ -6488,21 +6488,24 @@ class Tachanka(Operator):
 
 class Tecno(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Tecno",pp,[1,2],[],2,1,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Tecno",pp,[1,2],[2],2,1,2) #available skills, available modules, default skill, def pot, def mod
 		if not self.trait_dmg: self.name += " noSummons"
 		else:
 			if self.talent_dmg: self.name += f" {int(self.talent1_params[0])}summons"
 			else: self.name += " 1summon"
+		if self.module == 2 and self.module_lvl > 1: self.drone_atk += 100
 	
 	def skill_dps(self, defense, res):
 		atkbuff = self.skill_params[0] if self.skill == 1 else 0
+		if self.trait_dmg and self.module == 2 and self.module_lvl == 3: atkbuff += 0.15
 		aspd = self.skill_params[0] if self.skill == 2 else 0
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1 - res/100), final_atk * 0.05)
 		dps = hitdmg/self.atk_interval * (self.attack_speed + aspd)/100
 		final_drone = self.drone_atk * (1 + self.buff_atk) + self.buff_atk_flat
 		drone_hitdmg = np.fmax(final_drone * (1 - res/100), final_drone * 0.05)
-		drone_dps = drone_hitdmg/self.drone_atk_interval * (self.attack_speed + aspd)/100
+		aspd_correction = 4 + self.module_lvl if self.module == 2 else 0
+		drone_dps = drone_hitdmg/self.drone_atk_interval * (self.attack_speed + aspd - aspd_correction)/100
 		if self.trait_dmg:
 			drones = self.talent1_params[0] if self.talent_dmg else 1
 			dps += drones * drone_dps
