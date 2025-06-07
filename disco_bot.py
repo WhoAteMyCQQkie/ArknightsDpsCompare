@@ -103,22 +103,26 @@ async def dps(ctx, *content):
 	"""Plots the dps graph"""
 	await cmds.dps_command(list(content)).send(ctx.channel)
 
-@bot.command(aliases=["DPH","Dph"])
+@bot.command(aliases=["DPH","Dph"]) #helper, that calls the dps command with extra prompt
 @commands.check(check_channel)
 async def dph(ctx, *content):
-	"""Plots the dps graph"""
 	await cmds.dps_command(["dph"]+list(content)).send(ctx.channel)
+
+@bot.command(aliases=["totaldmg","dmgtotal","dpstotal","Total","Totaldmg","Dpstotal","Dmgtotal"]) #helper, that calls the dps command with extra prompt
+@commands.check(check_channel)
+async def total(ctx, *content):
+	await cmds.dps_command(["total"]+list(content)).send(ctx.channel)
 
 @bot.command(aliases=["HPS","Hps"])
 @commands.check(check_channel)
 async def hps(ctx, *content):
-	"""Compares hps of operators"""
+	"""Compares hps of operators."""
 	await cmds.hps_command(list(content)).send(ctx.channel)
 
 @bot.command(aliases=["Stage"])
 @commands.check(check_channel)
 async def stage(ctx, *content):
-	"""Type !stage for more details"""
+	"""Type !stage for more details."""
 	if not allow_stage: return
 	await cmds.stage_command(list(content)).send(ctx.channel)
 
@@ -158,14 +162,14 @@ async def animate(ctx, *content):
 @bot.command()
 @commands.check(check_channel)
 async def ops(ctx):
-	"""Lists the available operators"""
+	"""Lists the available operators."""
 	output = DiscordSendable(f"These are the currently available operators: \n{', '.join(operators)} \n (Not all operators have all their skills implemented, check the legend of the graph)")
 	await output.send(ctx.channel)
 
 @bot.command()
 @commands.check(check_channel)
 async def hops(ctx):
-	"""Lists the available healers"""
+	"""Lists the available healers."""
 	output = DiscordSendable(f"These are the currently available healers: \n{', '.join(healers)}")
 	await output.send(ctx.channel)
 
@@ -192,7 +196,7 @@ hide,left,tiny,short (for the legend), highlight, color (for colorblind people),
 @bot.command(aliases=["muelsyse"])
 @commands.check(check_channel)
 async def mumu(ctx):
-	"""shows how to properly use !dps muelsyse"""
+	"""shows how to properly use !dps muelsyse."""
 	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu.
 for S1/S2 ranged operators some averaged amount of clones will be assumed, which isn't super accurate.
 Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is NOT included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
@@ -209,7 +213,7 @@ async def marco(ctx):
 
 @bot.command()
 async def calc(ctx, *content):
-	"""Does math calculations, following python syntax. Accepts x and ^ instead of * and **"""
+	"""Does math calculations, following python syntax. Accepts x and ^ instead of * and **."""
 	if platform.system() == "Linux":
 		output = cmds.calc_command_linux(list(content))
 	else:
@@ -244,7 +248,7 @@ If you want to see how the bot works or expand it, it has a public repository: g
 """
 		for cog, commands_list in mapping.items():
 			for command in commands_list:
-				if command.name in ["ping","marco","gui","dph"]: continue
+				if command.name in ["ping","marco","gui","dph","total"]: continue
 				help_message += f"{command.name}: {command.help}\n"
 		await self.context.send(help_message)
 
