@@ -530,8 +530,8 @@ class StageData:
 			elif tile["tileKey"] == "tile_flystart": layout.append(10)
 			elif tile["tileKey"] == "tile_quicksand": layout.append(11) #sand tiles from EP (thornsalter event)
 			elif tile["tileKey"] == "tile_deepsea": layout.append(12) #water from DH for example
-			elif tile["tileKey"] == "tile_fence_bound": layout.append(13) #unpassable melee
-			elif tile["tileKey"] in ["tile_merope","tile_mire","tile_reed","tile_reedw","tile_passable_wall"]: layout.append(7)
+			elif tile["tileKey"] in ["tile_fence_bound","tile_fence"]: layout.append(13) #unpassable melee
+			elif tile["tileKey"] in ["Xtile_merope","Xtile_grass","tile_bigforce","AAtile_gazebo","Xtile_healing","Xtile_mire","Xtile_reed","Xtile_reedw","Xtile_passable_wall","Xtile_infection","Xtile_stairs"]: layout.append(7)
 			elif tile["heightType"] == "HIGHLAND":
 				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(3) #usable ranged tile
 				else: layout.append(4) #unusable highground tile
@@ -539,8 +539,36 @@ class StageData:
 				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(5) #usable floor tile
 				else: layout.append(6) #unusable floor tile
 			else: layout.append(7) #no idea how this could happen, but we'll see
-		#TODO: holes, special tiles (like bombs)
+		#TODO: implement more tile types (including their height)
 		return layout
+	
+	def get_special_layout(self,stage):
+		layout = []
+		types = [] #see comments to see what type is what
+		if not stage.upper() in self.stages.keys(): return (layout,types)
+		path = self.stages[stage.upper()]
+		with open(path,encoding="utf8") as json_file:
+			stage_details = json.load(json_file)
+		stage_layout = stage_details["mapData"]["map"]
+		x_size = len(stage_layout[0])
+		if stage.lower().endswith("cm"):
+			for rune in stage_details["runes"]:
+				if rune["key"] == "global_forbid_location":
+					for board in rune["blackboard"]:
+						if board["key"] == "location":
+							input = board["valueStr"]
+							coordinates = [tuple(map(int, pair.strip("()").split(","))) for pair in input.split("|")]
+							for coordinate in coordinates:
+								layout.append(x_size * coordinate[0] + coordinate[1])
+								types.append(1) #type 1: CM condition blocking a tile
+		for entry in stage_details["predefines"]["tokenInsts"]:
+			layout.append(x_size * entry["position"]["row"] + entry["position"]["col"])
+			types.append(2) #any token enemy (1-7 bomb,etc)
+		for entry in stage_details["predefines"]["characterInsts"]:
+			layout.append(x_size * entry["position"]["row"] + entry["position"]["col"])
+			types.append(3) #friendly units (rosmontis, maybe shieldguards. who knows. probably not though, those guys gotta be tokens)
+		return (layout,types)
+		return([1,2,3,20],[1,1,1,1])
 	
 	def get_enemy_pathing(self, stage):
 		#return a list of dictionaries

@@ -36,6 +36,11 @@ class StageAnimator(Scene):
 		x_offset = (stage_layout[0]+1)%2
 		y_offset = (stage_layout[1]+1)%2
 		self.camera.frame_center = np.array([-x_offset/2,-y_offset/2,0.0])
+		try:
+			extra_pos, extra_type = stage_data.get_special_layout(stage_name)
+		except:
+			extra_pos = []
+			extra_type = []
 
 		counter = 2 #the first 2 elements contain the dimensions of the plot
 		for row in range(stage_layout[1]):
@@ -68,6 +73,23 @@ class StageAnimator(Scene):
 				counter += 1
 				self.add(square)
 				row_squares.append(square)
+				if (counter-3 in extra_pos):
+					special_type = extra_type[extra_pos.index(counter-3)]
+					if special_type == 1:
+						top_left = square.get_corner(UL)
+						bottom_right = square.get_corner(DR)
+						top_right = square.get_corner(UR)
+						bottom_left = square.get_corner(DL)
+						diag1 = Line(start=top_left, end=bottom_right, color=RED)
+						diag2 = Line(start=top_right, end=bottom_left, color=RED)
+						x_shape = VGroup(diag1, diag2)
+						self.add(x_shape)
+					else:#if special_type == 2:
+						icon_shape = Square(side_length=square_size*0.7)
+						icon_shape.move_to(square.get_center())
+						icon_shape.set_stroke(GREEN,width = 10)
+						self.add(icon_shape)
+
 			squares.append(row_squares)
 		
 		label = Text(f"{stage_name.upper().replace('PSIM-','')}",font_size=20).move_to(np.array([-(stage_layout[0]-1)//2,(stage_layout[1]-1)//2,0]))
