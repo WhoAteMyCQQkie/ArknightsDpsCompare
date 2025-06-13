@@ -58,8 +58,14 @@ class StageAnimator(Scene):
 				elif stage_layout[counter] == 8: square.set_fill(BLACK, opacity=1.0) #hole
 				elif stage_layout[counter] == 9: square.set_fill(PURPLE, opacity=0.6) #teleporter
 				elif stage_layout[counter] == 10: square.set_fill(RED, opacity=0.5) #fly start
+				elif stage_layout[counter] == 11: square.set_fill(LIGHT_BROWN, opacity=0.8) #sand tiles from EP
+				elif stage_layout[counter] == 12: square.set_fill(DARK_BLUE, opacity=0.8) #deep sea water
+				elif stage_layout[counter] == 13: #fenced melee tile
+					square.side_length = 0.92 * square_size
+					square.set_fill(WHITE, opacity=0.3)
+					square.set_stroke(WHITE, opacity = 0.13, width = 8)	
+				if stage_layout[counter] != 13: square.set_stroke(BLACK, opacity=0.9, width=1)
 				counter += 1
-				square.set_stroke(BLACK, opacity=0.9, width=1)
 				self.add(square)
 				row_squares.append(square)
 			squares.append(row_squares)

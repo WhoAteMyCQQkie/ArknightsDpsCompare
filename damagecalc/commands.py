@@ -60,7 +60,7 @@ def calc_command_linux(args: List[str]) -> DiscordSendable:
 		result = "Exceeded reasonable computation time."
 	finally:
 		signal.alarm(0)
-	return DiscordSendable(str(result))#return_dict.get('result', 'No result'))
+	return DiscordSendable(str(result))
 
 def dps_command(args: List[str])-> DiscordSendable:
 	if len(args) == 0: return DiscordSendable("use !ops to see the available operators, use !guide for details on the prompts")

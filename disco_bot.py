@@ -22,7 +22,7 @@
 #TODO: bigger changes that may be complicated or even unrealistic
 # s123 prompt to add multiple skills
 # !guide image to show things graphically.
-# combine prompt to combine 2 ops dps
+# combine prompt to combine 2 ops dps (or compare, to show relative difference)
 # clean up plotting, so that the parts are not scattered around in the code
 # add detail prompt to give an explanation text for complicated graphs (like assumptions for santallas s2 hit-/freezeratio, or necrosis details)
 # add plus ultra prompt to show unrealistically high dmg
@@ -34,6 +34,7 @@
 # super massive project: let people upload their krooster data and return an ideal base rotation, based on whether it's 252 or 243, the amount of logins. etc.
 # Add GUI
 # logging of wrong inputs for future improvements
+# AI support to fix input syntax
 
 import os
 import platform

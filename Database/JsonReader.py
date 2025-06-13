@@ -528,6 +528,10 @@ class StageData:
 			elif tile["tileKey"] == "tile_hole" : layout.append(8)
 			elif tile["tileKey"] in ["tile_telin", "tile_telout"] : layout.append(9)
 			elif tile["tileKey"] == "tile_flystart": layout.append(10)
+			elif tile["tileKey"] == "tile_quicksand": layout.append(11) #sand tiles from EP (thornsalter event)
+			elif tile["tileKey"] == "tile_deepsea": layout.append(12) #water from DH for example
+			elif tile["tileKey"] == "tile_fence_bound": layout.append(13) #unpassable melee
+			elif tile["tileKey"] in ["tile_merope","tile_mire","tile_reed","tile_reedw","tile_passable_wall"]: layout.append(7)
 			elif tile["heightType"] == "HIGHLAND":
 				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(3) #usable ranged tile
 				else: layout.append(4) #unusable highground tile
