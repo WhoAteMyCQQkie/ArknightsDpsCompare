@@ -524,14 +524,19 @@ class StageData:
 		for tile in stage_details["mapData"]["tiles"]:
 			if tile["tileKey"] == "tile_end" : layout.append(0) #blue box
 			elif tile["tileKey"] == "tile_start" : layout.append(1) #red box
-			elif tile["tileKey"] == "tile_forbidden" : layout.append(2) #outer border i think
+			elif tile["tileKey"] in ["tile_forbidden","tile_empty"] : layout.append(2) #outer border i think
 			elif tile["tileKey"] == "tile_hole" : layout.append(8)
 			elif tile["tileKey"] in ["tile_telin", "tile_telout"] : layout.append(9)
 			elif tile["tileKey"] == "tile_flystart": layout.append(10)
 			elif tile["tileKey"] == "tile_quicksand": layout.append(11) #sand tiles from EP (thornsalter event)
-			elif tile["tileKey"] == "tile_deepsea": layout.append(12) #water from DH for example
+			elif tile["tileKey"] == "tile_deepsea": #water from DH for example
+				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(12)
+				else: layout.append(14)
 			elif tile["tileKey"] in ["tile_fence_bound","tile_fence"]: layout.append(13) #unpassable melee
-			elif tile["tileKey"] in ["Xtile_merope","Xtile_grass","tile_bigforce","AAtile_gazebo","Xtile_healing","Xtile_mire","Xtile_reed","Xtile_reedw","Xtile_passable_wall","Xtile_infection","Xtile_stairs"]: layout.append(7)
+			elif tile["tileKey"] in ["Xtile_merope","Xtile_grass","Xtile_mire","Xtile_reed","Xtile_reedw","Xtile_passable_wall","Xtile_infection","Xtile_stairs"]: layout.append(7)
+			elif tile["tileKey"] in ["tile_gazebo","tile_bigforce","tile_healing","tile_defup"]: #buff tiles
+				if tile["heightType"] == "HIGHLAND": layout.append(15)
+				else: layout.append(16)
 			elif tile["heightType"] == "HIGHLAND":
 				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(3) #usable ranged tile
 				else: layout.append(4) #unusable highground tile

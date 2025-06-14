@@ -55,9 +55,9 @@ class StageAnimator(Scene):
 				if stage_layout[counter] == 0: square.set_fill(BLUE, opacity=1.0) #blue box
 				elif stage_layout[counter] == 1: square.set_fill(RED, opacity=1.0) #red box
 				elif stage_layout[counter] == 2: square.set_fill(WHITE, opacity = 0.13) #tile forbidden
-				elif stage_layout[counter] == 3: square.set_fill(WHITE, opacity=0.8) #usable highground
+				elif stage_layout[counter] in [3,15]: square.set_fill(WHITE, opacity=0.8) #usable highground
 				elif stage_layout[counter] == 4: square.set_fill(GREEN, opacity=0.7) #unusable highground
-				elif stage_layout[counter] == 5: square.set_fill(WHITE, opacity=0.3) #usable floor
+				elif stage_layout[counter] in [5,16]: square.set_fill(WHITE, opacity=0.3) #usable floor
 				elif stage_layout[counter] == 6: square.set_fill(GRAY_BROWN, opacity=0.9) #unusable floor
 				elif stage_layout[counter] == 7: square.set_fill(GREEN, opacity=0.8) #something nefarious
 				elif stage_layout[counter] == 8: square.set_fill(BLACK, opacity=1.0) #hole
@@ -68,11 +68,29 @@ class StageAnimator(Scene):
 				elif stage_layout[counter] == 13: #fenced melee tile
 					square.side_length = 0.92 * square_size
 					square.set_fill(WHITE, opacity=0.3)
-					square.set_stroke(WHITE, opacity = 0.13, width = 8)	
+					square.set_stroke(WHITE, opacity = 0.13, width = 8) 
+				elif stage_layout[counter] == 14: square.set_fill(DARK_BLUE, opacity=0.6) #deep sea water, unusable
+				
+				if stage_layout[counter] in [15,16]:#show buff tiles
+					top = (square.get_corner(UL)+square.get_corner(UR))/2
+					lef = (square.get_corner(UL)+square.get_corner(DL))/2
+					bot = (square.get_corner(DL)+square.get_corner(DR))/2
+					rig = (square.get_corner(DR)+square.get_corner(UR))/2
+					diag1 = Line(start=top, end=rig, color=ORANGE)
+					diag2 = Line(start=rig, end=bot, color=ORANGE)
+					diag3 = Line(start=bot, end=lef, color=ORANGE)
+					diag4 = Line(start=lef, end=top, color=ORANGE)
+					x_shape = VGroup(diag1, diag2, diag3, diag4)
+					x_shape.set_z_index(1)
+					self.add(x_shape)
+
 				if stage_layout[counter] != 13: square.set_stroke(BLACK, opacity=0.9, width=1)
+				
 				counter += 1
 				self.add(square)
 				row_squares.append(square)
+				
+				#Including tokens
 				if (counter-3 in extra_pos):
 					special_type = extra_type[extra_pos.index(counter-3)]
 					if special_type == 1:
