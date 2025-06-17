@@ -199,8 +199,9 @@ hide,left,tiny,short (for the legend), highlight, color (for colorblind people),
 async def mumu(ctx):
 	"""shows how to properly use !dps muelsyse."""
 	output = DiscordSendable("""Mumu will use the last operator before her as a clone (including potentials,level,promotion). If no operator is found, Ela will be used instead with the same pot/lvl/promotion as Mumu.
-for S1/S2 ranged operators some averaged amount of clones will be assumed, which isn't super accurate.
-Some ops have innate buffs, that WILL be copied (eunectes s1, eyja with modlvl2+,..). This is NOT included automatically, but you can add these by adding bbuff XX% to the cloned op.""")
+for S1/S2 ranged clones, some averaged amount of clones will be assumed, which isn't super accurate.
+Some ops have innate buffs, that WILL be copied (eunectes s1, modlvl2+ eyja, skadi, ..). This is NOT included automatically, but you can add these by adding bbuff XX% to the cloned op.
+Example: !dps eyja bbuff 22% mumu""")
 	await output.send(ctx.channel)
 
 @bot.command()

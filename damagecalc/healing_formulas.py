@@ -593,7 +593,7 @@ class Myrtle(Healer):
 			return self.name
 		extraheal = self.talent1_params[0]
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-		skillhps = final_atk * self.skill_params[0] * (1+self.buff_fragile) * min(self.targets,9)
+		skillhps = final_atk * self.skill_params[0] * (1+self.buff_fragile)
 		avghps = skillhps * self.skill_duration / (self.skill_duration + self.skill_cost/(1+self.sp_boost))
 		self.name += f": **{int(skillhps)}**/0/*{int(avghps)}* + {int(extraheal)}hps to vanguards"
 		return self.name
