@@ -456,12 +456,13 @@ class EnemyData:
 
 class StageData:
 	def __init__(self):
+		self.stages = dict()
+
+		#reading out everything from stage_stable.json
 		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/stage_table.json',encoding="utf8") as json_file:
 			stage_data = json.load(json_file)
-		
 		annihilation_counter = 1
-		self.stages = dict()
-		for key in stage_data["stages"].keys(): #reading out everything from stage_stable.json
+		for key in stage_data["stages"].keys(): 
 			challenge_mode = stage_data["stages"][key]["difficulty"] == "FOUR_STAR"
 			adverse = stage_data["stages"][key]["diffGroup"] == "TOUGH"
 			code = stage_data["stages"][key]["code"]
@@ -478,12 +479,28 @@ class StageData:
 				self.stages[code] = path
 			except:
 				pass
+		
+		#reading the paradox simulations
 		for entry in os.listdir(path_prefix +"CN-gamedata/zh_CN/gamedata/levels/obt/memory/"):
 			op_name = entry[13:-7]
 			for key in id_dict.keys():
 				if op_name in id_dict[key]:
 					self.stages["PSIM-"+key.upper()] = path_prefix +"CN-gamedata/zh_CN/gamedata/levels/obt/memory/" + entry
 					break
+		
+		try:
+			with open(path_prefix+'EN-gamedata/en_US/gamedata/excel/roguelike_topic_table.json',encoding="utf8") as json_file:
+				roguelike_data = json.load(json_file)
+			rogue_counter = 2
+			for roguelike in roguelike_data["details"].keys():
+				for key in roguelike_data["details"][roguelike]["stages"]:
+					code = f"IS{rogue_counter}-" + roguelike_data["details"][roguelike]["stages"][key]["name"].replace(" ","").upper()
+					path = path_prefix + "CN-gamedata/zh_CN/gamedata/levels/" + roguelike_data["details"][roguelike]["stages"][key]["levelId"].lower().replace("""\\""","/") + ".json"
+					try: self.stages[code] = path
+					except: pass
+				rogue_counter += 1
+		except:
+			print("you need to provide EN game data if you want to add IS stages.")
 
 		
 		self.stage_prefixes = set()
