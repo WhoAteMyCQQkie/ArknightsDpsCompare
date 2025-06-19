@@ -529,7 +529,7 @@ class StageData:
 				enemies.add(enemy["id"])
 		return enemies
 	
-	def get_stage_layout(self, stage):
+	def get_stage_layout(self, stage, roadblocks = []):
 		layout = []
 		if not stage.upper() in self.stages.keys(): return layout
 		path = self.stages[stage.upper()]
@@ -550,7 +550,7 @@ class StageData:
 				if tile["buildableType"] in ["ALL","RANGED","MELEE"]: layout.append(12)
 				else: layout.append(14)
 			elif tile["tileKey"] in ["tile_fence_bound","tile_fence"]: layout.append(13) #unpassable melee
-			elif tile["tileKey"] in ["Xtile_merope","Xtile_grass","Xtile_mire","Xtile_reed","Xtile_reedw","Xtile_passable_wall","Xtile_infection","Xtile_stairs"]: layout.append(7)
+			elif tile["tileKey"] in ["tile_xbdpsea","tile_steam","xtile_defbreak","xtile_volcano","Xtile_merope","Xtile_grass","Xtile_mire","Xtile_reed","Xtile_reedw","Xtile_passable_wall","Xtile_infection","Xtile_stairs"]: layout.append(7)
 			elif tile["tileKey"] in ["tile_gazebo","tile_bigforce","tile_healing","tile_defup"]: #buff tiles
 				if tile["heightType"] == "HIGHLAND": layout.append(15)
 				else: layout.append(16)
@@ -562,6 +562,9 @@ class StageData:
 				else: layout.append(6) #unusable floor tile
 			else: layout.append(7) #no idea how this could happen, but we'll see
 		#TODO: implement more tile types (including their height)
+		for pos in roadblocks:
+			if layout[pos+1] == 5:
+				layout[pos+1] = 69 #roadblock
 		return layout
 	
 	def get_special_layout(self,stage):
@@ -590,7 +593,6 @@ class StageData:
 			layout.append(x_size * entry["position"]["row"] + entry["position"]["col"])
 			types.append(3) #friendly units (rosmontis, maybe shieldguards. who knows. probably not though, those guys gotta be tokens)
 		return (layout,types)
-		return([1,2,3,20],[1,1,1,1])
 	
 	def get_enemy_pathing(self, stage):
 		#return a list of dictionaries
@@ -614,7 +616,7 @@ class StageData:
 			elif route["motionMode"] in ["WALK","FLY"]:
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
 				for checkpoint in route["checkpoints"]:
-					if checkpoint["type"] == "MOVE":
+					if checkpoint["type"] == "MOVE": #TODO: if walk: add pathfinding
 						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
 					if checkpoint["type"] == "DISAPPEAR":
 						currently_hidden = True

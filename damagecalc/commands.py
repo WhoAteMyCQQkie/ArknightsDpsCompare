@@ -482,20 +482,27 @@ def stage_command(args: List[str]) -> DiscordSendable:
 
 def animate_command(args: List[str], handler) -> DiscordSendable:
 	try:
-		#clear cached files
-		#for file_name in os.listdir(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}"):
-		#	os.remove(f"media/videos/StageAnimator/480p15/partial_movie_files/Handler{handler}/"+file_name)
 		from Database.JsonReader import StageData
 		stage_data = StageData()
 		#download images
 		utils.get_enemies(args[0])
 		dimensions = stage_data.get_stage_layout(args[0].upper())
+		rb_text = "NOPE"
+		roadblocks = []
+		if len(args) > 1:
+			for arg in args[1:]:
+				xy = arg.split(",")
+				x = max(1,min(dimensions[0],int(xy[0])))
+				y = max(1,min(dimensions[1],int(xy[1])))
+				roadblocks.append(dimensions[0] * (y-1) + x)
+			rb_text = str(roadblocks)[1:-1].replace(" ","")
 		#Do the animation
-		subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' manim -r {dimensions[0]*60},{dimensions[1]*60} Database/StageAnimator.py Handler{handler}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		subprocess.run(f"STAGE_NAME={args[0]} DO_ANIM='YES' R_BLOCK={rb_text} manim -r {dimensions[0]*60},{dimensions[1]*60} Database/StageAnimator.py Handler{handler}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		#rename the file
+		file_name = args[0].upper() if rb_text == "NOPE" else f"temp{handler}"
 		os.makedirs("media/videos/StageAnimator/outputs", exist_ok=True)
-		os.rename(f'media/videos/StageAnimator/{dimensions[1]*60}p15/Handler{handler}.mp4', f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4')
-		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4', filename=f'media/videos/StageAnimator/outputs/{args[0].upper()}.mp4')
+		os.rename(f'media/videos/StageAnimator/{dimensions[1]*60}p15/Handler{handler}.mp4', f'media/videos/StageAnimator/outputs/{file_name}.mp4')
+		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{file_name}.mp4', filename=f'media/videos/StageAnimator/outputs/{file_name}.mp4')
 		return DiscordSendable(file=file)
 	except:
 		return DiscordSendable("error")

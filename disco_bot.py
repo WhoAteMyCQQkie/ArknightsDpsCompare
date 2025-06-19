@@ -132,7 +132,12 @@ async def stage(ctx, *content):
 async def animate(ctx, *content):
 	"""Will create a video of the stage, showing spawn points, spawn times, paths and idle durations of all the enemies."""
 	if not allow_stage: return
-	if os.path.isfile(f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4'):
+	if len(list(content)) == 0:
+		output = DiscordSendable("""See !stage to get valid inputs. You can also add roadblocks to the animation by adding x,y coordinates, with 1,1 being the bottom left corner (you can see the coords using !stage <stagename> ... soon).
+Example: !animate 4-4 2,6 4,5 5,4 9,5 8,6 12,4
+right now the roadblocks get ignored, but soon there will be proper pathfinding""")
+		await output.send(ctx.channel)
+	elif len(list(content)) == 1 and os.path.isfile(f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4'):
 		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4', filename=f'media/videos/StageAnimator/outputs/{list(content)[0].upper()}.mp4')
 		await DiscordSendable(file=file).send(ctx.channel)
 	else:

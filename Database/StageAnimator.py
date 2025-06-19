@@ -26,8 +26,12 @@ class StageAnimator(Scene):
 		squares = []
 		stage_data = StageData()
 		stage_name = os.environ.get("STAGE_NAME", "Default text")
+		try:
+			road_blocks = [int(x) for x in os.environ.get("R_BLOCK","NOPE").split(',')]
+		except ValueError:
+			road_blocks = []
 		animate = not (os.environ.get("DO_ANIM", "default") == "default")
-		stage_layout = stage_data.get_stage_layout(stage_name)
+		stage_layout = stage_data.get_stage_layout(stage_name, road_blocks)
 		
 		#set frame size
 		self.camera.frame_height = stage_layout[1]
@@ -70,6 +74,7 @@ class StageAnimator(Scene):
 					square.set_fill(WHITE, opacity=0.3)
 					square.set_stroke(WHITE, opacity = 0.13, width = 8) 
 				elif stage_layout[counter] == 14: square.set_fill(DARK_BLUE, opacity=0.6) #deep sea water, unusable
+				elif stage_layout[counter] == 69: square.set_fill(ORANGE, opacity=0.9)
 				
 				if stage_layout[counter] in [15,16]:#show buff tiles
 					top = (square.get_corner(UL)+square.get_corner(UR))/2
