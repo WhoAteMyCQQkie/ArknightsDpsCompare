@@ -3,6 +3,7 @@
 
 import json
 import os
+import numpy as np
 
 import dill
 
@@ -594,7 +595,7 @@ class StageData:
 			types.append(3) #friendly units (rosmontis, maybe shieldguards. who knows. probably not though, those guys gotta be tokens)
 		return (layout,types)
 	
-	def get_enemy_pathing(self, stage):
+	def get_enemy_pathing(self, stage, road_blocks = []):
 		#return a list of dictionaries
 		enemy_pathing = []
 		if not stage.upper() in self.stages.keys(): return enemy_pathing
@@ -615,9 +616,20 @@ class StageData:
 				path.append((0,0))
 			elif route["motionMode"] in ["WALK","FLY"]:
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
+				if len(route["checkpoints"]) == 0 and route["motionMode"] == "WALK":
+					steps = self.path_find(stage,path[-1],(route["endPosition"]["row"],route["endPosition"]["col"]),road_blocks)
+					if steps != []:
+						for step in steps: path.append(step)
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE": #TODO: if walk: add pathfinding
-						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
+						if route["motionMode"] == "WALK":
+							steps = self.path_find(stage,path[-1],(checkpoint["position"]["row"],checkpoint["position"]["col"]),road_blocks)
+							if steps != []:
+								for step in steps: path.append(step)
+							else:
+								path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
+						else:
+							path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
 					if checkpoint["type"] == "DISAPPEAR":
 						currently_hidden = True
 						is_instant_teleport = True
@@ -674,6 +686,102 @@ class StageData:
 				current_fragement_delay += max_delay
 			current_wave_delay += current_fragement_delay
 		return enemy_pathing
+	
+	def path_find(self, stage, start, finish, road_blocks = []):
+		result = []
+		stage_layout = self.get_stage_layout(stage, road_blocks)
+		rows = stage_layout[1]
+		cols = stage_layout[0]
+		
+		layout = np.array(stage_layout[2:]).reshape((rows, cols))
+		#layout = np.flipud(layout) path finding being mirrored might not pose a problem, as long as the coords are correct
+		passable_tile_types = [0,1,5,6,9,11,12,14,16] #Todo: catastrophe defense walls "passable_walls"
+
+		#check direct line availability
+		fully_passable = True
+		for x in range(min(start[0],finish[0]),max(start[0],finish[0])+1):
+			for y in range(min(start[1],finish[1]),max(start[1],finish[1])+1):
+				if layout[x][y] not in passable_tile_types: 
+					fully_passable = False
+					break
+		if fully_passable:
+			return result
+
+		#do a bread first
+		visited = np.full((rows, cols), False)
+		distances = np.full((rows, cols), -1)
+		distances[start[0]][start[1]] = 0
+		queue = [start]
+		goal_reached = False
+		path_length = 0
+		while queue:
+			x,y = queue.pop(0)
+			depth = distances[x,y] + 1
+			neighbors = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
+			for neighbor in neighbors:
+				h,v = neighbor
+				if neighbor == finish:
+					goal_reached = True
+					distances[h][v] = depth
+					path_length = depth
+					queue = []
+					break
+				try: _ = layout[h][v]
+				except IndexError: continue
+				if layout[h][v] in passable_tile_types and not visited[h][v]:
+					visited[h][v] = True
+					distances[h][v] = depth
+					queue.append(neighbor)
+		
+		#try again this time without roadblocks
+		if not goal_reached:
+			passable_tile_types.append(69)
+			visited = np.full((rows, cols), False)
+			distances = np.full((rows, cols), -1)
+			distances[start[0]][start[1]] = 0
+			queue = [start]
+			goal_reached = False
+			path_length = 0
+			while queue:
+				x,y = queue.pop(0)
+				depth = distances[x,y] + 1
+				neighbors = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
+				for neighbor in neighbors:
+					h,v = neighbor
+					if neighbor == finish:
+						goal_reached = True
+						distances[h][v] = depth
+						path_length = depth
+						queue = []
+						break
+					try: _ = layout[h][v]
+					except IndexError: continue
+					if layout[h][v] in passable_tile_types and not visited[h][v]:
+						visited[h][v] = True
+						distances[h][v] = depth
+						queue.append(neighbor)
+		
+		if not goal_reached:
+			return result
+
+		#create the path
+		step = finish
+		while path_length > 0:
+			path_length -= 1
+			x,y = step
+			neighbors = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
+			for neighbor in neighbors:
+				try: _ = distances[neighbor[0],neighbor[1]]
+				except IndexError: continue
+				if distances[neighbor[0],neighbor[1]] == path_length:
+					step = neighbor
+					result.append(neighbor)
+					break
+		result = result[::-1]
+
+		#smooth out the path
+
+		return result
 
 
 """

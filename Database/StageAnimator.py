@@ -120,7 +120,7 @@ class StageAnimator(Scene):
 
 		# Doing the Animation
 		if animate:
-			entry_list = stage_data.get_enemy_pathing(stage_name)
+			entry_list = stage_data.get_enemy_pathing(stage_name, road_blocks)
 			#entry["speed"] = 0.7
 			#entry["path"] = [(1,0), (1,1), (3,1), (3,3)]
 			#entry["start_time"] = 24.5
