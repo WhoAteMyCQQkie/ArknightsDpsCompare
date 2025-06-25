@@ -616,10 +616,7 @@ class StageData:
 				path.append((0,0))
 			elif route["motionMode"] in ["WALK","FLY"]:
 				path.append((route["startPosition"]["row"],route["startPosition"]["col"]))
-				if len(route["checkpoints"]) == 0 and route["motionMode"] == "WALK":
-					steps = self.path_find(stage,path[-1],(route["endPosition"]["row"],route["endPosition"]["col"]),road_blocks)
-					if steps != []:
-						for step in steps: path.append(step)
+				
 				for checkpoint in route["checkpoints"]:
 					if checkpoint["type"] == "MOVE": #TODO: if walk: add pathfinding
 						if route["motionMode"] == "WALK":
@@ -647,7 +644,11 @@ class StageData:
 							is_instant_teleport = False
 						path.append((checkpoint["position"]["row"],checkpoint["position"]["col"]))
 						currently_hidden = False
-
+					
+				if route["motionMode"] == "WALK":
+					steps = self.path_find(stage,path[-1],(route["endPosition"]["row"],route["endPosition"]["col"]),road_blocks)
+					if steps != []:
+						for step in steps: path.append(step)
 				path.append((route["endPosition"]["row"],route["endPosition"]["col"]))
 			routes.append(path)
 			idle_spots.append(idle_spot)
@@ -688,7 +689,7 @@ class StageData:
 		return enemy_pathing
 	
 	def path_find(self, stage, start, finish, road_blocks = []):
-		result = []
+		result = [finish]
 		stage_layout = self.get_stage_layout(stage, road_blocks)
 		rows = stage_layout[1]
 		cols = stage_layout[0]
@@ -726,12 +727,12 @@ class StageData:
 					path_length = depth
 					queue = []
 					break
-				try: _ = layout[h][v]
-				except IndexError: continue
-				if layout[h][v] in passable_tile_types and not visited[h][v]:
-					visited[h][v] = True
-					distances[h][v] = depth
-					queue.append(neighbor)
+				try:
+					if layout[h][v] in passable_tile_types and not visited[h][v] and h >= 0 and v >= 0:
+						visited[h][v] = True
+						distances[h][v] = depth
+						queue.append(neighbor)
+				except IndexError: pass
 		
 		#try again this time without roadblocks
 		if not goal_reached:
@@ -754,15 +755,17 @@ class StageData:
 						path_length = depth
 						queue = []
 						break
-					try: _ = layout[h][v]
-					except IndexError: continue
-					if layout[h][v] in passable_tile_types and not visited[h][v]:
-						visited[h][v] = True
-						distances[h][v] = depth
-						queue.append(neighbor)
+					try:
+						if layout[h][v] in passable_tile_types and not visited[h][v] and h >= 0 and v >= 0:
+							visited[h][v] = True
+							distances[h][v] = depth
+							queue.append(neighbor)
+					except IndexError: pass
 		
 		if not goal_reached:
 			return result
+		else:
+			result = []
 
 		#create the path
 		step = finish
@@ -779,7 +782,7 @@ class StageData:
 					break
 		result = result[::-1]
 
-		#smooth out the path
+		#TODO smooth out the path
 
 		return result
 
