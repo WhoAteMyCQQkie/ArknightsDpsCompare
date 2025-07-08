@@ -82,7 +82,7 @@ respond_to_dm = config["respond_to_dm"]
 allow_stage = config["allow_stage_command"]
 if allow_stage:
 	if not os.path.exists('Database/CN-gamedata/zh_CN/gamedata/excel/stage_table.json'):
-		print("In order for the !stage and !animate commands to function you need to download the CN gamefiles. You can do so by running:\ngit submodule update --remote")
+		print("In order for the !stage and !animate commands to function you need to download the CN gamefiles. You can do so by running:\ngit submodule init/update")
 		allow_stage = False
 
 

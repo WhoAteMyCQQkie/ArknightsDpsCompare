@@ -106,16 +106,22 @@ def fileHelper():
 				except: #unwritable symbols
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
 
+path_prefix = "" #if __name__ == "__main__" else "Database/"
+try:
+	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
+		pass
+except:
+	path_prefix = "Database/"
 
 if __name__ == "__main__":
 	#These files are like 7MB each, maybe not a good idea to load them each time.
-		with open('CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
 			character_data = json.load(json_file)
-		with open('CN-gamedata/zh_CN/gamedata/excel/skill_table.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/skill_table.json',encoding="utf8") as json_file:
 			skill_data = json.load(json_file)
-		with open('CN-gamedata/zh_CN/gamedata/excel/battle_equip_table.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/battle_equip_table.json',encoding="utf8") as json_file:
 			module_data = json.load(json_file)
-		with open('CN-gamedata/zh_CN/gamedata/excel/char_patch_table.json',encoding="utf8") as json_file:
+		with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/char_patch_table.json',encoding="utf8") as json_file:
 			extra_data = json.load(json_file)
 			amiya_data = extra_data["patchChars"]
 
@@ -420,12 +426,7 @@ class OperatorData:
 					drone_atk2[1] = character_data[drone_key]["phases"][2]["attributesKeyFrames"][1]["data"]["atk"]
 					self.drone_atk_e2.append(drone_atk2)
 
-path_prefix = "" #if __name__ == "__main__" else "Database/"
-try:
-	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
-		pass
-except:
-	path_prefix = "Database/"
+
 
 class EnemyData:
 	def __init__(self):
@@ -501,7 +502,7 @@ class StageData:
 					except: pass
 				rogue_counter += 1
 		except:
-			print("you need to provide EN game data if you want to add IS stages.")
+			pass#print("you need to provide EN game data if you want to add IS stages.")
 
 		
 		self.stage_prefixes = set()
