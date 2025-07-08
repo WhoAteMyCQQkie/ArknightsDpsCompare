@@ -82,8 +82,15 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Xingzhu': 'char_4172_xingzh','Entelechia': 'char_4010_etlchi','Nowell': 'char_4173_nowell','Eblana': 'char_450_necras','Wulfenite': 'char_4171_wulfen',
 		   'Brigid': 'char_4177_brigid','Mon3tr': 'char_4179_monstr','Alanna': 'char_4178_alanna','Windscoot': 'char_445_wscoot','CONFESS-47': 'char_4188_confes',
 		   'Lemuen': 'char_4193_lemuen','ExusiaiAlter': 'char_1041_angel2','Gracebearer': 'char_4187_graceb','SanktaMiksaparato': 'char_4194_rmixer',
-		   'Tippi': 'char_4191_tippi','MissChristine': 'char_4198_christ','Tragodia': 'char_1042_phatm2'} 
+		   'Tippi': 'char_4191_tippi','MissChristine': 'char_4198_christ','Tragodia': 'char_1042_phatm2','LeiziAlter': 'char_1043_leizi2',
+		   'Recordkeeper': 'char_4196_reckpr'} 
 
+path_prefix = "" #if __name__ == "__main__" else "Database/"
+try:
+	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
+		pass
+except:
+	path_prefix = "Database/"
 
 def fileHelper():
 	available_ops = ["504", "514", "507", "506", "505", "4025", "512"]
@@ -92,7 +99,7 @@ def fileHelper():
 		if id_dict[key][8].isnumeric():
 			number += id_dict[key][8]
 		available_ops.append(number)
-	with open('CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
+	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/excel/character_table.json',encoding="utf8") as json_file:
 		character_data = json.load(json_file)
 	with open("dictionary.txt", 'w') as f:
 		for key in character_data.keys():
@@ -105,13 +112,6 @@ def fileHelper():
 					f.writelines(str(f"'{character_data[key]['name']}': '{key}',\n"))
 				except: #unwritable symbols
 					print(str(f"'{character_data[key]['name']}': '{key}',"))
-
-path_prefix = "" #if __name__ == "__main__" else "Database/"
-try:
-	with open(path_prefix+'CN-gamedata/zh_CN/gamedata/levels/enemydata/enemy_database.json',encoding="utf8") as json_file:
-		pass
-except:
-	path_prefix = "Database/"
 
 if __name__ == "__main__":
 	#These files are like 7MB each, maybe not a good idea to load them each time.
@@ -788,7 +788,7 @@ class StageData:
 		return result
 
 
-"""
+#"""
 if __name__ == "__main__":
 	op_data_dict = {}
 	for key in id_dict.keys():
