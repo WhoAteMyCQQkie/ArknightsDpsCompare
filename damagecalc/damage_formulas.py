@@ -2783,7 +2783,7 @@ class Goldenglow(Operator):
 	
 	def skill_dps(self, defense, res):
 		newres = np.fmax(res-self.talent2_params[0],0)
-		drone_dmg = 1.1
+		drone_dmg = 1.2 if self.module == 2 else 1.1
 		drone_explosion = self.talent1_params[1] if self.elite > 0 else 0
 		explosion_prob = 0.1 if self.elite > 0 else 0
 		aspd = 0
@@ -6837,23 +6837,26 @@ class Totter(Operator):
 
 class Typhon(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Typhon",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Typhon",pp,[1,2,3],[1,2],3,1,1)
 		self.try_kwargs(2,["crit","crits","nocrit","nocrits"],**kwargs)
 		self.try_kwargs(5,["heavy","vsheavy","vs","light","vslight"],**kwargs)
 		self.talent2_dmg = self.talent2_dmg and self.talent_dmg
 		if self.elite == 2:
 			if not self.talent2_dmg: self.name += " noCrits"
 			else:
-				if self.skill == 3: self.name += " 1Crit/salvo"
+				if self.skill == 3 and self.module == 2 and self.module_lvl > 1: self.name += " 2Crits/salvo"
+				elif self.skill == 3: self.name += " 1Crit/salvo"
 				elif self.skill == 2:
-					if self.targets == 1: self.name += " 1/2Crits"
+					if self.targets == 1 and not (self.module == 2 and self.module_lvl > 1): self.name += " 1/2Crits"
 					else: self.name += " allCrits"
 				else: self.name += " allCrits"
 		if self.module_dmg and self.module == 1: self.name += " vsHeavy"
+		if self.module_dmg and self.module == 2: self.name += " maxRange"
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets" ######when op has aoe
 				
 	def skill_dps(self, defense, res):
 		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		if self.module == 2 and self.module_dmg: atk_scale = 1.12
 		crit_scale = self.talent2_params[0] if self.talent2_dmg and self.elite == 2 else 1
 		def_ignore = 0 if self.elite == 0 else 5 * self.talent1_params[1]
 
@@ -6868,7 +6871,7 @@ class Typhon(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * atk_scale - defense*(1-def_ignore), final_atk * atk_scale * 0.05)
 			critdmg = np.fmax(final_atk * atk_scale * crit_scale - defense*(1-def_ignore), final_atk * atk_scale * crit_scale * 0.05)
-			if self.targets == 1: dps = (hitdmg+critdmg)/self.atk_interval * self.attack_speed/100
+			if self.targets == 1 and self.module != 2: dps = (hitdmg+critdmg)/self.atk_interval * self.attack_speed/100
 			else: dps = 2 * critdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 3:
 			self.atk_interval = 5.5
@@ -6880,6 +6883,8 @@ class Typhon(Operator):
 			totaldmg = hits * hitdmg
 			if self.talent2_dmg:
 				totaldmg = (hits-1)*hitdmg + critdmg
+			if self.talent2_dmg and self.module == 2 and self.module_lvl > 1:
+				totaldmg = (hits-2)*hitdmg + 2*critdmg
 			dps = totaldmg/self.atk_interval * self.attack_speed/100
 		return dps
 	
