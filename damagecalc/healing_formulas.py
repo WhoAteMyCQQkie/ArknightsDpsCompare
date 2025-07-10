@@ -889,6 +889,45 @@ class Quercus(Healer):
 			self.name += f": **{int(skillhps)}**/0/*{int(avghps)}*"
 		return self.name
 
+class RecordKeeper(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Recordkeeper",pp,[1,2],[1],2,6,1)
+		if self.module == 1 and not self.module_dmg: self.name += " vs>50%"
+		if self.skill == 2 and not self.talent_dmg: self.name += " talentInactive"
+	
+	def skill_hps(self, **kwargs):
+		aspd = self.talent1_params[0] if self.elite > 0 else 0
+		if self.skill == 2 and not self.talent_dmg: aspd = 0
+		module_heal = 1.15 if self.module == 1 and self.module_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = final_atk * module_heal /self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile)
+		restore = 1 if self.elite > 0 else 0
+
+		####the actual skills
+		if self.skill == 1:
+			skill_factor = self.skill_params[0]
+			skill_heal = final_atk * skill_factor * (1 + self.buff_fragile) * module_heal * min(self.targets,2)
+			base_heal = module_heal * final_atk * (1 + self.buff_fragile)
+			sp_cost = (self.skill_cost-restore)/(1+self.sp_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/((self.attack_speed+aspd)/100)
+			atks_per_skillactivation = sp_cost / atkcycle
+			avg_heal = skill_heal
+			if atks_per_skillactivation > 1:
+				if self.skill_params[2] > 1:
+					avg_heal = (skill_heal + (atks_per_skillactivation - 1) * base_heal) / atks_per_skillactivation
+				else:
+					avg_heal = (skill_heal + int(atks_per_skillactivation) * base_heal) / (int(atks_per_skillactivation)+1)
+			skill_hps = skill_heal/self.atk_interval*(self.attack_speed+aspd)/100
+			avg_hps = avg_heal/self.atk_interval*(self.attack_speed+aspd)/100
+		if self.skill == 2:
+			final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[2]) + self.buff_atk_flat
+			skill_hps = final_atk_skill * module_heal /self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile) * min(self.targets,2)
+			if not self.talent_dmg:
+				skill_hps = final_atk_skill * module_heal /self.atk_interval * (self.attack_speed + (self.talent1_params[0] * self.talent1_params[1]/25))/100 * (1 + self.buff_fragile) * min(self.targets,2)
+			avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
+		return self.name
+
 class RoseSalt(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
 		super().__init__("RoseSalt",params,[1,2],[1],2,6,1)
@@ -1386,7 +1425,7 @@ class Xingzhu(Healer):
 
 healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjaalter": Eyjaberry, "eyjafjallaalter": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry,
 			   "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mon3tr": Mon3tr, "m3": Mon3tr, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer, "nowell": Nowell,
-			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
+			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "recordkeeper": RecordKeeper, "keeper": RecordKeeper, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "thorns": ThornsAlter, "thornsalter": ThornsAlter, "lobster": ThornsAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain, "xingzhu": Xingzhu}
 
-healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mon3tr","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Nowell","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
+healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mon3tr","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Nowell","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RecordKeeper","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
