@@ -77,7 +77,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Ascalon': 'char_4132_ascln', 'CivilightEterna': 'char_4134_cetsyr', 'Marcille': 'char_4141_marcil', 'Chilchuk': 'char_4144_chilc',
 		   'Laios': 'char_4142_laios', 'Senshi': 'char_4143_sensi', 'AmiyaGuard': 'char_1001_amiya2', 'AmiyaMedic': 'char_1037_amiya3', 'Shu': 'char_2025_shu',
 		   'VinaVictoria': 'char_1019_siege2','Contrail': 'char_4165_ctrail','Vulpisfoglia':'char_4026_vulpis','LapplandAlter':'char_1038_whitw2','Crownslayer':'char_1502_crosly',
-		   'Philae':'char_4148_philae','Figurino':'char_4155_talr','Bobbing':'char_487_bobb', 'Catherine':'char_4162_cathy', 'Raidian': 'char_614_acsupo',
+		   'Philae':'char_4148_philae','Figurino':'char_4155_talr','Bobbing':'char_487_bobb', 'Catherine':'char_4162_cathy', 'Raidian': 'char_4195_radian',
 		   'Tecno': 'char_4164_tecno','RoseSalt': 'char_4163_rosesa','ThornsAlter': 'char_1039_thorn2','Yu': 'char_2026_yu','BlazeAlter': 'char_1040_blaze2','Surfer': 'char_4052_surfer',
 		   'Xingzhu': 'char_4172_xingzh','Entelechia': 'char_4010_etlchi','Nowell': 'char_4173_nowell','Eblana': 'char_450_necras','Wulfenite': 'char_4171_wulfen',
 		   'Brigid': 'char_4177_brigid','Mon3tr': 'char_4179_monstr','Alanna': 'char_4178_alanna','Windscoot': 'char_445_wscoot','CONFESS-47': 'char_4188_confes',

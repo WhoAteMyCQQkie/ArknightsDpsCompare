@@ -145,7 +145,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes"]:
+					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes","Raidian"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -5697,24 +5697,23 @@ class Quartz(Operator):
 
 class Raidian(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		pp.pot = 1
-		super().__init__("Raidian",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
-		self.name = self.name.replace("P1 ","")
-		if self.targets > 1 and self.skill != 3: self.name += f" {self.targets}targets" ######when op has aoe
-	
+		super().__init__("Raidian",pp,[1,2,3],[3],3,6,3)
+		if not self.trait_dmg: self.name += " noDrones"
+		elif not self.talent_dmg: self.name += " 1Drone"
+		else: self.name += " 2Drones"
+		if self.skill == 0: self.name = self.name.replace("S0","S0(S3)")
+
 	def skill_dps(self, defense, res):
-		aspd = self.talent1_params[0]
-		atkbuff = self.skill_params[0] if self.skill in [1,3] else 0
-		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-		if self.skill < 2:
-			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * min(self.targets,1+self.skill)
-		if self.skill == 2:
-			dps = hitdmg / (self.atk_interval+self.skill_params[0]) * (self.attack_speed + aspd) / 100 * min(self.targets,3)
-		if self.skill == 3:
-			fragile = max(self.buff_fragile, self.skill_params[2]-1) + 1
-			aspd *= self.skill_params[1]
-			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 /(1+self.buff_fragile) * fragile
+		drones = 2 if self.talent_dmg else 1
+		if not self.trait_dmg: drones = 0
+		dmg = self.skill_params[6] if self.skill == 3 and drones > 0 else 1
+		hits = 3 if self.skill == 2 else 1
+		skill_attack = self.skill_params[0] if self.skill in [2,3] else 0
+		final_atk = self.atk * (1 + self.buff_atk + skill_attack) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg
+		final_drone = self.drone_atk * (1 + self.buff_atk + skill_attack) + self.buff_atk_flat + max(self.elite - 1,0) * self.talent2_params[0]
+		hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05) * hits if self.skill in [1,2] else np.fmax(final_drone * (1-res/100), final_drone * 0.05) * dmg
+		dps = hitdmg/self.atk_interval * self.attack_speed/100 + hitdmgdrone/self.drone_atk_interval* (self.attack_speed)/100 * drones
 		return dps
 
 class Rangers(Operator):
