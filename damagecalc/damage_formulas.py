@@ -5711,7 +5711,7 @@ class Raidian(Operator):
 		skill_attack = self.skill_params[0] if self.skill in [2,3] else 0
 		final_atk = self.atk * (1 + self.buff_atk + skill_attack) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * dmg
-		final_drone = self.drone_atk * (1 + self.buff_atk + skill_attack) + self.buff_atk_flat + max(self.elite - 1,0) * self.talent2_params[0]
+		final_drone = self.drone_atk * (1 + self.buff_atk + skill_attack) + self.buff_atk_flat + max(self.elite - 1,0) * self.talent2_params[0] * final_atk
 		hitdmgdrone = np.fmax(final_drone - defense, final_drone * 0.05) * hits if self.skill in [1,2] else np.fmax(final_drone * (1-res/100), final_drone * 0.05) * dmg
 		dps = hitdmg/self.atk_interval * self.attack_speed/100 + hitdmgdrone/self.drone_atk_interval* (self.attack_speed)/100 * drones
 		return dps
