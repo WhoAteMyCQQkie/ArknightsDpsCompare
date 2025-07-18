@@ -454,7 +454,10 @@ class EnemyData:
 		#"""
 	
 	def get_data(self, key):
-		return (self.enemy_data[key])
+		try:
+			return(self.enemy_data[key])
+		except KeyError:
+			return(self.enemy_data[key[:-2]])
 
 class StageData:
 	def __init__(self):
@@ -524,7 +527,7 @@ class StageData:
 		with open(path,encoding="utf8") as json_file:
 			stage_details = json.load(json_file)
 		for enemy in stage_details["enemyDbRefs"]:
-			if enemy["id"].endswith("_a") or enemy["id"].endswith("_b"):
+			if enemy["id"].endswith("_a") or enemy["id"].endswith("_b") or enemy["id"].endswith("_c") or enemy["id"].endswith("_d") or enemy["id"].endswith("_e"):
 				name = enemy["id"][:-1]+"2"
 				enemies.add(name)
 			else:
@@ -670,7 +673,7 @@ class StageData:
 					interval = action["interval"]
 					delay = action["preDelay"]
 					enemy_key = action["key"]
-					if enemy_key.endswith("_a"): enemy_key = enemy_key[:-1] + "2"
+					if enemy_key.endswith("_a") or enemy_key.endswith("_b") or enemy_key.endswith("_c") or enemy_key.endswith("_d") or enemy_key.endswith("_e"): enemy_key = enemy_key[:-1] + "2"
 					enemy = enemy_data.get_data(enemy_key)
 					for i in range(number):
 						input_data = dict()
