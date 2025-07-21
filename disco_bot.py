@@ -220,7 +220,7 @@ async def marco(ctx):
 
 @bot.command()
 async def calc(ctx, *content):
-	"""Does math calculations, following python syntax. Accepts x and ^ instead of * and **."""
+	"""Does math calculations, following python syntax. Accepts x and ^ instead of * and ** ."""
 	if platform.system() == "Linux":
 		output = cmds.calc_command_linux(list(content))
 	else:

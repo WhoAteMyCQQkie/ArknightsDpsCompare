@@ -1,4 +1,4 @@
-import math  # fu Kjera
+import math  # fuck you, Kjera
 import numpy as np
 
 import dill
@@ -252,14 +252,16 @@ class Operator:
 		self.drone_atk = 0
 		self.drone_atk_interval = 1
 		if op_data.drone_atk_e0 != []:
-			slot = skill - 1
-			if len(op_data.drone_atk_e0) < 2: slot = 0
-			self.drone_atk_interval = op_data.drone_atk_interval[slot]
-			self.drone_atk = op_data.drone_atk_e0[slot][0] + (op_data.drone_atk_e0[slot][1]-op_data.drone_atk_e0[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
-			if elite == 1: self.drone_atk = op_data.drone_atk_e1[slot][0] + (op_data.drone_atk_e1[slot][1]-op_data.drone_atk_e1[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
-			if elite == 2: self.drone_atk = op_data.drone_atk_e2[slot][0] + (op_data.drone_atk_e2[slot][1]-op_data.drone_atk_e2[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
-
-		
+			try:
+				slot = skill - 1
+				if len(op_data.drone_atk_e0) < 2: slot = 0
+				self.drone_atk_interval = op_data.drone_atk_interval[slot]
+				self.drone_atk = op_data.drone_atk_e0[slot][0] + (op_data.drone_atk_e0[slot][1]-op_data.drone_atk_e0[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+				if elite == 1: self.drone_atk = op_data.drone_atk_e1[slot][0] + (op_data.drone_atk_e1[slot][1]-op_data.drone_atk_e1[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+				if elite == 2: self.drone_atk = op_data.drone_atk_e2[slot][0] + (op_data.drone_atk_e2[slot][1]-op_data.drone_atk_e2[slot][0]) * (level-1) / (max_levels[elite][rarity-1]-1)
+			except:
+				pass #fuck you, Tragodia
+			
 		
 		############### Buffs
 		self.buff_name = "" #needed to put the conditionals before the buffs
@@ -788,13 +790,18 @@ class Ash(Operator):
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.skill)
 		if self.skill == 2:
-			self.atk_interval = 0.2	
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			if self.skill_dmg: atk_scale *= self.skill_params[1] 
 			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
 			dmg_bonus = self.talent1_params[2] if self.module == 1 and self.module_lvl > 1 and self.skill_dmg else 1
-			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * dmg_bonus
+			dps = hitdmg/0.2 * (self.attack_speed+aspd)/100 * dmg_bonus
 		return dps
+	
+	def total_dmg(self, defense, res):
+		if self.skill == 2:
+			return(self.skill_dps(defense,res) * 31 * (0.2/(self.attack_speed/100)))
+		else:
+			return(super().total_dmg(defense,res))
 
 class Ashlock(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -1122,6 +1129,12 @@ class BlazeAlter(Operator):
 			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + final_atk * ele_scale
 			dps = hitdmg / 0.3 * self.attack_speed/ 100 * self.targets
 		return dps
+	
+	def total_dmg(self, defense, res):
+		if self.skill == 3:
+			return(self.skill_dps(defense,res) * self.skill_params[2] * (0.3/(self.attack_speed/100)))
+		else:
+			return(super().total_dmg(defense,res))
 
 class Blemishine(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -2022,7 +2035,6 @@ class Ela(Operator):
 			dps = avgdmg/self.atk_interval * self.attack_speed/100
 			
 		if self.skill == 3:
-			self.atk_interval = 0.5
 			fragile = self.skill_params[3]
 			if not self.talent2_dmg: fragile = 0
 			fragile = max(fragile, self.buff_fragile)
@@ -2030,9 +2042,15 @@ class Ela(Operator):
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * (1+fragile)
 			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05) * (1+fragile)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/self.atk_interval * self.attack_speed/100 /(1+self.buff_fragile)
+			dps = avgdmg/0.5 * self.attack_speed/100 /(1+self.buff_fragile)
 			
 		return dps
+	
+	def total_dmg(self, defense, res):
+		if self.skill == 3:
+			return(self.skill_dps(defense,res) * 40 * (0.5/(self.attack_speed/100)))
+		else:
+			return(super().total_dmg(defense,res))
 
 class Entelechia(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -6900,6 +6918,53 @@ class Totter(Operator):
 			if self.targets == 1: hitdmg = np.fmax(final_atk * skill_scale *  atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			dps = hitdmg/(self.atk_interval/((self.attack_speed + aspd)/100)) * min(self.targets, 3)
 		return dps
+	
+class Tragodia(Operator): #todo: correct aoe dps
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("Tragodia",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
+		if not self.trait_dmg: self.name += " vsBoss"
+		elif self.module == 1:
+			if self.module_dmg: self.name += " vsElite"
+			else: self.name += " vsMob"
+		if self.skill == 2 and not self.skill_dmg: self.name += " onlyCat"
+	
+	def skill_dps(self, defense, res):
+		nerv_factor = self.talent1_params[0]
+		nerv_aoe = self.talent1_params[1]
+		mod_factor = 1.18 if self.module == 1 and (not self.trait_dmg or self.module_dmg) else 1
+		ele_gauge = 1000 if self.trait_dmg else 2000
+		atkbuff = self.skill_params[0] if self.skill == 3 else 0
+		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+
+		if self.skill == 0:
+			ele_dps = 6000/(10 + (ele_gauge / (final_atk * nerv_factor * mod_factor / self.atk_interval * self.attack_speed / 100)))
+			dps = hitdmg / self.atk_interval * self.attack_speed / 100 + ele_dps
+		
+		if self.skill == 1:
+			skilldmg = np.fmax(final_atk * self.skill_params[0] * (1-res/100), final_atk * self.skill_params[0] * 0.05) * 2
+			nerv_dps = (final_atk * nerv_factor * mod_factor * self.skill_cost + 2 * final_atk * nerv_factor * mod_factor * self.skill_params[1])/(self.skill_cost+1)/ self.atk_interval * self.attack_speed  / 100
+			ele_dps = 6000/(10+ele_gauge/nerv_dps)
+			dps = (skilldmg + hitdmg * self.skill_cost)/(self.skill_cost+1)/ self.atk_interval * self.attack_speed / 100 + ele_dps
+		
+		if self.skill == 2:
+			skill_factor = self.skill_params[0]
+			artsdmg = np.fmax(final_atk * skill_factor * (1-res/100), final_atk * skill_factor * 0.05)
+			dps = 12 * artsdmg / 25
+
+			if self.skill_dmg:
+				ele_dps = 6000/(10 + (ele_gauge / (final_atk * nerv_factor * mod_factor / self.atk_interval * (self.attack_speed+self.skill_params[7]) / 100)))
+				dps += hitdmg / self.atk_interval * (self.attack_speed+self.skill_params[7]) / 100 + ele_dps
+			else:
+				if 12 * 0.25 * final_atk * mod_factor < ele_gauge:
+					dps += 3000 / 25
+				else:
+					dps += 6000 / 25
+
+		if self.skill == 3:
+			ele_dps = 6000/(6.666 + (ele_gauge / (final_atk * nerv_factor * mod_factor / self.atk_interval * self.attack_speed / 100 + final_atk * 0.1 * mod_factor)))
+			dps = hitdmg / self.atk_interval * self.attack_speed / 100 + ele_dps
+		return dps
 
 class Typhon(Operator):
 	def __init__(self, pp, *args, **kwargs):
@@ -7535,7 +7600,6 @@ class Walter(Operator):
 			elif self.targets > 1: dps *= min(3, self.targets)
 		
 		if self.skill == 3:
-			self.atk_interval = 5
 			atkbuff = self.skill_params[0]
 			skill_scale = self.skill_params[3]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
@@ -7544,7 +7608,7 @@ class Walter(Operator):
 			bonushitdmg_main = np.fmax(final_atk * maintargetscale * skill_scale * 0.5 - defense, final_atk * skill_scale * maintargetscale * 0.5 * 0.05)
 			bonushitdmg = np.fmax(final_atk * 0.5 - defense, final_atk * 0.5 * 0.05)
 			explosiondmg = np.fmax(final_atk * explosionscale - defense, final_atk * explosionscale * 0.05)
-			dps = (hitdmg_main + bonushitdmg_main * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100
+			dps = (hitdmg_main + bonushitdmg_main * bonushits + explosiondmg)/5 * self.attack_speed/100
 			if self.targets > 1:
 				dps += (hitdmg + bonushitdmg * bonushits + explosiondmg)/self.atk_interval * self.attack_speed/100 * (self.targets-1)
 		
@@ -7554,8 +7618,7 @@ class Walter(Operator):
 	
 	def total_dmg(self, defense, res):
 		if self.skill == 3:
-			self.atk_interval = 5
-			return(self.skill_dps(defense,res) * 6 * (self.atk_interval/(self.attack_speed/100)))
+			return(self.skill_dps(defense,res) * 6 * (5/(self.attack_speed/100)))
 		else:
 			return(super().total_dmg(defense,res))
 
@@ -7853,7 +7916,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "necrass": Necrass, "eblana": Necrass, "banana": Necrass, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"sideroca": Sideroca, "siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
-		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
+		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "tragodia": Tragodia, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
