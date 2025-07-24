@@ -341,17 +341,17 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.shred[0] = max(0,(1-float(args[i][:-1])/100))
-						pps.shred[2] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[0] = max(0,(1-abs(float(args[i][:-1])/100)))
+						pps.shred[2] = max(0,(1-abs(float(args[i][:-1])/100)))
 					except ValueError:
 						break
 				else:
 					try:
-						val = float(args[i])
-						if val > 0 and val < 1:
+						val = abs(float(args[i]))
+						if val <= 1:
 							pps.shred[0] = 1 - val
 							pps.shred[2] = 1 - val
-						if val > 2:
+						if val > 1:
 							pps.shred[1] = val
 							pps.shred[3] = val
 					except ValueError:
@@ -366,15 +366,15 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.shred[2] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[2] = max(0,(1-abs(float(args[i][:-1])/100)))
 					except ValueError:
 						break
 				else:
 					try:
-						val = float(args[i])
-						if val > 0 and val < 1:
+						val = abs(float(args[i]))
+						if  val <= 1:
 							pps.shred[2] = 1 - val
-						if val > 2:
+						if val > 1:
 							pps.shred[3] = val
 					except ValueError:
 						break
@@ -388,15 +388,15 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 			while i < entries:
 				if args[i][-1] == "%":
 					try:
-						pps.shred[0] = max(0,(1-float(args[i][:-1])/100))
+						pps.shred[0] = max(0,(1-abs(float(args[i][:-1])/100)))
 					except ValueError:
 						break
 				else:
 					try:
-						val = float(args[i])
-						if val > 0 and val < 1:
+						val = abs(float(args[i]))
+						if val <= 1:
 							pps.shred[0] = 1 - val
-						if val > 2:
+						if val > 1:
 							pps.shred[1] = val
 					except ValueError:
 						break
@@ -507,7 +507,7 @@ def parse_plot_parameters(pps: PlotParametersSet, args: list[str]):
 		elif args[i] in ["high4","h4","highs","shigh","highskill","skillhigh"]:
 			pps.temp_condition[3] = True
 			pps.conditionalss = {bools_to_int(pps.temp_condition)}
-		elif args[i] in ["low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow"]:
+		elif args[i] in ["low5","l5","lowm","mlow","lowmod","modlow","lowmodule","modulelow","vs"]:
 			pps.temp_condition[4] = False
 			pps.conditionalss = {bools_to_int(pps.temp_condition)}
 		elif args[i] in ["high5","h5","highm","mhigh","highmod","modhigh","highmodule","modulehigh"]:
