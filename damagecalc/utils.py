@@ -924,12 +924,8 @@ def get_enemies(stage_name):
 	import requests
 	for enemy in enemies[:]:
 		if os.path.exists(f"Database/images/{enemy[5]}.png"): continue
-		url = f"https://prts.wiki/w/%E6%96%87%E4%BB%B6:%E5%A4%B4%E5%83%8F_%E6%95%8C%E4%BA%BA_{enemy[0]}.png"
-		res = requests.get(url, stream = True)
-		pos = str(res.content).find('src="https://media.prts.wiki/')
-		snippet = str(res.content)[pos+29:pos+33]
 		file_name = f"Database/images/{enemy[5]}.png"
-		image_url =  f"https://media.prts.wiki/{snippet}/%E5%A4%B4%E5%83%8F_%E6%95%8C%E4%BA%BA_{enemy[0]}.png"
+		image_url = f"https://raw.githubusercontent.com/fexli/ArknightsResource/refs/heads/main/enemy/{enemy[5]}.png"
 		res = requests.get(image_url, stream = True)
 		img_data = res.content
 		with open(file_name, 'wb') as handler:
