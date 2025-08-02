@@ -83,7 +83,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Brigid': 'char_4177_brigid','Mon3tr': 'char_4179_monstr','Alanna': 'char_4178_alanna','Windscoot': 'char_445_wscoot','CONFESS-47': 'char_4188_confes',
 		   'Lemuen': 'char_4193_lemuen','ExusiaiAlter': 'char_1041_angel2','Gracebearer': 'char_4187_graceb','SanktaMiksaparato': 'char_4194_rmixer',
 		   'Tippi': 'char_4191_tippi','MissChristine': 'char_4198_christ','Tragodia': 'char_1042_phatm2','LeiziAlter': 'char_1043_leizi2',
-		   'Recordkeeper': 'char_4196_reckpr'} 
+		   'Recordkeeper': 'char_4196_reckpr','Haruka': 'char_4202_haruka','HoshigumaAlter': 'char_1044_hsgma2','Matsukiri': 'char_4199_makiri','Kichisei': 'char_4203_kichi'} 
 
 path_prefix = "" #if __name__ == "__main__" else "Database/"
 try:
