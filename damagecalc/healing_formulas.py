@@ -337,6 +337,44 @@ class Harold(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class Haruka(Healer):
+	def __init__(self, pp, **kwargs):
+		super().__init__("Haruka",pp,[1,2,3],[2],2,1,2)
+		if not self.skill_dmg and self.skill == 2: self.name += " 1stActivation"
+	
+	def skill_hps(self, **kwargs):
+		targets = 2 if self.module == 2 else 1
+		heal_factor = 1 if self.module == 1 else 0.75
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_bubble = 0.25 * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * min(targets,self.targets)
+		if self.skill == 1:
+			aspd = self.skill_params[0]
+			skill_hps = heal_factor * final_atk/self.atk_interval * (self.attack_speed+aspd)/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			avg_hps = (skill_hps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost)) 
+			skill_bubble = 0.25 * final_atk/self.atk_interval * (self.attack_speed+aspd)/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			avg_bubble = (skill_bubble * self.skill_duration + self.skill_cost/(1+self.sp_boost) * base_bubble)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			if self.elite > 1: self.name += f": **{int(skill_hps+skill_bubble)}**/{int(base_bubble)}/*{int(avg_hps+avg_bubble)}* or **{int(skill_hps)}**/0/*{int(avg_hps)}* w/o bubble"
+			else: self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+
+		if self.skill == 2:
+			if self.skill_dmg: final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
+			targets += self.skill_params[2]
+			skill_hps = heal_factor * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			skill_bubble = 0.25 * final_atk/self.atk_interval * self.attack_speed/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			if self.elite > 1: self.name += f": **{int(skill_hps+skill_bubble)}**/{int(base_bubble)} or **{int(skill_hps)}**/0 w/o bubble"
+			else: self.name += f": **{int(skill_hps)}**/0"
+		
+		if self.skill == 3:
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[2]) + self.buff_atk_flat
+			skill_hps = heal_factor * final_atk/(self.atk_interval+self.skill_params[0]) * self.attack_speed/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			skill_bubble = 0.25 * final_atk/(self.atk_interval+self.skill_params[0]) * self.attack_speed/100 * (1+self.buff_fragile) * min(targets,self.targets)
+			avg_hps = (skill_hps * self.skill_duration)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			avg_bubble = (skill_bubble * self.skill_duration + self.skill_cost/(1+self.sp_boost) * base_bubble)/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
+			if self.elite > 1: self.name += f": **{int(skill_hps+skill_bubble)}**/{int(base_bubble)}/*{int(avg_hps+avg_bubble)}* or **{int(skill_hps)}**/0/*{int(avg_hps)}* w/o bubble"
+			else: self.name += f": **{int(skill_hps)}**/0/*{int(avg_hps)}*"
+
+		return self.name
+
 class Heidi(Healer):
 	def __init__(self, pp, **kwargs):
 		super().__init__("Heidi",pp,[1,2],[1],2,1,1)
@@ -1424,8 +1462,8 @@ class Xingzhu(Healer):
 
 
 healer_dict = {"amiya": AmiyaMedic, "amiyamedic": AmiyaMedic, "medicamiya": AmiyaMedic, "ansel": Ansel, "bassline": Bassline, "blemishine": Blemishine, "breeze": Breeze, "ceylon": Ceylon, "chestnut": Chestnut, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "doc": Doc, "eyja": Eyjaberry, "eyjaalter": Eyjaberry, "eyjafjallaalter": Eyjaberry, "eyjafjalla": Eyjaberry, "eyjaberry": Eyjaberry,
-			   "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mon3tr": Mon3tr, "m3": Mon3tr, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer, "nowell": Nowell,
+			   "folinic": Folinic, "gavial":Gavial, "gummy": Gummy, "harold": Harold, "haruka": Haruka, "heidi": Heidi, "hibiscus": Hibiscus, "honey": Honeyberry, "honeyberry": Honeyberry, "hung": Hung, "kaltsit": Kaltsit, "lancet2": Lancet2, "lumen": Lumen, "mon3tr": Mon3tr, "m3": Mon3tr, "mulberry": Mulberry, "myrrh": Myrrh, "myrtle": Myrtle,"nearl":Nearl,"nightingale":Nightingale, "nightmare":Nightmare,"ncd": NineColoredDeer, "ninecoloreddeer": NineColoredDeer, "nowell": Nowell,
 			   "paprika": Paprika,"papyrus": Papyrus, "perfumer": Perfumer, "podenco": Podenco, "ptilopsis": Ptilopsis, "ptilo": Ptilopsis, "purestream": Purestream, "quercus": Quercus, "recordkeeper": RecordKeeper, "keeper": RecordKeeper, "rosesalt": RoseSalt, "saileach":Saileach,"saria": Saria, "senshi": Senshi, "shining": Shining, "shu": Shu, "silence": Silence, "silencealter": SilenceAlter, "silence2": SilenceAlter,
 			   "skadi": Skalter, "skalter": Skalter, "skaldialter": Skalter, "sora": Sora, "spot":Spot, "sussurro": Sussurro, "sus": Sussurro, "amongus": Sussurro, "swire": SwireAlter, "swirealt": SwireAlter, "swirealter": SwireAlter, "thorns": ThornsAlter, "thornsalter": ThornsAlter, "lobster": ThornsAlter, "tsukinogi": Tsukinogi, "tuye": Tuye, "uofficial": UOfficial, "eureka": UOfficial, "wanqing": Wanqing, "warfarin":Warfarin,"whisperain":Whisperain, "xingzhu": Xingzhu}
 
-healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mon3tr","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Nowell","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RecordKeeper","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
+healers = ["Amiya","Ansel","Bassline","Blemishine","Breeze","Ceylon","Chestnut","CivilightEterna","Doc","Eyjafjalla","Folinic","Gavial","Gummy","Harold","Haruka","Heidi","Hibiscus","Honeyberry","Hung","Kaltsit","Lancet2","Lumen","Mon3tr","Mulberry","Myrrh","Myrtle","Nearl","Nightingale","Nightmare","NineColoredDeer","Nowell","Paprika","Papyrus","Perfumer","Podenco","Ptilopsis","Purestream","Quercus","RecordKeeper","RoseSalt","Saileach","Saria","Senshi","Shining","Shu","Silence","SilenceAlter","Skalter","Sora","Spot","Sussurro","SwireAlt","Thorns","Tsukinogi","Tuye","UOfficial","Wanqing","Warfarin","Whisperain","Xingzhu"]
