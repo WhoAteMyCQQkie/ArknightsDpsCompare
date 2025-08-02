@@ -1071,7 +1071,7 @@ class Blaze(Operator):
 
 class BlazeAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("BlazeAlter",pp,[1,2,3],[],3,1,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("BlazeAlter",pp,[1,2,3],[1],3,1,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill in [1,2]:
 			if not self.trait_dmg: self.name += " no Burn"
 			else:
@@ -1081,8 +1081,10 @@ class BlazeAlter(Operator):
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
+		burst_scale = 1.1 if self.module == 1 and self.skill_dmg else 1
 		falloutdmg = 7000
 		atkbuff = self.skill_params[0] if self.skill == 2 else 0
+		module_atk = 0.05 * (self.module_lvl - 1) if self.module == 1 and self.module_lvl > 1 and ((self.trait_dmg and self.skill != 3) or (self.skill_dmg and self.skill == 3)) else 0
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		if self.elite > 0: falloutdmg += final_atk * self.talent1_params[0]
 
@@ -1092,7 +1094,7 @@ class BlazeAlter(Operator):
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
-			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + module_atk) + self.buff_atk_flat
 			newres = np.fmax(0,res-20)
 			elegauge = 1000 if self.skill_dmg else 2000
 			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
@@ -1102,13 +1104,13 @@ class BlazeAlter(Operator):
 			dpsNorm = hitdmg1/self.atk_interval * (self.attack_speed)/100 + skilldmg1 * self.targets
 			dpsFallout = hitdmg2/self.atk_interval * (self.attack_speed)/100 + skilldmg2 * self.targets
 			timeToFallout = elegauge/(skilldmg1 * self.skill_params[1])
-			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
+			dps = (dpsNorm * timeToFallout + dpsFallout * burst_scale * 10 + falloutdmg)/(timeToFallout + 10)
 			if not self.trait_dmg: dps = dpsNorm
 		
 		if self.skill == 2:
 			atkbuff = self.skill_params[0]
 			skill_scale = self.skill_params[2]
-			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + atkbuff + module_atk) + self.buff_atk_flat
 			newres = np.fmax(0,res-20)
 			elegauge = 1000 if self.skill_dmg else 2000
 			hitdmg1 = np.fmax(final_atk * (1-res/100), final_atk * 0.05) * min(self.targets,3)
@@ -1118,16 +1120,16 @@ class BlazeAlter(Operator):
 			dpsNorm = hitdmg1/2.5 * (self.attack_speed)/100 + skilldmg1 * self.targets
 			dpsFallout = hitdmg2/2.5 * (self.attack_speed)/100 + skilldmg2 * self.targets
 			timeToFallout = elegauge/(skilldmg1 * self.skill_params[1])
-			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
+			dps = (dpsNorm * timeToFallout + dpsFallout * burst_scale * 10 + falloutdmg)/(timeToFallout + 10)
 			if not self.trait_dmg: dps = dpsNorm
 
 		if self.skill == 3:
 			atkbuff = self.skill_params[0]
-			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk + module_atk) + self.buff_atk_flat
 			newres = np.fmax(0,res-20) if self.skill_dmg else res
 			ele_scale = self.skill_params[3] if self.skill_dmg else 0
 			hitdmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05) + final_atk * ele_scale
-			dps = hitdmg / 0.3 * self.attack_speed/ 100 * self.targets
+			dps = hitdmg * burst_scale / 0.3 * self.attack_speed/ 100 * self.targets
 		return dps
 	
 	def total_dmg(self, defense, res):
@@ -1464,7 +1466,7 @@ class Chen(Operator):
 
 class ChenAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("ChenAlter",pp,[1,3],[1],3,1,1)
+		super().__init__("ChenAlter",pp,[1,3],[1,2],3,1,2)
 		if self.skill == 0 and not self.trait_dmg: self.name += " maxRange"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 		try:
@@ -1476,6 +1478,12 @@ class ChenAlter(Operator):
 		dps = 0
 		atkbuff = self.skill_params[0] if self.skill > 0 else 0
 		aspd = 8 if self.elite == 2 else 0 #im not going to include the water buff for now
+		if self.module == 2:
+			if self.module_lvl == 2: atkbuff += 0.1
+			if self.module_lvl == 3:
+				atkbuff += 0.28
+				aspd = 20
+			
 		atk_scale = 1.6 if self.module == 1 else 1.5
 		if self.skill == 0 and not self.trait_dmg: atk_scale = 1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
@@ -1743,7 +1751,7 @@ class Degenbrecher(Operator):
 
 class Diamante(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Diamante",pp,[1,2],[],2,1,0) #available skills, available modules, default skill, def pot, def mod
+		super().__init__("Diamante",pp,[1,2],[1],2,1,1) #available skills, available modules, default skill, def pot, def mod
 		if self.skill == 2:
 			if self.talent_dmg and self.skill_dmg: self.name += " vsFallout(800dpsNotIncluded)"
 			else: self.name += " noNecrosis"
@@ -1755,12 +1763,13 @@ class Diamante(Operator):
 			else: self.name += " vsFallout(800dpsNotIncluded)"
 	
 	def skill_dps(self, defense, res):
+		burst_scale = 1.1 if self.module == 1 else 1
 		if self.skill in [0,2]:
 			atkbuff = self.talent1_params[0] if self.talent_dmg and self.skill_dmg and self.skill == 2 else 0
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			skill_scale = self.skill_params[1] if self.talent_dmg and self.skill_dmg and self.skill == 2 else 0
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			eledmg =  np.fmax(final_atk * 0 * (1-res/100), final_atk * skill_scale) /(1+self.buff_fragile)
+			eledmg =  np.fmax(final_atk * 0 * (1-res/100), final_atk * skill_scale) /(1+self.buff_fragile) * burst_scale
 			dps = (hitdmg+eledmg) / self.atk_interval * (self.attack_speed + self.skill_params[0]) / 100 * min(self.targets,2)
 		
 		if self.skill == 1:
@@ -1781,9 +1790,9 @@ class Diamante(Operator):
 			avg_eledmg = eledmg_necro * 15 / (time_to_apply_necrosis + 15)
 
 			if not self.trait_dmg: dps = (hitdmg) / self.atk_interval * (self.attack_speed) / 100
-			elif not self.talent_dmg and not self.skill_dmg: dps = fallout_dps + (avg_hitdmg + avg_eledmg) / self.atk_interval * (self.attack_speed) / 100
-			elif self.talent_dmg ^ self.skill_dmg: dps = fallout_dps + (avg_hitdmg + avg_eledmg) / self.atk_interval * (self.attack_speed) / 100
-			else: dps = (hitdmg_necro + eledmg_necro) / self.atk_interval * (self.attack_speed) / 100
+			elif not self.talent_dmg and not self.skill_dmg: dps = fallout_dps + (avg_hitdmg + avg_eledmg * burst_scale) / self.atk_interval * (self.attack_speed) / 100
+			elif self.talent_dmg ^ self.skill_dmg: dps = fallout_dps + (avg_hitdmg + avg_eledmg * burst_scale) / self.atk_interval * (self.attack_speed) / 100
+			else: dps = (hitdmg_necro + eledmg_necro) * burst_scale / self.atk_interval * (self.attack_speed) / 100
 
 		return dps
 
@@ -5104,9 +5113,9 @@ class Nian(Operator):
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
-class Nymph(Operator):
+class Nymph(Operator): #TODO: rework with the module and stuff
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Nymph",pp,[1,2,3],[],3,1,0)
+		super().__init__("Nymph",pp,[1,2,3],[1],3,1,1)
 		if self.talent2_dmg and self.elite == 2: self.name += f" {int(self.talent2_params[1])}stacks"
 		if self.trait_dmg and self.talent_dmg: self.name += " vsFallout(not inlcuding 800FalloutDps)"
 		if self.targets > 1 and self.skill != 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -5114,6 +5123,8 @@ class Nymph(Operator):
 	def skill_dps(self, defense, res):
 		talent1_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 0
 		atkbuff = self.talent2_params[0] * self.talent2_params[1] if self.elite == 2 and self.talent2_dmg else 0
+		aspd = self.talent2_params[2] if self.module == 1 and self.module_lvl > 1 and self.talent2_dmg else 0
+		burst_scale = 1.1 if self.module == 1 else 1
 			
 		if self.skill == 1:
 			atkbuff += self.skill_params[0]
@@ -5124,7 +5135,7 @@ class Nymph(Operator):
 			eledmg = 0
 			if self.trait_dmg and self.talent_dmg:
 				eledmg = final_atk * ele_scale
-			dps = (hitdmg+eledmg)/self.atk_interval * self.attack_speed/100
+			dps = (hitdmg+eledmg)/self.atk_interval * (self.attack_speed+aspd)/100
 			
 		if self.skill == 2:
 			sp_cost = self.skill_cost/(1 + self.sp_boost) + 1.2
@@ -5134,15 +5145,15 @@ class Nymph(Operator):
 			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05) * self.targets
-			dps = hitdmg/self.atk_interval * self.attack_speed/100 + skilldmg/sp_cost
+			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 + skilldmg/sp_cost
 		
 		if self.skill in [0,3]:
 			atkbuff += self.skill_params[0] if self.skill == 3 else 0
-			aspd = self.skill_params[1] if self.skill == 3 else 0
+			aspd += self.skill_params[1] if self.skill == 3 else 0
 			final_atk = self.atk * (1+atkbuff+ self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			if self.trait_dmg and self.talent_dmg and self.skill == 3:
-				hitdmg = final_atk * np.fmax(1,-res) /(1+self.buff_fragile)
+				hitdmg = final_atk * np.fmax(1,-res) /(1+self.buff_fragile) * burst_scale
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,1+self.skill/3)
 		
 		extra_dmg = 0
@@ -7624,7 +7635,7 @@ class Walter(Operator):
 
 class Warmy(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Warmy",pp,[1,2],[],2,1,0)
+		super().__init__("Warmy",pp,[1,2],[1],2,1,1)
 		if self.skill == 1:
 			if not self.trait_dmg: self.name += " no Burn"
 			else:
@@ -7640,6 +7651,7 @@ class Warmy(Operator):
 
 	def skill_dps(self, defense, res):
 		falloutdmg = 7000
+		burst_scale = 1.1 if ((self.skill == 2 and self.skill_dmg) or (self.skill == 1 and self.trait_dmg)) and self.module == 1 else 1
 		if self.skill == 0:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
@@ -7655,7 +7667,7 @@ class Warmy(Operator):
 			dpsNorm = hitdmg1/self.atk_interval * (self.attack_speed+aspd)/100
 			dpsFallout = hitdmg2/self.atk_interval * (self.attack_speed+aspd)/100
 			timeToFallout = elegauge/(dpsNorm * 0.15)
-			dps = (dpsNorm * timeToFallout + dpsFallout * 10 + falloutdmg)/(timeToFallout + 10)
+			dps = (dpsNorm * timeToFallout + dpsFallout * burst_scale * 10 + falloutdmg)/(timeToFallout + 10)
 			if not self.trait_dmg: dps = dpsNorm
 			
 		if self.skill == 2:
@@ -7664,7 +7676,7 @@ class Warmy(Operator):
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			hitdmgele = final_atk * 0.5
 			hitdmg = hitdmgarts + hitdmgele if self.skill_dmg else hitdmgarts
-			dps = hitdmg/2.5 * self.attack_speed/100 * min(self.targets,3)
+			dps = hitdmg* burst_scale/2.5 * self.attack_speed/100 * min(self.targets,3)
 		return dps
 
 class Weedy(Operator): #TODO add weight prompt and actually calc the dmg for s3
