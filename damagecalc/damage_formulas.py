@@ -145,7 +145,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes","Raidian"]:
+					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes","Raidian","Pepe","SwireAlter"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -5335,7 +5335,7 @@ class Penance(Operator):
 
 class Pepe(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Pepe",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Pepe",pp,[1,2,3],[1,3],3,1,1)
 		self.try_kwargs(4,["stacks","maxstacks","max","nostacks"],**kwargs)
 		if self.module == 1 and self.module_dmg: self.name += " 3inRange"
 		if self.skill_dmg and not self.skill == 1: self.name += " maxStacks"
@@ -6527,7 +6527,7 @@ class Suzuran(Operator):
 
 class SwireAlt(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("SwireAlter",pp,[1,2,3],[1,2],3,1,1)
+		super().__init__("SwireAlter",pp,[1,2,3],[1,2,3],3,1,1)
 		if not self.talent_dmg and self.elite > 0: self.name += " noStacks"
 		elif self.elite > 0: self.name += f" {int(self.talent1_params[3])}Stacks"
 		if self.skill_dmg and self.skill == 2: self.name += " 2HitBottles"
