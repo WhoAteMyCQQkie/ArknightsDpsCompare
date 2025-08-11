@@ -504,5 +504,6 @@ def animate_command(args: List[str], handler) -> DiscordSendable:
 		os.rename(f'media/videos/StageAnimator/{dimensions[1]*60}p15/Handler{handler}.mp4', f'media/videos/StageAnimator/outputs/{file_name}.mp4')
 		file = discord.File(fp = f'media/videos/StageAnimator/outputs/{file_name}.mp4', filename=f'media/videos/StageAnimator/outputs/{file_name}.mp4')
 		return DiscordSendable(file=file)
-	except:
+	except Exception as e:
+		print(e)
 		return DiscordSendable("error")

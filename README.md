@@ -1,16 +1,16 @@
 # Discord Bot for Comparing Operators' DPS
 
 This repository contains a Discord bot that creates graphs comparing different operators' DPS depending on enemy defense and resistance.  
-It is currently active on the Discord server of **DragonGJY** ([YouTube Channel](https://www.youtube.com/@DragonGJY)) in the **operation-room** channel.
+It is currently active on the Discord server of **DragonGJY** ([YouTube Channel](https://www.youtube.com/@DragonGJY)) in the **dps-bot-spam** channel.
 
 ---
 
 ## 1. How to Use
 
-To use the bot, follow these steps:
+To start the bot, use `uv run disco_bot.py`. [uv](https://docs.astral.sh/uv/getting-started/installation/) will handle the dependencies. To use the bot, follow these steps:
 
-1. The bot requires a `token.txt` file containing the Discord bot token. This file should be in the same directory as the `discoBot.py` file.
-2. Modify the `valid_channels` variable (located just below the imports in `discoBot.py`) to specify the channels where the bot will respond.
+1. The bot requires a `config.json` file if you want to use it as a discord bot. This file will be automatically created when first running the script.
+2. Edit the file with your data.
 3. You can then type `!help` in those channels to get a quick explanation on how to use the bot.
 
 ---
@@ -19,9 +19,9 @@ To use the bot, follow these steps:
 
 The bot was originally not designed to be as complex as it is now, resulting in some spaghetti-ish code. Viewer discretion is advised.
 
-- The bot only calculates DPS based on damage per hit and attack interval. 
+- The bot only calculates DPS based on damage per hit and attack interval. It provides the average dps you would get with infinite skill duration. 
 - It does **not** account for animation frames and sp lockout is always assumed to be 1.2 seconds (example: Horn S1).
-- For example, Exusiai's S3 multiplies the damage by 5, even though each shot takes some time.
+- For example, Tippi's' S2 multiplies the damage by 3, even though each shot takes quite some time.
 - The total damage is calculated by multiplying DPS by the skill duration, regardless of whether the duration aligns with the attack interval or not. Therefore, you may get the damage of something like 17.42 attacks.
 
 **TL;DR**: The numbers are not 100% accurate, and users should use them with some discretion. The bot is best used for comparing operators against themselves (considering skill masteries, module levels, etc.).
@@ -34,14 +34,14 @@ The easiest way to contribute is by adding to the `damageformulas.py` or `healin
 Here's how to do it:
 
 1. Copy the code of existing operators or the blueprint class.
-2. Modify the copied class to fit the new operator. For the contents (including the order) of the talent and skill parameters you can check [Aceship](https://aceship.github.io/AN-EN-Tags/akhrchars.html).
+2. Modify the copied class to fit the new operator. For the contents (including the order) of the talent and skill parameters you can check [Aceship](https://puppiizsunniiz.github.io/AN-EN-Tags/akhrchars.html).
 3. Add the new operator to the dictionary and list at the end of the file.
 
 ---
 
 ## 4. Miscellaneous
 
-- If you want the `!stage` command (and the enemy/stage prompt for the DPS calculation) to work, you will need to pull the submodule from [Kengxxiao](https://github.com/Kengxxiao) which contains the game data.
+- If you want the `!stage` command (and the enemy/stage prompt for the DPS calculation) to work, you will need to pull the submodule from [Kengxxiao](https://github.com/Kengxxiao) which contains the game data. Furthermore, to show the stage layout or create the animations you will also need to install [Manim](https://docs.manim.community/en/stable/installation/uv.html).
 
 ---
 

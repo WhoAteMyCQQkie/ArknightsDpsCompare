@@ -1,0 +1,15 @@
+[project]
+name = "arknightsdpscompare"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dill>=0.4.0",
+    "discord>=2.3.2",
+    "manim>=0.19.0",
+    "matplotlib>=3.10.5",
+    "nltk>=3.9.1",
+    "pillow>=11.3.0",
+    "requests>=2.32.4",
+]

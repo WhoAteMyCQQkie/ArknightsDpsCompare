@@ -1,7 +1,0 @@
-discord
-nltk
-numpy
-pillow
-matplotlib
-dill
-manim
