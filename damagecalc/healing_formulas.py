@@ -966,6 +966,46 @@ class RecordKeeper(Healer):
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
 		return self.name
 
+class ReedAlter(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("ReedAlter",pp,[1,2,3],[1],2,1,1)
+		self.res = pp.res
+	
+	def skill_dps(self, defense, res):
+		dmg_scale = self.talent1_params[2] if (self.talent_dmg and self.elite > 1) or self.skill == 3 else 1
+		heal_scale = 0.6 if self.module == 1 else 0.5
+		base_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		base_hps = base_atk *(1-res/100) * dmg_scale * heal_scale /self.atk_interval * self.attack_speed/100 * (1 + self.buff_fragile)
+		for res in self.res:
+			res = max(0,res)
+			if self.skill == 1:
+				atkbuff = self.skill_params[0]
+				aspd = self.skill_params[1] * self.skill
+				final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+				hitdmgarts = final_atk *(1-res/100) * dmg_scale
+				skill_hps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100 * (1 + self.buff_fragile) * heal_scale
+				avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			if self.skill == 2:
+				atk_scale = self.skill_params[1]
+				multiplier = 2 if self.skill_dmg else 1
+				final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+				hitdmgarts = (1-res/100) * final_atk * atk_scale * dmg_scale * multiplier
+				skill_hps = hitdmgarts/0.8 * heal_scale * (1 + self.buff_fragile)  #/1.5 * 3 (or /0.5) is technically the limit, the /0.8 come from the balls taking 2.4 for a rotation 
+				avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			if self.skill == 3:
+				atkbuff = self.skill_params[1]
+				atk_scale = self.skill_params[2]
+				final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+				directhits = final_atk *(1-res/100) * dmg_scale
+				atkdps = directhits/self.atk_interval * self.attack_speed/100 * min(self.targets,2)
+				skillhits = final_atk *(1-res/100) * dmg_scale * atk_scale
+				skilldps = self.targets * skillhits
+				skill_hps = (atkdps + skilldps) * heal_scale * (1 + self.buff_fragile)
+				avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost /(1+ self.sp_boost))/(self.skill_duration + self.skill_cost /(1+ self.sp_boost))
+			self.name += f"{res}res: **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*   "
+		if len(self.res) == 1: self.name = self.name.replace(" 0res: "," ")
+		return self.name
+
 class RoseSalt(Healer):
 	def __init__(self, params: PlotParameters, **kwargs):
 		super().__init__("RoseSalt",params,[1,2],[1],2,6,1)

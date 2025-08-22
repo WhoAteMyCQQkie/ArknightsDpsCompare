@@ -64,7 +64,9 @@ CONFIG_TEMPLATE = { #!!!changing this does nothing, change your settings in the 
     "respond_to_dm": True,
     "debug_mode": False,
 	"allow_stage_command": True,
-	"_comment_include": "stage command needs CN gamedata loaded"
+	"_comment_include": "stage command needs CN gamedata loaded",
+	"admins": [543191588151754783],
+	"use_ai_helper": False
 }
 
 try:
