@@ -56,6 +56,7 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
 handler_busy = [0,0,0]
+dm_users = set()
 
 CONFIG_TEMPLATE = { #!!!changing this does nothing, change your settings in the config.json file that gets created the first time you run the script
     "token": "YOUR_BOT_TOKEN_HERE",
@@ -241,6 +242,21 @@ async def on_reaction_add(reaction, user):
 				print("Missing permissions to delete message.")
 			except discord.HTTPException as e:
 				print(f"Failed to delete message: {e}")
+
+#creating a greeting message for users using a DM for the first time
+@bot.event
+async def on_message(message):
+	if message.author == bot.user:
+		return
+	if isinstance(message.channel, discord.DMChannel) and respond_to_dm:
+		user_id = message.author.id
+		if user_id not in dm_users:
+			history = [msg async for msg in message.channel.history(limit=2)]
+			
+			if len(history) == 1:
+				await message.channel.send("Hello! Keep in mind that this channel is not fully private. The person running this bot could theoretically access the complete channel history whenever they want, so don't use it for personal reminders. To get going with the bot you can type !help and/or !guide.")
+			dm_users.add(user_id)	
+	await bot.process_commands(message)		
 			
 
 #Creating the help command
