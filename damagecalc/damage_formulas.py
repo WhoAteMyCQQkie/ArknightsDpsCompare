@@ -1040,12 +1040,14 @@ class Bibeak(Operator):
 	
 class Blaze(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Blaze", pp, [1,2],[1],2,1,1)
+		super().__init__("Blaze", pp, [1,2],[1,2],2,1,1)
 		if self.elite == 2 and not self.talent2_dmg and not self.skill == 2: self.name += " w/o talent2"
 		if self.module == 1 and self.module_dmg: self.name += " vsBlocked"
+		if self.module == 2 and self.module_dmg and self.module_lvl > 1: self.name += " >50%hp"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
+		newdef = np.fmax(0,defense-150) if self.module == 2 and self.module_dmg and self.module_lvl > 1 else defense
 		atkbuff = 0
 		aspd = 0
 		atk_scale = 1.1 if self.module_dmg and self.module == 1 else 1
@@ -1057,15 +1059,15 @@ class Blaze(Operator):
 		if self.skill == 1:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
-			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - defense, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + skillhitdmg) / (sp_cost + 1) * min(self.targets, targets)
 			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100
 		else:
 			atkbuff += self.skill_params[0] * self.skill/2
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05) * min(self.targets,targets)
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05) * min(self.targets,targets)
 			dps = hitdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
 
@@ -7393,7 +7395,7 @@ class Vina(Operator):
 
 class Virtuosa(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Virtuosa",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Virtuosa",pp,[1,2,3],[1,2],3,1,1)
 		if not self.trait_dmg: self.name += " vsBoss"
 		if self.skill == 3 and self.skill_dmg: self.name += " selfBuff"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
@@ -7403,6 +7405,9 @@ class Virtuosa(Operator):
 		necro_scale = self.talent1_params[0]
 		necro_fragile = max(self.talent2_params) if self.elite == 2 else 1
 		ele_fragile = self.talent2_params[0] if self.module == 1 and self.module_lvl > 1 else 1
+		if self.module == 2: ele_fragile = 1.1
+		falloutdmg = 12000
+		if self.module == 2 and self.module_lvl > 1: falloutdmg = 15 * (800 + 50 * self.module_lvl)
 			
 		####the actual skills
 		if self.skill == 1:
@@ -7426,9 +7431,9 @@ class Virtuosa(Operator):
 			time_to_fallout_1 = ele_gauge / (necro_dps + necro_skill_dps) #this is meant as a rough estimate to her saving skill charges against fallout, potentially improving dps
 			time_to_fallout = ele_gauge / (necro_dps + necro_skill_dps/(time_to_fallout_1)*(time_to_fallout_1 + 15))
 			if skill_scale < 2.05: time_to_fallout = time_to_fallout_1
-			dps += 12000 * ele_fragile / (15 + time_to_fallout) / (1 + self.buff_fragile)
+			dps += falloutdmg * ele_fragile / (15 + time_to_fallout) / (1 + self.buff_fragile)
 			if self.targets > 1:
-				dps += 12000 * ele_fragile / (15 + ele_gauge/necro_dps) / (1 + self.buff_fragile) * (self.targets -1)
+				dps += falloutdmg * ele_fragile / (15 + ele_gauge/necro_dps) / (1 + self.buff_fragile) * (self.targets -1)
 		
 		if self.skill == 2:
 			aspd = self.skill_params[0]
@@ -7439,8 +7444,8 @@ class Virtuosa(Operator):
 			eleApplicationBase = final_atk * necro_scale
 			hitdmgarts = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
 			artsdps = hitdmgarts/(self.atk_interval/((self.attack_speed+aspd)/100))
-			targetEledps = 12000 * ele_fragile / (15 + ele_gauge/eleApplicationTarget)
-			ambientEledps = 12000 * ele_fragile / (15 + ele_gauge/eleApplicationBase)
+			targetEledps = falloutdmg * ele_fragile / (15 + ele_gauge/eleApplicationTarget)
+			ambientEledps = falloutdmg * ele_fragile / (15 + ele_gauge/eleApplicationBase)
 			dps = np.fmin(self.targets, 2) * (artsdps + targetEledps/(1 + self.buff_fragile))
 			if self.targets > 2:
 				dps += ambientEledps * (self.targets - 2) / (1 + self.buff_fragile)			
