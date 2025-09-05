@@ -6911,6 +6911,69 @@ class Toddifons(Operator):
 			dps = (hitdmg+hitdmg2)/3.12 * self.attack_speed/100
 		return dps
 
+class TogawaSakiko(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("TogawaSakiko",pp,[1,2,3],[2],3,1,2) #available skills, available modules, default skill, def pot, def mod
+		#if not self.trait_dmg: self.name += " rangedAtk"
+		if self.skill == 1 and self.skill_dmg: self.name += " maxSkillDmg"
+		if self.skill == 2:
+			if self.skill_dmg: self.name += " Organ"
+			else: self.name += " Piano"
+		if self.talent_dmg and self.elite > 0: self.name += " maxNotes"
+		if not self.talent_dmg and self.elite > 0: self.name += " minNotes"
+		if self.talent2_dmg and self.skill in [1,2]: self.name += " fever"
+		if self.module == 2 and self.module_dmg: self.name += " vs2+Enemy"
+		
+		if self.targets > 1 and self.skill == 2 and not self.skill_dmg: self.name += f" {self.targets}targets" ######when op has aoe
+		try:
+			self.shreds = kwargs['shreds']
+		except KeyError:
+			self.shreds = [1,0,1,0]
+	
+	def skill_dps(self, defense, res):
+		atk_scale = 1 #if self.trait_dmg else 0.8
+		atkbuff = self.skill_params[1] if self.skill == 2 else 0
+		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+		aspd = self.talent2_params[1]
+		aspd += 12 if self.module == 2 and self.module_dmg else 0
+		resshred = 0
+		defshred = 0
+		if self.talent_dmg:
+			resshred = self.talent1_params[4] * self.talent1_params[1] if self.module == 2 and self.module_lvl > 1 else self.talent1_params[4] * self.talent1_params[2]
+			defshred = self.talent1_params[4] * self.talent1_params[0] if self.module == 2 and self.module_lvl > 1 else self.talent1_params[4] * self.talent1_params[1]
+		if self.shreds[2] < 1 and self.shreds[2] > 0:
+			res = res / self.shreds[0]
+		newres = res * (1-resshred)
+		if self.shreds[0] < 1 and self.shreds[0] > 0:
+			defense = defense / self.shreds[0]
+		newdef = defense * (1-defshred)
+
+		if self.skill == 1:
+			skill_scale = self.skill_params[0] if self.skill_dmg else self.skill_params[7]
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05)
+			skill_dmg = np.fmax(final_atk * skill_scale * (1-newres/100), final_atk * skill_scale * 0.05) * 8
+			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100
+			dps += skill_dmg / self.atk_interval * (self.attack_speed + aspd) / 100 / self.skill_cost
+			if self.talent2_dmg:
+				dps = skill_dmg / self.atk_interval * (self.attack_speed + aspd) / 100
+		
+		if self.skill == 2:
+			hits = 2 if self.talent2_dmg else 1
+			hitdmg = np.fmax(final_atk * atk_scale - newdef, final_atk * atk_scale * 0.05) * hits
+			hitdmgarts = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05) * hits
+			if self.skill_dmg:
+				dps = hitdmgarts / self.atk_interval * (self.attack_speed + aspd + self.skill_params[0]) / 100
+			else:
+				dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100 * self.targets
+		
+		if self.skill == 3:
+			skill_scale = self.skill_params[1]
+			hitdmg = np.fmax(final_atk * atk_scale * skill_scale - newdef, final_atk * atk_scale * skill_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * atk_scale * skill_scale * (1-newres/100), final_atk * atk_scale * skill_scale * 0.05)
+			dps = 2*(hitdmg+hitdmgarts) / self.atk_interval * (self.attack_speed + aspd) / 100 
+
+		return dps
+
 class Tomimi(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Tomimi", pp, [1,2], [2],2,6,2)
@@ -7964,7 +8027,7 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"mumu": Muelsyse,"muelsyse": Muelsyse, "narantuya": Narantuya, "ntr": NearlAlter, "ntrknight": NearlAlter, "nearlalter": NearlAlter, "nearl": NearlAlter, "necrass": Necrass, "eblana": Necrass, "banana": Necrass, "nian": Nian, "nymph": Nymph, "odda": Odda, "pallas": Pallas, "passenger": Passenger, "penance": Penance, "pepe": Pepe, "phantom": Phantom, "pinecone": Pinecone,"pith": Pith,  "platinum": Platinum, "plume": Plume, "popukar": Popukar, "pozy": Pozemka, "pozemka": Pozemka, "projekt": ProjektRed, "red": ProjektRed, "projektred": ProjektRed, "provence": Provence, "pudding": Pudding, "qiubai": Qiubai,"quartz": Quartz, 
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"sideroca": Sideroca, "siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
-		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "tomimi": Tomimi, "totter": Totter, "tragodia": Tragodia, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
+		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "sakiko": TogawaSakiko, "tomimi": Tomimi, "totter": Totter, "tragodia": Tragodia, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
