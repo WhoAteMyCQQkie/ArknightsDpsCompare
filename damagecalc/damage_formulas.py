@@ -6934,7 +6934,7 @@ class TogawaSakiko(Operator):
 	
 	def skill_dps(self, defense, res):
 		atk_scale = 1 #if self.trait_dmg else 0.8
-		atkbuff = self.skill_params[1] if self.skill == 2 else 0
+		atkbuff = self.skill_params[1] if self.skill == 2 and not self.skill_dmg else 0
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		aspd = self.talent2_params[1]
 		aspd += 12 if self.module == 2 and self.module_dmg else 0
