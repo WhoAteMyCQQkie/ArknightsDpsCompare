@@ -2864,7 +2864,7 @@ class Gracebearer(Operator):
 		if self.skill == 2:
 			skill_scale = self.skill_params[0]
 			skilldmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) if not self.skill_dmg else final_atk * skill_scale
-			dps += skilldmg/((self.skill_cost + 1.2)/(1+self.sp_boost)) * min(self.targets, self.skill_params[1])
+			dps += 3 * skilldmg/((self.skill_cost + 1.2)/(1+self.sp_boost)) * min(self.targets, self.skill_params[1])
 		return dps
 
 class Grani(Operator):
