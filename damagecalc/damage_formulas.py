@@ -7966,6 +7966,46 @@ class Yu(Operator):
 		dps += hitdmg/self.atk_interval * self.attack_speed/100
 		return dps
 
+class YutenjiNyamu(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("YutenjiNyamu",pp,[1,2],[1],2,6,1)	
+		if self.module == 1 and self.module_dmg: self.name += " 3inRange"
+		if self.targets > 1: self.name += f" {self.targets}targets"
+
+	def skill_dps(self, defense, res):
+		atk_scale = 1.15 if self.module == 1 and self.module_dmg else 1
+		atkbuff = self.talent2_params[2] if self.elite > 0 else 0
+		hits = 3 if self.skill == 1 else 8
+		if self.skill == 0: hits = 1
+		prob = self.talent1_params[0]
+		duration = self.talent1_params[1]
+		fragile = self.talent1_params[2]
+		counting_hits = hits * int(duration/self.atk_interval) + max(1,hits/2) #only approximation, the later hits in the chain have a higher fragile chance
+		fragile_chance = 1 - (1-prob)**counting_hits
+		fragile = fragile * fragile_chance + (1-fragile_chance)
+		fragile = max(fragile, 1+self.buff_fragile)
+
+		if self.skill == 0:
+			skill_scale = self.skill_params[0] if self.skill == 1 else 1
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			splashhitdmg = np.fmax(0.5 * final_atk * atk_scale - defense, 0.5 * final_atk * atk_scale * 0.05)
+			dps = hitdmg/self.atk_interval * self.attack_speed/100
+			if self.targets > 1:
+				dps += splashhitdmg/self.atk_interval * self.attack_speed/100 * (self.targets - 1)
+		else:
+			big_scale = self.skill_params[0]
+			small_scale = self.skill_params[1]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			bighitdmg = np.fmax(final_atk * atk_scale * big_scale - defense, final_atk * atk_scale * big_scale * 0.05) * int(hits/3)
+			bigsplashhitdmg = np.fmax(0.5 * final_atk * atk_scale * big_scale - defense, 0.5 * final_atk * atk_scale * big_scale * 0.05) * int(hits/3)
+			smallhitdmg = np.fmax(final_atk * atk_scale * small_scale - defense, final_atk * atk_scale * small_scale * 0.05) * (hits - int(hits/3))
+			smallsplashhitdmg = np.fmax(0.5 * final_atk * atk_scale * small_scale - defense, 0.5 * final_atk * atk_scale * small_scale * 0.05) * (hits - int(hits/3))
+			dps = (bighitdmg+smallhitdmg)/self.atk_interval * self.attack_speed/100
+			if self.targets > 1:
+				dps += (bigsplashhitdmg+smallsplashhitdmg)/self.atk_interval * self.attack_speed/100 * (self.targets - 1)
+		return dps * fragile/(1+self.buff_fragile)
+
 class ZuoLe(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("ZuoLe",pp,[1,2,3],[1,2],3,1,1)
@@ -8048,9 +8088,10 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"raidian": Raidian, "rangers": Rangers, "ray": Ray, "reed": ReedAlter, "reedalt": ReedAlter, "reedalter": ReedAlter,"reed2": ReedAlter, "rockrock": Rockrock, "rosa": Rosa, "rosmontis": Rosmontis, "saga": Saga, "bettersiege": Saga, "sandreckoner": SandReckoner, "reckoner": SandReckoner, "sankta": SanktaMiksaparato, "sanktamiksaparato": SanktaMiksaparato, "mixer": SanktaMiksaparato, "savage": Savage, "scavenger": Scavenger, "scene": Scene, "schwarz": Schwarz, "shalem": Shalem, "sharp": Sharp,
 		"sideroca": Sideroca, "siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "sakiko": TogawaSakiko,"togawa": TogawaSakiko,"togawasakiko": TogawaSakiko,"sakikotogawa": TogawaSakiko, "tomimi": Tomimi, "totter": Totter, "tragodia": Tragodia, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
-		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "wakaba": WakabaMutsumi,"mutsumi": WakabaMutsumi,"wakabamutsumi": WakabaMutsumi,"mutsumiwakaba": WakabaMutsumi, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "zuo": ZuoLe, "zuole": ZuoLe}
+		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "wakaba": WakabaMutsumi,"mutsumi": WakabaMutsumi,"wakabamutsumi": WakabaMutsumi,"mutsumiwakaba": WakabaMutsumi, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, 
+		"yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "yutenjinyamu": YutenjiNyamu, "Ynyamu": YutenjiNyamu, "yutenji": YutenjiNyamu, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","BlazeAlter","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Entelechia","Erato","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Gracebearer","Grani","Greythroat","GreyyAlter",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","HoshigumaAlter","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kafka","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","LeiziAlter","Lemuen","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Necrass","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Sideroca","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Tippi","Toddifons","Tomimi","Totter","Tragodia","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","WakabaMutsumi","Warmy","Weedy","Whislash","Wildmane","Windscoot","Wis'adel","YatoAlter","Yu","ZuoLe"]
+		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Sideroca","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Tippi","Toddifons","Tomimi","Totter","Tragodia","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","WakabaMutsumi","Warmy","Weedy","Whislash","Wildmane","Windscoot","Wis'adel","YatoAlter","Yu","YutenjiNyamu","ZuoLe"]
