@@ -81,7 +81,7 @@ except:
 
 channels = config["channels"]
 token = config["token"]
-respond_to_dm = config["respond_to_dm"]
+respond_to_dm = True #config["respond_to_dm"] #this needs to be changed back asap. right now i dont have hardware access to the bot, so this will have to do =(
 allow_stage = config["allow_stage_command"]
 if allow_stage:
 	if not os.path.exists('Database/CN-gamedata/zh_CN/gamedata/excel/stage_table.json'):
@@ -93,7 +93,7 @@ if allow_stage:
 def check_channel(ctx):
 	if channels == []: return True
 	if isinstance(ctx.channel, discord.TextChannel):
-		if str(ctx.channel.id) in channels or ctx.channel.name in channels:
+		if str(ctx.channel.id) in channels or ctx.channel.name in channels or ctx.channel.name == "dps-bot-spam": #see comment on line 84, the second or shouldnt exist
 			return True
 	elif isinstance(ctx.channel, discord.DMChannel):
 		return respond_to_dm
