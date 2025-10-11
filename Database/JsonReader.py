@@ -84,7 +84,8 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Lemuen': 'char_4193_lemuen','ExusiaiAlter': 'char_1041_angel2','Gracebearer': 'char_4187_graceb','SanktaMiksaparato': 'char_4194_rmixer',
 		   'Tippi': 'char_4191_tippi','MissChristine': 'char_4198_christ','Tragodia': 'char_1042_phatm2','LeiziAlter': 'char_1043_leizi2',
 		   'Recordkeeper': 'char_4196_reckpr','Haruka': 'char_4202_haruka','HoshigumaAlter': 'char_1044_hsgma2','Matsukiri': 'char_4199_makiri','Kichisei': 'char_4203_kichi',
-		   'TogawaSakiko': 'char_4182_oblvns','MisumiUika': 'char_4184_dolris','YutenjiNyamu': 'char_4185_amoris','YahataUmiri': 'char_4186_tmoris','WakabaMutsumi': 'char_4183_mortis'} 
+		   'TogawaSakiko': 'char_4182_oblvns','MisumiUika': 'char_4184_dolris','YutenjiNyamu': 'char_4185_amoris','YahataUmiri': 'char_4186_tmoris','WakabaMutsumi': 'char_4183_mortis',
+		   'Snegurochka': 'char_4208_wintim','Mantra': 'char_4204_mantra','Vetochki': 'char_4207_branch'} 
 
 path_prefix = "" #if __name__ == "__main__" else "Database/"
 try:
