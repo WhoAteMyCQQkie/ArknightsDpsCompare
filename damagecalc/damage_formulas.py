@@ -7906,6 +7906,42 @@ class Windscoot(Operator):
 			dps = (hitdmg+extrahit)/self.atk_interval * self.attack_speed/100 * min(self.targets, 2)
 		return dps
 
+class YahataUmiri(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		super().__init__("YahataUmiri",pp,[1,2,3],[2],1,6,2) #available skills, available modules, default skill, def pot, def mod
+		if self.talent_dmg: self.name += " vsSlow" 
+		if self.skill == 1 and self.skill_dmg: self.name += " Fever"
+		
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		dmg = self.talent2_params[0] if self.talent_dmg else 1
+		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
+		print(self.talent1_params)
+		print(self.talent2_params)
+
+		if self.skill == 0:
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			dps = hitdmg / self.atk_interval * self.attack_speed / 100 * self.targets
+		
+		if self.skill == 1:
+			skill_scale = self.skill_params[0]
+			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
+			skillhit = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * 5
+			if self.skill_dmg: # Fever
+				dps = skillhit / self.atk_interval * self.attack_speed / 100 * self.targets
+			else:
+				dpsnorm = hitdmg / self.atk_interval * self.attack_speed / 100
+				dpsskill = skillhit / 2.1
+				interval = self.atk_interval / self.attack_speed * 100
+				dps = (dpsnorm * self.skill_cost * interval + dpsskill * 2.1)/(self.skill_cost * interval + 2.1) * self.targets
+		
+		if self.skill == 2:
+			skill_scale = self.skill_params[0]
+			dps = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05) * self.targets
+
+		return dps * dmg
+
 class YatoAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("YatoAlter",pp,[1,2,3],[1],1,1,1)
@@ -8088,7 +8124,7 @@ class ZuoLe(Operator):
 ################################################################################################################################################################################
 
 #Add the operator with their names and nicknames here
-op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiyaalter": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
+op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
 		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "blazealter": BlazeAlter, "blaze2": BlazeAlter, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
 		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai,"exia": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "exusiaialter": ExusiaiAlter, "exualter": ExusiaiAlter, "covenant": ExusiaiAlter, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
@@ -8104,9 +8140,9 @@ op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absi
 		"sideroca": Sideroca, "siege": Siege, "silverash": SilverAsh, "sa": SilverAsh, "skadi": Skadi, "<:skadidaijoubu:1078503492408311868>": Skadi, "<:skadi_hi:1211006105984041031>": Skadi, "<:skadi_hug:1185829179325939712>": Skadi, "kyaa": Skadi, "skalter": Skalter, "skadialter": Skalter, "specter": Specter, "shark": SpecterAlter, "specter2": SpecterAlter, "spectral": SpecterAlter, "spalter": SpecterAlter, "specteralter": SpecterAlter, "laurentina": SpecterAlter, "stainless": Stainless, "steward": Steward, "stormeye": Stormeye, "surfer": Surfer, "surtr": Surtr, "jus": Surtr, "suzuran": Suzuran, "swire": SwireAlt, "swire2": SwireAlt,"swirealt": SwireAlt,"swirealter": SwireAlt, 
 		"tachanka": Tachanka, "tecno": Tecno, "texas": TexasAlter, "texasalt": TexasAlter, "texasalter": TexasAlter, "texalt": TexasAlter, "texalter": TexasAlter, "tequila": Tequila, "terraresearchcommission": TerraResearchCommission, "trc": TerraResearchCommission, "thorns": Thorns, "thorn": Thorns, "thorns2": ThornsAlter, "lobster": ThornsAlter, "thornsalter": ThornsAlter, "tin": TinMan, "tinman": TinMan, "tippi": Tippi, "toddifons":Toddifons, "sakiko": TogawaSakiko,"togawa": TogawaSakiko,"togawasakiko": TogawaSakiko,"sakikotogawa": TogawaSakiko, "tomimi": Tomimi, "totter": Totter, "tragodia": Tragodia, "typhon": Typhon, "<:typhon_Sip:1214076284343291904>": Typhon, 
 		"ulpian": Ulpianus, "ulpianus": Ulpianus, "underflow": Underflow, "utage": Utage, "vanilla": Vanilla, "vendela": Vendela, "vermeil": Vermeil, "vigil": Vigil, "trash": Vigil, "garbage": Vigil, "vigna": Vigna, "vina": Vina, "victoria": Vina, "siegealter": Vina, "vinavictoria": Vina, "virtuosa": Virtuosa, "<:arturia_heh:1215863460810981396>": Virtuosa, "arturia": Virtuosa, "viviana": Viviana, "vivi": Viviana, "vulcan": Vulcan, "ingrid": Vulpisfoglia, "vulpisfoglia": Vulpisfoglia, "suzumom": Vulpisfoglia, "vulpis": Vulpisfoglia, "w": W, "wakaba": WakabaMutsumi,"mutsumi": WakabaMutsumi,"wakabamutsumi": WakabaMutsumi,"mutsumiwakaba": WakabaMutsumi, "walter": Walter, "wisadel": Walter, "warmy": Warmy, "weedy": Weedy, "whislash": Whislash, "aunty": Whislash, "wildmane": Wildmane, "windscoot": Windscoot, 
-		"yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "yutenjinyamu": YutenjiNyamu, "Ynyamu": YutenjiNyamu, "yutenji": YutenjiNyamu, "zuo": ZuoLe, "zuole": ZuoLe}
+		"yahataumiri": YahataUmiri, "umiri": YahataUmiri, "yahata": YahataUmiri, "umiriyahata": YahataUmiri, "yato": YatoAlter, "yatoalter": YatoAlter, "kirinyato": YatoAlter, "kirito": YatoAlter, "yu": Yu, "you": Yu, "yutenjinyamu": YutenjiNyamu, "Ynyamu": YutenjiNyamu, "yutenji": YutenjiNyamu, "zuo": ZuoLe, "zuole": ZuoLe}
 
 #The implemented operators
 operators = ["12F","Aak","Absinthe","Aciddrop","Adnachiel","Amiya","AmiyaGuard","AmiyaMedic","Andreana","Angelina","Aosta","April","Archetto","Arene","Asbestos","Ascalon","Ash","Ashlock","Astesia","Astgenne","Aurora","Ayerscarpe","Bagpipe","Beehunter","Beeswax","Bibeak","Blaze","BlazeAlter","Blemishine","Blitz","BluePoison","Broca","Bryophyta","Cantabile","Caper","Carnelian","Castle3","Catapult","Ceobe","Chen","Chalter","Chongyue","CivilightEterna","Click","Coldshot","Contrail","Conviction","Crownslayer","Dagda","Degenbrecher","Diamante","Dobermann","Doc","Dorothy","Durin","Durnar","Dusk","Ebenholz","Ela","Entelechia","Erato","Estelle","Ethan","Eunectes","ExecutorAlt","Exusiai","Eyjafjalla","FangAlter","Fartooth","Fiammetta","Figurino","Firewhistle","Flamebringer","Flametail","Flint","Folinic","Franka","Frost","Frostleaf","Fuze","Gavialter","Gladiia","Gnosis","Goldenglow","Gracebearer","Grani","Greythroat","GreyyAlter",
 		"Harmonie","Haze","Hellagur","Hibiscus","Highmore","Hoederer","Hoolheyak","Horn","Hoshiguma","HoshigumaAlter","Humus","Iana","Ifrit","Indra","Ines","Insider","Irene","Jackie","Jaye","Jessica","JessicaAlt","JusticeKnight","Kafka","Kaltsit","Kazemaru","Kirara","Kjera","Kroos","Kroos3star","Laios","Lapluma","Lappland","LapplandAlter","Lava3star","LavaAlt","Lee","LeiziAlter","Lemuen","Lessing","Logos","Leto","Lin","Ling","Lucilla","Lunacub","LuoXiaohei","Lutonada","Magallan","Manticore","Marcille","Matoimaru","May","Melantha","Meteor","Meteorite","Midnight","Minimalist","Mint","Mizuki","Mlynar","Mon3tr","Mostima","Morgan","Mountain","Mousse","MrNothing","Mudrock","Muelsyse(type !mumu for details)","Narantuya","NearlAlter","Necrass","Nian","Nymph","Odda","Pallas","Passenger","Penance","Pepe","Phantom","Pinecone","Pith","Platinum","Plume","Popukar","Pozemka","ProjektRed","Provence","Pudding","Qiubai","Quartz","Raidian","Rangers","Ray","ReedAlt","Rockrock",
-		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Sideroca","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Tippi","Toddifons","Tomimi","Totter","Tragodia","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","WakabaMutsumi","Warmy","Weedy","Whislash","Wildmane","Windscoot","Wis'adel","YatoAlter","Yu","YutenjiNyamu","ZuoLe"]
+		"Rosa","Rosmontis","Saga","SandReckoner","Savage","Scavenger","Scene","Schwarz","Shalem","Sharp","Sideroca","Siege","SilverAsh","Skadi","Skalter","Specter","SpecterAlter","Stainless","Steward","Stormeye","Surfer","Surtr","Suzuran","SwireAlt","Tachanka","Tecno","TexasAlter","Tequila","TerraResearchCommission","Thorns","ThornsAlter","TinMan","Tippi","Toddifons","Tomimi","Totter","Tragodia","Typhon","Ulpianus","Underflow","Utage","Vanilla","Vendela", "Vermeil","Vigil","Vigna","VinaVictoria","Virtuosa","Viviana","Vulcan","Vulpisfoglia","W","WakabaMutsumi","Warmy","Weedy","Whislash","Wildmane","Windscoot","Wis'adel","YahataUmiri","YatoAlter","Yu","YutenjiNyamu","ZuoLe"]
