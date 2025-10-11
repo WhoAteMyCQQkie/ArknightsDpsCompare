@@ -2184,7 +2184,7 @@ class Eunectes(Operator):
 
 class ExecutorAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("ExecutorAlter",pp,[1,2,3],[1],3,1,1)
+		super().__init__("ExecutorAlter",pp,[1,2,3],[1,2],3,1,1)
 		self.ammo = 4 + 4 * self.skill
 		if self.elite > 0 and self.skill != 1:
 			if self.talent2_dmg and self.elite == 2: self.ammo += 4
@@ -2196,43 +2196,47 @@ class ExecutorAlter(Operator):
 		if self.skill == 3: self.name += f" {self.ammo}stacks"	
 		if self.targets > 1: self.name += f" {self.targets}targets"
 		if self.skill == 3:
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] + self.ammo * self.skill_params[1]) + self.buff_atk_flat
+			extra = 0.04 * self.module_lvl if self.module == 2 and self.module_lvl > 1 else 0
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] + self.ammo * self.skill_params[1] + extra) + self.buff_atk_flat
 			dmg = final_atk * self.skill_params[3] * (1 + self.buff_fragile)
 			self.name += f" finalHit:{int(dmg)}"
+		if self.module == 2 and self.module_dmg: self.name += " vs2+"
 
 	def skill_dps(self, defense, res):
 		crate = self.talent1_params[0] + self.talent1_params[1] * self.ammo if self.elite > 0 and self.skill != 0 else 0
 		try: critdefignore = self.talent1_params[2]
 		except: critdefignore = 0
 		crate = min(crate, 1)
+		aspd = 12 if self.module == 2 and self.module_dmg else 0
+		modatkbuff = 0.04 * self.module_lvl if self.module == 2 and self.module_lvl > 1 else 0
 
 		atkbuff = self.skill_params[0] if self.skill > 0 else 0
 		if self.skill < 2:
 			defignore = self.skill_params[1] if self.skill == 1 else 0
 			newdef = np.fmax(0, defense - defignore)
 			critdef =np.fmax(0, defense - defignore - critdefignore)
-			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill * modatkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - newdef, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - newdef, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/self.atk_interval * self.attack_speed/100 * self.targets
+			dps = avgdmg/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
 		
 		if self.skill == 2:
 			critdef = np.fmax(0, defense - critdefignore)
-			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk + modatkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/self.atk_interval * self.attack_speed/100 * self.targets
+			dps = avgdmg/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
 		
 		if self.skill == 3:
 			atkbuff += self.ammo * self.skill_params[1]
 			critdef = np.fmax(0, defense - critdefignore)
-			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk + modatkbuff) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			critdmg =  np.fmax(final_atk - defense, final_atk * 0.05) + np.fmax(final_atk - critdef, final_atk * 0.05)
 			avgdmg = crate * critdmg + (1-crate) * hitdmg
-			dps = avgdmg/1.8 * self.attack_speed/100 * self.targets
+			dps = avgdmg/1.8 * (self.attack_speed+aspd)/100 * self.targets
 		return dps
 	
 class Exusiai(Operator):
@@ -2312,20 +2316,26 @@ class ExusiaiAlter(Operator):
 		
 class Eyjafjalla(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Eyjafjalla",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Eyjafjalla",pp,[1,2,3],[1,2],3,1,1)
 		if self.skill_dmg:
 			if self.skill == 1: self.name += " 2ndSkilluse"
 			if self.skill == 2: self.name += " permaResshred"
 		if not self.skill_dmg and self.skill == 2: self.name += " minResshred"
+		if self.module == 2 and self.module_lvl == 3 and not self.talent_dmg: self.name += " minAspd+"
+		if self.skill == 2 and self.module == 2 and self.module_dmg: self.name += " vsElite"
 		if self.targets > 1 and self.skill > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
 		atkbuff = self.talent1_params[0] if self.elite > 0 else 0
 		resignore = 10 if self.module == 1 else 0
 		newres = np.fmax(0, res - resignore)
+		aspd = 0 
+		if self.module == 2 and self.module_lvl == 3:
+			if self.talent_dmg: aspd = 16
+			else: aspd = 6
 
 		if self.skill < 2:
-			aspd = self.skill_params[0] if self.skill == 1 else 0
+			aspd += self.skill_params[0] if self.skill == 1 else 0
 			if self.skill_dmg and self.skill == 1: atkbuff += self.skill_params[2]
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
@@ -2338,8 +2348,9 @@ class Eyjafjalla(Operator):
 			if not self.skill_dmg: hitdmg = np.fmax(final_atk  * (1-newres/100), final_atk * 0.05)
 			skilldmg = np.fmax(final_atk * atk_scale * (1-newres2/100), final_atk* atk_scale * 0.05)
 			aoeskilldmg = np.fmax(0.5 * final_atk * atk_scale * (1-newres/100), 0.5 * final_atk* atk_scale * 0.05)
-			sp_cost = self.skill_cost/(1+self.sp_boost) + 1.2 #sp lockout
-			atkcycle = self.atk_interval/(self.attack_speed/100)
+			extra_boost = 1/(self.atk_interval)*(self.attack_speed+aspd)/100 if self.module == 2 and self.module_dmg else 0
+			sp_cost = self.skill_cost/(1+self.sp_boost + extra_boost) + 1.2 #sp lockout
+			atkcycle = self.atk_interval/((self.attack_speed+aspd)/100)
 			atks_per_skillactivation = sp_cost / atkcycle
 			avghit = skilldmg + (self.targets - 1) * aoeskilldmg
 			if atks_per_skillactivation > 1:
@@ -2347,7 +2358,7 @@ class Eyjafjalla(Operator):
 					avghit = (skilldmg + (self.targets - 1) * aoeskilldmg + (atks_per_skillactivation - 1) * hitdmg) / atks_per_skillactivation
 				else:
 					avghit = (skilldmg + (self.targets - 1) * aoeskilldmg + int(atks_per_skillactivation) * hitdmg) / (int(atks_per_skillactivation)+1)								
-			dps = avghit/self.atk_interval * self.attack_speed/100
+			dps = avghit/self.atk_interval * (self.attack_speed+aspd)/100
 			
 		if self.skill == 3:
 			self.atk_interval = 0.5
@@ -2355,7 +2366,7 @@ class Eyjafjalla(Operator):
 			final_atk = self.atk * (1+atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmgarts = np.fmax(final_atk *(1-newres/100), final_atk * 0.05)
 			maxtargets = self.skill_params[2]
-			dps = hitdmgarts/self.atk_interval * self.attack_speed/100 * min(self.targets, maxtargets)
+			dps = hitdmgarts/self.atk_interval * (self.attack_speed+aspd)/100 * min(self.targets, maxtargets)
 			 
 		return dps
 
