@@ -1291,20 +1291,22 @@ class Cantabile(Operator):
 
 class Caper(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Caper",pp,[1,2],[],2,6,0)
+		super().__init__("Caper",pp,[1,2],[1],2,6,1)
+		if self.module == 1: self.trait_dmg = self.trait_dmg and self.module_dmg
 		if not self.trait_dmg: self.name += " maxRange"
 		else: self.name += " minRange"
 
 	def skill_dps(self, defense, res):
+		atk_scale = 1.1 if self.module == 1 and self.trait_dmg else 1
 		crate = self.talent1_params[0] if self.elite > 0 else 0
 		cdmg = self.talent1_params[1] if self.elite > 0 else 1
 		if self.skill < 2:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
-			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			skillcritdmg = np.fmax(final_atk * cdmg *skill_scale - defense, final_atk * cdmg * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * cdmg * atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
+			skillhitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			skillcritdmg = np.fmax(final_atk * cdmg * skill_scale * atk_scale - defense, final_atk * cdmg * skill_scale * atk_scale * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
 			skillhitdmg = skillcritdmg * crate + (1-crate) * skillhitdmg
 			if self.skill == 0: skillhitdmg = hitdmg
@@ -1315,8 +1317,8 @@ class Caper(Operator):
 		if self.skill == 2:
 			atkbuff = self.skill_params[0]
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
-			critdmg = np.fmax(final_atk * cdmg - defense, final_atk * cdmg * 0.05)
+			hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
+			critdmg = np.fmax(final_atk * cdmg * atk_scale - defense, final_atk * cdmg * atk_scale * 0.05)
 			hitdmg = critdmg * crate + (1-crate) * hitdmg
 			interval = 20/13.6 if not self.trait_dmg else (self.atk_interval/(self.attack_speed/100))
 			dps = 2 * hitdmg/interval
@@ -4992,7 +4994,8 @@ class Muelsyse(Operator):
 
 class Narantuya(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Narantuya",pp,[1,2,3],[],3,1,0)
+		super().__init__("Narantuya",pp,[1,2,3],[1],3,1,1)
+		if self.module == 1: self.trait_dmg = self.trait_dmg and self.module_dmg
 		if not self.trait_dmg: self.name += " maxRange"
 		else: self.name += " minRange"
 		if self.talent_dmg and self.elite > 0: self.name += " maxSteal"
@@ -5001,26 +5004,27 @@ class Narantuya(Operator):
 	def skill_dps(self, defense, res):
 		stealbuff = self.talent1_params[1] if self.elite > 0 and self.talent_dmg else 0
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat + stealbuff
+		atk_scale = 1.1 if self.module == 1 and self.trait_dmg else 1
 		
 		if self.skill == 1:
 			skill_scale = self.skill_params[1]
-			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
 			interval = self.atk_interval/self.attack_speed*100 if self.trait_dmg else 2.1
 			dps = hitdmg / interval
 			if self.targets > 1: dps *= 3
 		if self.skill == 2:
 			skill_scale = self.skill_params[2]
 			return_scale = self.skill_params[3]
-			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
-			returndmg = np.fmax(final_atk * return_scale - defense, final_atk * return_scale * 0.05) * self.targets
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			returndmg = np.fmax(final_atk * return_scale * atk_scale - defense, final_atk * return_scale * atk_scale * 0.05) * self.targets
 			interval = 1.15 if self.trait_dmg else 2
 			dps = (hitdmg+returndmg) / interval
 		if self.skill in [0,3]:
 			skill_scale = self.skill_params[0] if self.skill == 3 else 1
 			aoe_scale = self.skill_params[1] if self.skill == 3 else 0
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat + stealbuff
-			hitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05) * max(self.skill,1)
-			aoedmg = np.fmax(final_atk * aoe_scale - defense, final_atk * aoe_scale * 0.05)
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05) * max(self.skill,1)
+			aoedmg = np.fmax(final_atk * aoe_scale * atk_scale - defense, final_atk * aoe_scale * atk_scale * 0.05)
 			if not self.trait_dmg: aoedmg = 0
 			interval = 20/13.6 if not self.trait_dmg else (self.atk_interval/(self.attack_speed/100))
 			dps = hitdmg/interval + min(self.targets,3) * aoedmg/interval
