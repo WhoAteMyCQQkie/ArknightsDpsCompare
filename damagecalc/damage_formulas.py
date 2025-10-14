@@ -382,6 +382,69 @@ class NewBlueprint(Operator):
 
 			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100
 		return dps
+	
+class Guide(Operator):
+	def __init__(self, pp, *args, **kwargs):
+		#the name given to the init function can be found and must be updated in Database/JsonReader.py
+		super().__init__("NewBlueprint",pp,[1,2,3],[2,1],3,1,1) #available skills, available modules, default skill, def pot, def mod
+		#kwargs include stuff like hits received per second and maybe soon stacks, summon counts and more. see penance for the use
+
+		if self.trait_dmg or self.talent_dmg or self.talent2_dmg and self.elite > 0: self.name += " withBonus"
+		if self.skill == 3 and self.skill_dmg: self.name += " overcharged"
+		if self.module == 1 and self.module_dmg: self.name += " vsBlocked"
+		
+		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
+	
+	def skill_dps(self, defense, res):
+		dps = defense + res #are all numpy arrays of the same size. especially the dps getting returned needs the same size, which needs to be factored in for true dmg
+		self.atk #is the base attack. this already includes boni from trust, potentials and modules, as well as increases from the baseatk buffs from prompts
+		self.drone_atk #same for the summons, except it does not include base atk buffs (which maybe should be changed). should automatically search the right stats for the right skill. skill = 0 will always use the largest skill number instead
+		self.attack_speed #is 100 + whatever boni come from module upgrades or potentials. this also includes aspd buff from prompts.
+		#note that attack_speed is its own data type, that always stays within 20 and 600 when you add/subtract integers. after multiplication the type is lost and gives a float
+
+		self.atk_interval #self explanatory. make sure not to overwrite this if a skill changes it. it may be accessed multiple time for showing dmg numbers in the graph
+		self.drone_atk_interval #same for summons
+
+		self.buff_atk #atk buff from the prompt for example warfarin giving 0.9
+		self.buff_atk_flat #same but flat values, like 250ish from skalter
+		self.buff_fragile #10% fragile being 0.1, this is automatically accounted for in the dps and you only need to access it with operators having their own fragile, to see which is stronger. see Iana/suzuran
+		self.sp_boost #is for ptilopsis buff
+		
+		self.skill #the requested skill, can be 0,1,2,3
+		self.skill_cost #sp cost of the skill
+		self.skill_duration #written duration for the skill. unlimited and instant skills usually are -1
+		self.skill_params #the VALUES of the skill in the order as given by the game files. it is a list with length depending on the skills. degen s3 has like 10+ entries, other skills have only 1, still a list
+		self.talent1_params #and
+		self.talent2_params #are the same for the talents. this automatically includes the correct changes from promition level, the potentials and USUALLY also the module, but modules tend to mix around the order, so watch out for that
+
+		self.module #can be 0 for no module, 1 for x, 2 for y and 3 for alpha/delta
+		self.module_lvl #is 0,1,2 or 3
+
+		self.targets #are the targets given prompts. automatically clamped between 1 and 128
+		self.elite # is 0,1,2
+
+		self.trait_dmg and self.talent_dmg and self.talent2_dmg and self.skill_dmg and self.module_dmg #are booleans for the conditionals
+
+		self.base_name #is the name prior to setting the conditionals and buff descriptions. only needed for the short prompt
+		self.buff_name #the buff description
+		
+		atk_scale = 1 if self.module == 1 and self.module_dmg else 1
+		print(self.skill_params)
+		print(self.talent1_params)
+		print(self.talent2_params)
+		atkbuff = 0# self.talent1_params[0]
+		aspd = 0# self.talent2_params[0]
+		
+		if self.skill != 5:
+			atkbuff += self.skill_params[0]
+			skill_scale = self.skill_params[0]
+			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
+
+			hitdmg = np.fmax(final_atk * skill_scale * atk_scale - defense, final_atk * skill_scale * atk_scale * 0.05)
+			hitdmgarts = np.fmax(final_atk * skill_scale * atk_scale * (1-res/100), final_atk * skill_scale * atk_scale * 0.05)
+
+			dps = hitdmg / self.atk_interval * (self.attack_speed + aspd) / 100
+		return dps
 
 
 class Defense(Operator):
@@ -8159,7 +8222,7 @@ class ZuoLe(Operator):
 op_dict = {"helper1": Defense, "helper2": Res, "12f": twelveF, "aak": Aak, "absinthe": Absinthe, "aciddrop": Aciddrop, "adnachiel": Adnachiel, "<:amimiya:1229075612896071752>": Amiya, "amiya": Amiya, "amiya2": AmiyaGuard, "guardmiya": AmiyaGuard, "amiyaguard": AmiyaGuard, "amiya2": AmiyaGuard, "amiyamedic": AmiyaMedic, "amiya3": AmiyaMedic, "medicamiya": AmiyaMedic, "andreana": Andreana, "angelina": Angelina, "aosta": Aosta, "april": April, "archetto": Archetto, "arene": Arene, "asbestos":Asbestos, "ascalon": Ascalon, "ash": Ash, "ashlock": Ashlock, "astesia": Astesia, "astgenne": Astgenne, "aurora": Aurora, "<:aurora:1077269751925051423>": Aurora, "ayerscarpe": Ayerscarpe,
 		"bagpipe": Bagpipe, "beehunter": Beehunter, "beeswax": Beeswax, "bibeak": Bibeak, "blaze": Blaze, "<:blaze_smug:1185829169863589898>": Blaze, "blazealter": BlazeAlter, "blaze2": BlazeAlter, "<:blemi:1077269748972273764>":Blemishine, "blemi": Blemishine, "blemishine": Blemishine,"blitz": Blitz, "azureus": BluePoison, "bp": BluePoison, "poison": BluePoison, "bluepoison": BluePoison, "<:bpblushed:1078503457952104578>": BluePoison, "broca": Broca, "bryophyta" : Bryophyta,
 		"cantabile": Cantabile, "canta": Cantabile, "caper": Caper, "carnelian": Carnelian, "castle3": Castle3, "catapult": Catapult, "ceobe": Ceobe, "chen": Chen, "chalter": ChenAlter, "chenalter": ChenAlter, "chenalt": ChenAlter, "chongyue": Chongyue, "ce": CivilightEterna, "civilighteterna": CivilightEterna, "eterna": CivilightEterna, "civilight": CivilightEterna, "theresia": CivilightEterna, "click": Click, "coldshot": Coldshot, "contrail": Contrail, "chemtrail": Contrail, "conviction": Conviction, "clown": Crownslayer, "cs": Crownslayer, "crownslayer": Crownslayer, "dagda": Dagda, "degenbrecher": Degenbrecher, "degen": Degenbrecher, "diamante": Diamante, "dobermann": Dobermann, "doc": Doc, "dokutah": Doc, "dorothy" : Dorothy, "durin": Durin, "god": Durin, "durnar": Durnar, "dusk": Dusk, 
-		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai,"exia": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "exusiaialter": ExusiaiAlter, "exualter": ExusiaiAlter, "covenant": ExusiaiAlter, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
+		"eben": Ebenholz, "ebenholz": Ebenholz, "ela": Ela, "entelechia": Entelechia, "ente": Entelechia, "enchilada": Entelechia, "erato": Erato, "estelle": Estelle, "ethan": Ethan, "eunectes": Eunectes, "fedex": ExecutorAlter, "executor": ExecutorAlter, "executoralt": ExecutorAlter, "executoralter": ExecutorAlter, "exe": ExecutorAlter, "foedere": ExecutorAlter, "exu": Exusiai, "exusiai": Exusiai,"exia": Exusiai, "<:exucurse:1078503466353303633>": Exusiai, "<:exusad:1078503470610522264>": Exusiai, "exusiaialter": ExusiaiAlter, "exu2": ExusiaiAlter, "exualt": ExusiaiAlter, "exualter": ExusiaiAlter, "covenant": ExusiaiAlter, "eyja": Eyjafjalla, "eyjafjalla": Eyjafjalla, 
 		"fang": FangAlter, "fangalter": FangAlter, "fartooth": Fartooth, "fia": Fiammetta, "fiammetta": Fiammetta, "<:fia_ded:1185829173558771742>": Fiammetta, "figurino": Figurino, "firewhistle": Firewhistle, "flamebringer": Flamebringer, "flametail": Flametail, "flint": Flint, "folinic" : Folinic,
 		"franka": Franka, "frost": Frost, "frostleaf": Frostleaf, "fuze": Fuze, "gavial": GavialAlter, "gavialter": GavialAlter, "GavialAlter": GavialAlter, "gladiia": Gladiia, "gnosis": Gnosis, "gg": Goldenglow, "goldenglow": Goldenglow, "gracebearer": Gracebearer, "grace": Gracebearer, "grani": Grani, "greythroat": GreyThroat, "greyy": GreyyAlter, "greyyalter": GreyyAlter, 
 		"harmonie": Harmonie, "haze": Haze, "hellagur": Hellagur, "hibiscus": Hibiscus, "hibiscusalt": Hibiscus, "highmore": Highmore, "hoe": Hoederer, "hoederer": Hoederer, "<:dat_hoederer:1219840285412950096>": Hoederer, "hool": Hoolheyak, "hoolheyak": Hoolheyak, "horn": Horn, "hoshiguma": Hoshiguma, "hoshi": HoshigumaAlter, "hoshiguma2": HoshigumaAlter, "hoshigumaalt": HoshigumaAlter, "hoshialte": HoshigumaAlter, "humus": Humus, "iana": Iana, "ifrit": Ifrit, "indra": Indra, "ines": Ines, "insider": Insider, "irene": Irene, 
