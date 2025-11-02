@@ -776,21 +776,22 @@ class Arene(Operator):
 
 class Asbestos(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Asbestos",pp,[1,2],[],2,1,0)
+		super().__init__("Asbestos",pp,[1,2],[1],2,1,1)
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
+		extra_scale = 0.1 if self.module == 1 else 0
 		if self.skill == 0:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 			dps = hitdmg / self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1 + extra_scale) * (1-res/100), final_atk * (1 + extra_scale) * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 2:
 			final_atk = self.atk * (1 + self.skill_params[0] + self.buff_atk) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1 + extra_scale) * (1-res/100), final_atk * (1 + extra_scale) * 0.05)
 			dps = hitdmg/2 * self.attack_speed/100 * self.targets
 		return dps
 
@@ -1953,12 +1954,13 @@ class Durin(Operator):
 
 class Durnar(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Durnar",pp,[1,2],[],2,6,0)
+		super().__init__("Durnar",pp,[1,2],[1],2,6,1)
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 	
 	def skill_dps(self, defense, res):
+		extra_scale = 0.1 if self.module == 1 else 0
 		final_atk = self.atk * (1 + self.skill_params[0] * min(self.skill,1) + self.buff_atk + self.talent1_params[0]) + self.buff_atk_flat
-		hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) if self.skill > 0 else np.fmax(final_atk - defense, final_atk * 0.05)
+		hitdmg = np.fmax(final_atk * (1 + extra_scale) * (1-res/100), final_atk * (1 + extra_scale) * 0.05) if self.skill > 0 else np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg / self.atk_interval * self.attack_speed / 100
 		if self.skill == 2: dps *= min(self.targets,3)
 		return dps
@@ -3301,7 +3303,7 @@ class Hoshiguma(Operator):
 
 class HoshigumaAlter(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("HoshigumaAlter",pp,[1,3],[],2,1,0)
+		super().__init__("HoshigumaAlter",pp,[1,3],[1],2,1,1)
 		if self.talent2_dmg and self.talent_dmg and self.elite == 2: self.name += " maxTenacity"
 		if self.skill == 3 and self.skill_dmg: self.name += " lastStand"
 		if self.targets > 1 and self.skill == 3: self.name += f" {self.targets}targets"
@@ -3310,21 +3312,23 @@ class HoshigumaAlter(Operator):
 		if self.hits > 0 and self.skill == 1: self.name += f" {round(self.hits,2)}hits/s"
 	
 	def skill_dps(self, defense, res):
+		extra_scale = 0.1 if self.module == 1 else 0
 		atkbuff = self.talent2_params[2] if self.talent2_dmg and self.talent_dmg and self.elite == 2 else 0
+		if self.module == 1 and self.module_lvl > 1 and self.talent2_dmg and self.talent_dmg: atkbuff += 0.05 * self.module_lvl
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk - defense, final_atk * 0.05)
 		dps = hitdmg/self.atk_interval * self.attack_speed/100
 		if self.skill == 1:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1 + extra_scale) * (1-res/100), final_atk * (1 + extra_scale) * 0.05)
 			dps = hitdmg/self.atk_interval * self.attack_speed/100
-			skill_scale = self.skill_params[2]
+			skill_scale = self.skill_params[2] + extra_scale
 			reflectdmg = np.fmax(final_atk * skill_scale * (1-res/100), final_atk * skill_scale * 0.05)
 			dps += reflectdmg * self.hits
 		
 		if self.skill == 3:
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05) 
+			hitdmg = np.fmax(final_atk * (1 + extra_scale) * (1-res/100), final_atk * (1 + extra_scale) * 0.05) 
 			hits = 4 if self.skill_dmg else 3
 			dps = hits * hitdmg/self.atk_interval * self.attack_speed/100 * min(self.skill_params[2], self.targets)
 
@@ -6290,11 +6294,12 @@ class Schwarz(Operator):
 
 class Shalem(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Shalem",pp,[1,2],[],2,6,0)
+		super().__init__("Shalem",pp,[1,2],[1],2,6,1)
 		if self.talent_dmg: self.name += " (in IS2)"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe
 
 	def skill_dps(self, defense, res):
+		extra_scale = 0.1 if self.module == 1 else 0
 		aspd = self.talent1_params[0] if self.talent_dmg else 0
 		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
 		crate = self.talent2_params[0] if self.elite == 2 else 0
@@ -6310,8 +6315,8 @@ class Shalem(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			countinghits = int( self.talent2_params[2] /(atk_interval/((self.attack_speed+aspd)/100))) + 1
 			nocrit = (1-crate)**countinghits
-			hitdmg = np.fmax(final_atk * (1-res/100), final_atk * 0.05)
-			shreddmg = np.fmax(final_atk * (1-newres/100), final_atk * 0.05)
+			hitdmg = np.fmax(final_atk * (1+extra_scale) * (1-res/100), final_atk * (1+extra_scale) * 0.05)
+			shreddmg = np.fmax(final_atk * (1+extra_scale) * (1-newres/100), final_atk * (1+extra_scale) * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit) 
 			dps = avgdmg/atk_interval * (self.attack_speed+aspd)/100 * min(self.targets,3)
 		if self.skill == 2:
@@ -6320,8 +6325,8 @@ class Shalem(Operator):
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			countinghits =  (hits * int(self.talent2_params[2] /(self.atk_interval/((self.attack_speed+aspd)/100))) + 3)/self.targets + 1
 			nocrit = (1-crate)**countinghits
-			hitdmg = np.fmax(final_atk * atk_scale * (1-res/100), final_atk * atk_scale * 0.05)
-			shreddmg = np.fmax(final_atk * atk_scale * (1-newres/100), final_atk * atk_scale * 0.05)
+			hitdmg = np.fmax(final_atk * (atk_scale + extra_scale) * (1-res/100), final_atk * (atk_scale + extra_scale) * 0.05)
+			shreddmg = np.fmax(final_atk * (atk_scale + extra_scale) * (1-newres/100), final_atk * (atk_scale + extra_scale) * 0.05)
 			avgdmg = hitdmg * nocrit + shreddmg * (1-nocrit)
 			dps = 6 * avgdmg/self.atk_interval * (self.attack_speed+aspd)/100
 		return dps
