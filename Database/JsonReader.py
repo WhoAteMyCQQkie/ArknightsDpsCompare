@@ -85,7 +85,8 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Tippi': 'char_4191_tippi','MissChristine': 'char_4198_christ','Tragodia': 'char_1042_phatm2','LeiziAlter': 'char_1043_leizi2',
 		   'Recordkeeper': 'char_4196_reckpr','Haruka': 'char_4202_haruka','HoshigumaAlter': 'char_1044_hsgma2','Matsukiri': 'char_4199_makiri','Kichisei': 'char_4203_kichi',
 		   'TogawaSakiko': 'char_4182_oblvns','MisumiUika': 'char_4184_dolris','YutenjiNyamu': 'char_4185_amoris','YahataUmiri': 'char_4186_tmoris','WakabaMutsumi': 'char_4183_mortis',
-		   'Snegurochka': 'char_4208_wintim','Mantra': 'char_4204_mantra','Vetochki': 'char_4207_branch'} 
+		   'Snegurochka': 'char_4208_wintim','Mantra': 'char_4204_mantra','Vetochki': 'char_4207_branch','SilverashAlter': 'char_1045_svash2',
+		   'PramanixAlter': 'char_1046_sbell2','AstgenneAlter': 'char_1047_halo2','SnowHunter': 'char_4211_snhunt','Hadiya': 'char_394_hadiya','Akkord': 'char_4051_akkord'} 
 
 path_prefix = "" #if __name__ == "__main__" else "Database/"
 try:
@@ -96,6 +97,7 @@ except:
 
 def fileHelper():
 	available_ops = ["504", "514", "507", "506", "505", "4025", "512"]
+	for i in range(600,616): available_ops.append(str(i))
 	for key in id_dict.keys():
 		number = id_dict[key][5:8]
 		if id_dict[key][8].isnumeric():
@@ -130,6 +132,7 @@ if __name__ == "__main__":
 		#handling irregularities
 		character_data.update(amiya_data)
 		character_data['char_4016_kazema']["displayTokenDict"] = {"token_10022_kazema_shadow":True}
+		character_data['char_1045_svash2']["displayTokenDict"] = None
 
 else:
 	character_data = None
