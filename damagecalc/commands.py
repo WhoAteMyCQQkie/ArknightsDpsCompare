@@ -29,6 +29,8 @@ prompts = ["hide", "legend","big", "beeg", "large","repos", "reposition", "botto
 			 "lvl","level","lv","iaps","bonk","received","hits","hit","conditionals", "conditional","variation","variations","maxdef","limit","range","scale","healing","healingbonus","hb","bonus","avg","avgdmg","average","averagedmg","hp","hitpoints","stage","stage2","highlight","mark","marked","feature","alpha","is","modalpha","moddelta","situational", 
 			  "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","split","split2","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed",
 			   "atk","0%","attack","fragile","frag","dmg","aspd","apsd","speed","atkspeed","attackspeed","atkspd","reset","reset:","total","totaldmg","enemy","enemy2","chapter","chapter2","trust","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]
+value_prompts = ["t","target","targets","res","resis","resistance","d","def","defense","shred","shreds","debuff","ignore","resshred","resdebuff","shredres","debuffres","reshred","resignore","defshred","defdebuff","shreddef","debuffdef","defignore","basebuff","baseatk","base","bbuff","batk","lvl","level","lv","iaps","bonk","received","hits","hit","maxdef","limit","range","scale","healing","healingbonus","hb","bonus","hp","hitpoints",
+				 "b","buff","buffs","maxres","reslimit","limitres","scaleres","resscale","fixdef","fixeddef","fixdefense","fixeddefense","setdef","setdefense","fixres","fixedres","fixresistance","fixedresistance","setres","resresistance","set","fix","fixed","atk","attack","fragile","frag","dmg","aspd","apsd","speed","atkspeed","attackspeed","atkspd","trust","skilllvl","skilllevel","skilllv","skillvl","skillevel","skillv","slv","slevel","slvl"]
 
 #If some smartass requests more than 40 operators to be drawn
 bot_mad_message = ["excuse me, what? <:blemi:1077269748972273764>", "why you do this to me? <:jessicry:1214441767005589544>", "how about you draw your own graphs? <:worrymad:1078503499983233046>", "<:pepe_holy:1076526210538012793>", "spare me, please! <:harold:1078503476591607888>"]
@@ -175,16 +177,28 @@ def dps_command(args: List[str])-> DiscordSendable:
 	scopes.append(len(args))
 	if len(scopes) > 40: return(DiscordSendable())
 
-	#Fixing the order of input prompts (such as !dps horn 5 targets) TODO: so far only the first error in each scope is corrected. should be enough for most cases though
-	if (utils.is_float(args[0]) or args[0].endswith("%")) and args[1] in ["t","target","targets","def","defense","res","resistance","hits","hit","aspd","fragile","atk"] and not args[0] in "0123":
+	#Fixing the order of input prompts (such as !dps horn 5 targets)
+	def is_value(input):
+		return ((utils.is_float(input) or input.endswith("%")) and not input in "0123")
+	
+	if is_value(args[0]) and args[1] in value_prompts:#fix beginning
 		tmp = args[1]
 		args[1] = args[0]
 		args[0] = tmp
-	for i in range(1,len(args)-2):
-		if i in scopes and (utils.is_float(args[i+1]) or args[i+1].endswith("%")) and args[i+2] in ["t","target","targets","def","defense","res","resistance","hits","hit","aspd","fragile","atk"]  and not args[i+1] in "0123":
-			tmp = args[i+1]
-			args[i+1] = args[i+2]
-			args[i+2] = tmp
+	
+	scope_structure = [0 for i in range(len(args))]
+	for i in range(len(args)):
+		if args[i] in value_prompts:
+			scope_structure[i] = 1
+		elif is_value(args[i]):
+			scope_structure[i] = 2
+
+	for i in range(len(args)-1):
+		if scope_structure[-i-2] != 1:
+			if scope_structure[-i] == 1 and scope_structure[-i-1] == 2:
+				tmp = args[-i]
+				args[-i] = args[-i-1]
+				args[-i-1] = tmp
 
 	
 	plot_numbers = 0
