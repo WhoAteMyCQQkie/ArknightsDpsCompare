@@ -145,7 +145,7 @@ class Operator:
 					if trust < 100:
 						module_lvl = min(2, module_lvl)
 					mod_name = ["X","Y","$\\Delta$"]
-					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes","Raidian","Pepe","SwireAlter"]:
+					if name in ["Kaltsit","Phantom","Mizuki","Rosmontis","Dusk","Eunectes","Raidian","Pepe","SwireAlter","Gnosis","Hoolheyak"]:
 						mod_name = ["X","Y","$\\alpha$"]
 					self.name += " Mod" + mod_name[module-1] + f"{module_lvl}"
 		
@@ -3201,7 +3201,7 @@ class Hoederer(Operator):
 	
 class Hoolheyak(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Hoolheyak",pp,[1,2,3],[1,2],3,1,1)
+		super().__init__("Hoolheyak",pp,[1,2,3],[1,2,3],3,1,1)
 		if self.talent_dmg: self.name += " vsAerial"
 		if self.skill == 3:
 			if self.skill_dmg: self.name += " maxRange"
@@ -3212,7 +3212,7 @@ class Hoolheyak(Operator):
 	
 	def skill_dps(self, defense, res):
 		atk_scale = self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
-		newres = np.fmax(res-10,0) if self.module == 1 else res
+		newres = np.fmax(res-10,0) if self.module in [1,3] else res
 		dmg_scale = 1
 		if self.module == 2 and self.talent2_dmg:
 			dmg_scale += 0.1 * (self.module_lvl -1)
@@ -7535,16 +7535,21 @@ class Vigna(Operator):
 
 class Vina(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("VinaVictoria", pp, [1,2,3],[1],3,1,1)
+		super().__init__("VinaVictoria", pp, [1,2,3],[1,2],3,1,1)
 		if self.talent_dmg:
 			self.count = 8 if self.skill == 3 else 3
 		else:
 			self.count = 4 if self.skill == 3 else 0
 		if self.elite > 0: self.name += f" {self.count}Allies"
 		if self.module == 1 and self.module_dmg: self.name += " NotBlocking"
+		if self.module == 2 and self.module_lvl > 1 and self.talent2_dmg: self.name += " vsFrighten"
+		if self.module == 2 and self.module_dmg: self.name += " blocking"
 		if self.targets > 1: self.name += f" {self.targets}targets" ######when op has aoe	
 	
 	def skill_dps(self, defense, res):
+		value = 0.1 if self.module == 2 and self.module_dmg else 0
+		fragile = max(value, self.buff_fragile)
+		dmg_scale = 1 + 0.05 * self.module_lvl if self.module == 2 and self.module_lvl > 1 and self.talent2_dmg else 1
 		atkbuff = self.talent1_params[1] * self.count
 		aspd = 8 if self.module == 1 and self.module_dmg else 0	
 		if self.skill < 2:
@@ -7575,7 +7580,7 @@ class Vina(Operator):
 			hitdmgarts = np.fmax(final_atk *(1-res/100), final_atk * 1)
 			hitdmg_lion = np.fmax(self.drone_atk *(1-res/100), self.drone_atk * 1)
 			dps = hitdmgarts/(atk_interval/((self.attack_speed+aspd)/100)) * min(self.targets,maxtargets) + hitdmg_lion/self.drone_atk_interval * min(self.targets, self.count)
-		return dps
+		return dps * dmg_scale * (1+fragile)/(1+self.buff_fragile)
 
 class Virtuosa(Operator):
 	def __init__(self, pp, *args, **kwargs):
