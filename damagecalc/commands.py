@@ -181,24 +181,27 @@ def dps_command(args: List[str])-> DiscordSendable:
 	def is_value(input):
 		return ((utils.is_float(input) or input.endswith("%")) and not input in "0123")
 	
-	if is_value(args[0]) and args[1] in value_prompts:#fix beginning
-		tmp = args[1]
-		args[1] = args[0]
-		args[0] = tmp
-	
-	scope_structure = [0 for i in range(len(args))]
-	for i in range(len(args)):
-		if args[i] in value_prompts:
-			scope_structure[i] = 1
-		elif is_value(args[i]):
-			scope_structure[i] = 2
+	if is_value(args[-1]) or args[-1] in "0123": #since the input ended with a value the user probably understands the syntax
+		pass
+	else:
+		if is_value(args[0]) and args[1] in value_prompts:#fix beginning
+			tmp = args[1]
+			args[1] = args[0]
+			args[0] = tmp
+		
+		scope_structure = [0 for i in range(len(args))]
+		for i in range(len(args)):
+			if args[i] in value_prompts:
+				scope_structure[i] = 1 #1 means it is a value
+			elif is_value(args[i]):
+				scope_structure[i] = 2 #2 means it is a prompt that takes a value
 
-	for i in range(len(args)-1):
-		if scope_structure[-i-2] != 1:
-			if scope_structure[-i] == 1 and scope_structure[-i-1] == 2:
-				tmp = args[-i]
-				args[-i] = args[-i-1]
-				args[-i-1] = tmp
+		for i in range(len(args)-1):
+			if scope_structure[-i-2] != 1:
+				if scope_structure[-i] == 1 and scope_structure[-i-1] == 2:
+					tmp = args[-i]
+					args[-i] = args[-i-1]
+					args[-i-1] = tmp
 
 	
 	plot_numbers = 0
