@@ -182,6 +182,7 @@ def dps_command(args: List[str])-> DiscordSendable:
 		return ((utils.is_float(input) or input.endswith("%")) and not input in "0123")
 	
 	if is_value(args[-1]) or args[-1] in "0123": #since the input ended with a value the user probably understands the syntax
+		#TODO: doesnt have to be THE last input, the last input before any scope being a value should proof the syntax is understood
 		pass
 	else:
 		if is_value(args[0]) and args[1] in value_prompts:#fix beginning

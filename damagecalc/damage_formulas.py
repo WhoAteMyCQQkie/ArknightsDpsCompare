@@ -5949,7 +5949,7 @@ class Quartz(Operator):
 
 class Raidian(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Raidian",pp,[1,2,3],[3],3,6,3)
+		super().__init__("Raidian",pp,[1,2,3],[3,2],3,6,3)
 		if not self.trait_dmg: self.name += " noDrones"
 		elif not self.talent_dmg: self.name += " 1Drone"
 		else: self.name += " 2Drones"
