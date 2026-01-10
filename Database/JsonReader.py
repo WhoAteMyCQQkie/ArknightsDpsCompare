@@ -86,7 +86,9 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Recordkeeper': 'char_4196_reckpr','Haruka': 'char_4202_haruka','HoshigumaAlter': 'char_1044_hsgma2','Matsukiri': 'char_4199_makiri','Kichisei': 'char_4203_kichi',
 		   'TogawaSakiko': 'char_4182_oblvns','MisumiUika': 'char_4184_dolris','YutenjiNyamu': 'char_4185_amoris','YahataUmiri': 'char_4186_tmoris','WakabaMutsumi': 'char_4183_mortis',
 		   'Snegurochka': 'char_4208_wintim','Mantra': 'char_4204_mantra','Vetochki': 'char_4207_branch','SilverashAlter': 'char_1045_svash2',
-		   'PramanixAlter': 'char_1046_sbell2','AstgenneAlter': 'char_1047_halo2','SnowHunter': 'char_4211_snhunt','Hadiya': 'char_394_hadiya','Akkord': 'char_4051_akkord'} 
+		   'PramanixAlter': 'char_1046_sbell2','AstgenneAlter': 'char_1047_halo2','SnowHunter': 'char_4211_snhunt','Hadiya': 'char_394_hadiya','Akkord': 'char_4051_akkord',
+		   'Nasti': 'char_4212_nasti','Cairn': 'char_4214_cairn','Skybox': 'char_4213_skybx','Titi': 'char_4056_titi','PerfurmerAlter': 'char_1022_flwr2',
+		   'Varkaris': 'char_4166_varkis'} 
 
 path_prefix = "" #if __name__ == "__main__" else "Database/"
 try:
@@ -97,7 +99,7 @@ except:
 
 def fileHelper():
 	available_ops = ["504", "514", "507", "506", "505", "4025", "512"]
-	for i in range(600,616): available_ops.append(str(i))
+	for i in range(600,618): available_ops.append(str(i))
 	for key in id_dict.keys():
 		number = id_dict[key][5:8]
 		if id_dict[key][8].isnumeric():
