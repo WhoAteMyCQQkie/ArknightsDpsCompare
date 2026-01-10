@@ -2132,12 +2132,15 @@ class Ela(Operator):
 
 class Entelechia(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Entelechia",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Entelechia",pp,[1,2,3],[1,2],3,1,1)
 		if self.skill == 2 and self.skill_dmg: self.name += " overlapp"
-		if self.targets > 1: self.name += f" {self.targets}targets" 
+		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.module == 2 and self.module_dmg: self.name += " vs2+"
 	
 	def skill_dps(self, defense, res):
-		arts_dps = np.fmax(self.talent1_params[3] * (1-res/100), self.talent1_params[3] * 0.05) * self.targets if self.elite > 0 else 0
+		arts_damage = self.talent1_params[2] if self.module == 2 and self.module_lvl > 1 else self.talent1_params[3]
+		arts_dps = np.fmax(arts_damage * (1-res/100), self.talent1_params[3] * 0.05) * self.targets if self.elite > 0 else 0
+		aspd = 12 if self.module == 2 and self.module_dmg else 0
 
 		if self.skill < 2:
 			skill_scale = self.skill_params[0]		
@@ -2146,7 +2149,7 @@ class Entelechia(Operator):
 			skillhitdmg = np.fmax(final_atk * skill_scale - defense, final_atk * skill_scale * 0.05)
 			sp_cost = self.skill_cost
 			avgphys = (sp_cost * hitdmg + 2 * skillhitdmg) / (sp_cost + 1) if self.skill == 1 else hitdmg
-			dps = avgphys/self.atk_interval * (self.attack_speed)/100 * self.targets
+			dps = avgphys/self.atk_interval * (self.attack_speed+aspd)/100 * self.targets
 		if self.skill == 2:
 			skill_scale = self.skill_params[0]
 			final_atk = self.atk * (1  + self.buff_atk) + self.buff_atk_flat
@@ -2155,7 +2158,7 @@ class Entelechia(Operator):
 			if self.skill_dmg: dps *= 2
 		if self.skill == 3:
 			atkbuff = self.skill_params[0]
-			aspd = self.skill_params[1]
+			aspd += self.skill_params[1]
 			final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 			hitdmg = np.fmax(final_atk - defense, final_atk * 0.05) * self.targets
 			hitdmg_candle = np.fmax(final_atk - defense, final_atk * 0.35) * min(self.targets, 3)
@@ -3152,17 +3155,18 @@ class Highmore(Operator):
 
 class Hoederer(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Hoederer",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Hoederer",pp,[1,2,3],[1,2],3,1,1)
 		if self.skill == 2 and self.skill_dmg: self.talent_dmg = True
 		if self.talent_dmg and self.elite > 0: self.name += " vsStun/Bind"
 		elif self.skill == 3 and self.skill_dmg: self.name += " vsSelfAppliedStun"
 		if self.skill == 2 and not self.skill_dmg: " defaultState"
 		if self.targets > 1: self.name += f" {self.targets}targets"
+		if self.module == 2 and self.module_dmg: self.name += " vsBlocked"
 
 	def skill_dps(self, defense, res):
-		atk_scale = 1
+		atk_scale = 1.1 if self.module == 2 and self.module_dmg else 1
 		if self.elite > 0:
-			atk_scale = max(self.talent1_params) if self.talent_dmg else min(self.talent1_params)
+			atk_scale *= max(self.talent1_params) if self.talent_dmg else min(self.talent1_params)
 		dmg_bonus = 1
 		if self.module == 1:
 			if self.module_lvl == 2: dmg_bonus = 1.06
@@ -5983,13 +5987,13 @@ class Rangers(Operator):
 
 class Ray(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Ray",pp,[1,2,3],[1],3,1,1)
+		super().__init__("Ray",pp,[1,2,3],[1,2],3,1,1)
 		if not self.trait_dmg: self.name += " outOfAmmo"
 		if self.talent_dmg and self.elite > 0: self.name += " with pet"
-		if self.talent2_dmg and self.elite == 2: self.name += " After3Hits"
+		if self.talent2_dmg and self.elite == 2: self.name += f" After{int(max(self.talent2_params))}Hits"
 
 	def skill_dps(self, defense, res):
-		atk_scale = 1.2
+		atk_scale = 1.33 if self.module == 2 else 1.2
 		dmg_scale = 1 + self.talent1_params[0] if self.talent_dmg and self.elite > 0 else 1
 		atkbuff = self.talent2_params[0] * self.talent2_params[1] if self.talent2_dmg and self.elite == 2 else 0
 
@@ -6091,12 +6095,14 @@ class Rockrock(Operator):
 
 class Rosa(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Rosa",pp,[1,2,3],[1],2,1,1)
+		super().__init__("Rosa",pp,[1,2,3],[1,2],2,1,1)
 		self.try_kwargs(2,["heavy","vsheavy","light","vslight","vs"],**kwargs)
 		if self.module == 1: self.talent_dmg = self.talent_dmg and self.module_dmg
 		if self.elite > 0:
 			if not self.talent_dmg: self.name += " vsLight"
 			else: self.name += " vsHeavy"
+		if self.module == 2 and self.module_dmg: self.name += " maxRange"
+		if self.module == 2 and self.module_lvl > 2 and not self.talent2_dmg: self.name += " noTalentStacks"
 		if self.targets > 1 and not self.skill == 1: self.name += f" {self.targets}targets" ######when op has aoe
 	
 	def skill_dps(self, defense, res):
@@ -6111,6 +6117,10 @@ class Rosa(Operator):
 				if self.module_lvl == 2: additional_scale = 0.4
 				if self.module_lvl == 3: additional_scale = 0.6
 		newdef = defense * (1-defshred)
+		if self.module == 2 and self.module_dmg: atk_scale = 1.12
+		if self.module == 2 and self.module_lvl > 1:
+			if self.talent2_dmg: atkbuff += (0.07 + 0.04 * self.module_lvl) * 3
+			elif self.skill > 0: atkbuff += (0.07 + 0.04 * self.module_lvl)
 
 		if self.skill < 2:
 			atkbuff += self.skill_params[0] * self.skill
