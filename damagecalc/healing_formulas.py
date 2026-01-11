@@ -522,17 +522,21 @@ class Lumen(Healer):
 
 class Mon3tr(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Mon3tr",pp,[1,2,3],[],2,1,0)
+		super().__init__("Mon3tr",pp,[1,2,3],[1],2,1,0)
 		if not self.talent_dmg or (self.skill == 2 and not self.skill_dmg): self.name += " noConstruct"
 
 	def skill_hps(self, **kwargs):
 		targets = min(self.targets,4)
 		atkbuff = self.talent1_params[1] if self.talent_dmg and (self.skill != 2 or self.skill_dmg) else 0
 		target_scaling = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2]
+		if self.module == 1: target_scaling = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2]
+		if self.module == 1 and self.module_lvl == 3: target_scaling = [0, 1, 2, 2.85, 2.85]
 		final_atk = self.atk * (1 + self.buff_atk + atkbuff) + self.buff_atk_flat
 		aspd = self.talent2_params[1] if self.elite > 0 else 0
 		if self.skill == 1:
 			target_scaling_skill = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2 + 0.75**3]
+			if self.module == 1: target_scaling_skill = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2 + 0.85**3]
+			if self.module == 1 and self.module_lvl == 3: target_scaling_skill = [0, 1, 2, 2.85, 2.85 + 0.85**2]
 			heals =  (final_atk * target_scaling[targets] * self.skill_cost + final_atk * self.skill_params[0] * target_scaling_skill[targets]) / (self.skill_cost + 1)
 			avg_hps = heals/self.atk_interval * (self.attack_speed + aspd)/100 * (1+self.buff_fragile)
 			self.name += f": *{int(avg_hps)}*"
@@ -548,6 +552,8 @@ class Mon3tr(Healer):
 			final_atk = self.atk * (1 + self.buff_atk + atkbuff + self.skill_params[0]) + self.buff_atk_flat
 			atk_interval = self.atk_interval + self.skill_params[4]
 			target_scaling_skill = [0, 1, 2, 2.75 , 2.75 + 0.75**2]
+			if self.module == 1: target_scaling_skill = [0, 1, 2, 2.85 , 2.85 + 0.85**2]
+			if self.module == 1 and self.module_lvl == 3: target_scaling_skill = [0, 1, 2, 3 , 3.85]
 			skill_hps = final_atk/atk_interval *(self.attack_speed+aspd)/100 * (1+self.buff_fragile) * target_scaling_skill[targets] * 0.5
 		avg_hps = (skill_hps * self.skill_duration + base_hps * skill_down_duration)/(self.skill_duration + skill_down_duration)
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
@@ -758,20 +764,21 @@ class Nowell(Healer):
 
 class Paprika(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Paprika",pp,[1,2],[],2,1,0)
+		super().__init__("Paprika",pp,[1,2],[1],2,1,0)
 		if self.elite > 0:
 			if self.skill == 2:
-				if self.talent_dmg: self.name += " <40%Hp"
-				elif self.skill_dmg: self.name += f" 40-{int(100*self.skill_params[2])}%Hp"
+				if self.talent_dmg: self.name += f" <{int(100*self.skill_params[2])}%Hp"
 				else: self.name += f" >{int(100*self.skill_params[2])}%Hp"
 			else:
-				if self.talent_dmg: self.name += " <40%Hp"
-				else: self.name += " >40%Hp"
+				if self.talent_dmg: self.name += f" <{int(100*self.talent1_params[0])}%Hp"
+				else: self.name += f" >{int(100*self.talent1_params[0])}%Hp"
 	
 	def skill_hps(self, **kwargs):
 		targets = min(self.targets,4)
 		target_scaling = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2]
+		if self.module == 1: target_scaling = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2]
 		target_scaling_skill = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2 + 0.75**3]
+		if self.module == 1: target_scaling_skill = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2 + 0.85**3]
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		aspd = self.skill_params[0] if self.skill == 1 else 0
 		final_atk_skill = final_atk if self.skill == 1 else self.atk * (1 + self.buff_atk + self.skill_params[0]) + self.buff_atk_flat
@@ -783,7 +790,7 @@ class Paprika(Healer):
 			if self.talent_dmg: skill_hps += bonus_heal/self.atk_interval *(self.attack_speed+aspd)/100 * (1+self.buff_fragile) * min(self.targets,3)
 		else:
 			skill_hps = final_atk_skill/self.atk_interval *self.attack_speed/100 * (1+self.buff_fragile) * target_scaling_skill[targets]
-			if self.talent_dmg or self.skill_dmg:
+			if self.talent_dmg:
 				skill_hps += bonus_heal/self.atk_interval *self.attack_speed/100 * (1+self.buff_fragile) * min(self.targets,4)
 		avg_hps = (skill_hps * self.skill_duration + base_hps * self.skill_cost/(1+self.sp_boost))/(self.skill_duration + self.skill_cost/(1+self.sp_boost))
 		self.name += f": **{int(skill_hps)}**/{int(base_hps)}/*{int(avg_hps)}*"
@@ -791,12 +798,14 @@ class Paprika(Healer):
 
 class Papyrus(Healer):
 	def __init__(self, pp, **kwargs):
-		super().__init__("Papyrus",pp,[1,2],[],2,6,0)
+		super().__init__("Papyrus",pp,[1,2],[1],2,6,0)
 	
 	def skill_hps(self, **kwargs):
 		targets = min(self.targets,4)
 		target_scaling = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2]
+		if self.module == 1: target_scaling = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2]
 		target_scaling_skill = [0, 1, 1.75, 1.75 + 0.75**2, 1.75 + 0.75**2 + 0.75**3]
+		if self.module == 1: target_scaling_skill = [0, 1, 1.85, 1.85 + 0.85**2, 1.85 + 0.85**2 + 0.85**3]
 		shield_scale = self.talent1_params[0]
 		final_atk = self.atk * (1 + self.buff_atk) + self.buff_atk_flat
 		final_atk_skill = self.atk * (1 + self.buff_atk + self.skill_params[1]) + self.buff_atk_flat
