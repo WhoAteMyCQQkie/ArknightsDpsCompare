@@ -139,6 +139,8 @@ class Operator:
 				else:
 					if params.module in available_modules:
 						module = params.module #else default mod
+					elif available_modules != [] and default_mod == 0:
+						module = available_modules[0]
 					module_lvl = params.module_lvl if params.module_lvl in [1,2,3] else 3
 					if trust < 50:
 						module_lvl = 1
@@ -4922,15 +4924,17 @@ class Mlynar(Operator):
 
 class Mon3tr(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Mon3tr",pp,[3],[],3,1,0)
+		super().__init__("Mon3tr",pp,[3],[1],3,1,0)
+		if self.talent_dmg: self.name += " +construct"
 		if self.targets > 1: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
+		atkbuff = self.talent1_params[1] if self.talent_dmg else 0
 		aspd = self.talent2_params[1] if self.elite > 1 else 0		
 		if self.skill < 3: return res * 0
 		if self.skill == 3:
 			atk_interval = self.atk_interval + self.skill_params[4]
-			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] ) + self.buff_atk_flat
+			final_atk = self.atk * (1 + self.buff_atk + self.skill_params[0] + atkbuff) + self.buff_atk_flat
 			dps = final_atk/(atk_interval / (self.attack_speed+aspd)*100) * np.fmax(-defense, 1) * min(self.targets, 3)
 		return dps
 
@@ -7702,13 +7706,14 @@ class Virtuosa(Operator):
 	
 class Viviana(Operator):
 	def __init__(self, pp, *args, **kwargs):
-		super().__init__("Viviana",pp,[1,2,3],[3],3,1,3)
+		super().__init__("Viviana",pp,[1,2,3],[3,2],3,1,3)
 		if self.module == 3 and self.module_lvl > 1 and self.module_dmg and not self.talent2_dmg: self.talent_dmg = True #basically: a boss is always an elite
 		if self.talent_dmg and self.elite > 0: self.name += " vsElite"
 		if self.module == 3 and self.module_lvl > 1 and self.module_dmg and not self.talent2_dmg: self.name += "(boss)"
 		if self.skill_dmg and self.skill == 2: self.name += " afterSteal"
 		if not self.skill_dmg and self.skill == 3: self.name += " 1stActivation"
 		if self.skill_dmg and self.skill == 3: self.skill_duration = 25
+		if self.module == 2 and self.module_dmg: self.name += " blocking"
 		if self.module == 3:
 			if self.module_dmg and self.module_lvl > 1: 
 				self.name += " avgBurn"
@@ -7717,6 +7722,8 @@ class Viviana(Operator):
 		if self.targets > 1 and self.skill == 2: self.name += f" {self.targets}targets"
 
 	def skill_dps(self, defense, res):
+		value = 0.1 if self.module == 2 and self.module_dmg else 0
+		fragile = max(value, self.buff_fragile)
 		dmg_scale = 1 + self.talent1_params[1] * 2 if self.talent_dmg else 1 + self.talent1_params[1]
 		if self.elite == 0: dmg_scale = 1
 		burn_res = np.fmax(0,res-20)
@@ -7779,7 +7786,7 @@ class Viviana(Operator):
 				time_to_trigger = ele_gauge / (dps*ele_appli)
 				fallout_dps = hits * (hitdmgarts2 + ele_scale * final_atk)/1.75 * self.attack_speed/100
 				dps = (dps * time_to_trigger + fallout_dps * 10 + fallout_dmg) / (time_to_trigger + 10)
-		return dps
+		return dps * (1+fragile)/(1+self.buff_fragile)
 
 class Vulcan(Operator):
 	def __init__(self, pp, *args, **kwargs):
