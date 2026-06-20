@@ -992,11 +992,11 @@ class Ayerscarpe(Operator):
 class Bagpipe(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Bagpipe",pp,[1,2,3],[1,2],3,1,1)
-		if self.module_dmg and self.module == 2: self.name += " lowHpTarget"
+		if self.module_dmg and self.trait_dmg and self.module == 2: self.name += " lowHpTarget"
 		if self.targets > 1: self.name += f" {self.targets}targets"	
 	
 	def skill_dps(self, defense, res):
-		atk_scale = 1.15 if self.module == 2 and self.module_dmg else 1
+		atk_scale = 1.15 if self.module == 2 and self.module_dmg and self.trait_dmg else 1
 		crate = self.talent1_params[1] if self.elite > 0 else 0
 		cdmg = self.talent1_params[0] if self.elite > 0 else 1
 
@@ -6038,11 +6038,11 @@ class Ray(Operator):
 class Reed(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Reed",pp,[1,2],[2],2,1,2)
-		if self.module_dmg and self.module == 2: self.name += " vsLowHp"
+		if self.module_dmg and self.trait_dmg and self.module == 2: self.name += " vsLowHp"
 		if self.talent_dmg and self.module == 2 and self.module_lvl > 1: self.name += " talentASPD"
 			
 	def skill_dps(self, defense, res):
-		atk_scale = 1.15 if self.module_dmg and self.module == 2 else 1
+		atk_scale = 1.15 if self.module_dmg and self.trait_dmg and self.module == 2 else 1
 		aspd = self.talent1_params[2] if self.talent_dmg and self.module == 2 and self.module_lvl > 1 else 0
 
 		if self.skill < 2:
@@ -7633,7 +7633,7 @@ class Vigil(Operator):
 class Vigna(Operator):
 	def __init__(self, pp, *args, **kwargs):
 		super().__init__("Vigna",pp,[1,2],[2],2,6,2)
-		if self.module_dmg and self.module == 2: self.name += " vsLowHp"
+		if self.module_dmg and self.trait_dmg and self.module == 2: self.name += " vsLowHp"
 			
 	def skill_dps(self, defense, res):
 		crate = 0 if self.elite == 0 else self.talent1_params[2]
@@ -7641,7 +7641,7 @@ class Vigna(Operator):
 		cdmg = self.talent1_params[0]
 		atkbuff = self.skill_params[0] * min(self.skill, 1)
 		atk_interval = 1.5 if self.skill == 2 else self.atk_interval
-		atk_scale = 1.1 if self.module == 2 and self.module_dmg else 1
+		atk_scale = 1.15 if self.module == 2 and self.module_dmg and self.trait_dmg else 1
 		final_atk = self.atk * (1 + atkbuff + self.buff_atk) + self.buff_atk_flat
 		final_atk_crit = self.atk * (1 + atkbuff + self.buff_atk + cdmg) + self.buff_atk_flat
 		hitdmg = np.fmax(final_atk * atk_scale - defense, final_atk * atk_scale * 0.05)
