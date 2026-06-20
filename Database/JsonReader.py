@@ -88,7 +88,7 @@ id_dict = {'Lancet2': 'char_285_medic2','Castle3': 'char_286_cast3','THRMEX': 'c
 		   'Snegurochka': 'char_4208_wintim','Mantra': 'char_4204_mantra','Vetochki': 'char_4207_branch','SilverashAlter': 'char_1045_svash2',
 		   'PramanixAlter': 'char_1046_sbell2','AstgenneAlter': 'char_1047_halo2','SnowHunter': 'char_4211_snhunt','Hadiya': 'char_394_hadiya','Akkord': 'char_4051_akkord',
 		   'Nasti': 'char_4212_nasti','Cairn': 'char_4214_cairn','Skybox': 'char_4213_skybx','Titi': 'char_4056_titi','PerfurmerAlter': 'char_1022_flwr2',
-		   'Varkaris': 'char_4166_varkis'} 
+		   'Varkaris': 'char_4166_varkis', 'Reed': 'char_261_sddrag'} 
 
 path_prefix = "" #if __name__ == "__main__" else "Database/"
 try:
